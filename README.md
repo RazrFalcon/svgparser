@@ -6,7 +6,7 @@ data format without heap allocations.
 It's not a XML parser, since it's not only splits the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
-### Supported SVG types:
+### Supported SVG types
  - [\<color\>](https://www.w3.org/TR/SVG/types.html#DataTypeColor)
  - [\<paint\>](https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint)
  - [\<path\>](https://www.w3.org/TR/SVG/paths.html#PathData)
@@ -18,9 +18,9 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - [\<transform-list\>](https://www.w3.org/TR/SVG/types.html#DataTypeTransformList)
  - [\<style\>](https://www.w3.org/TR/SVG/styling.html#StyleAttribute)
 
-See documentation for details.
+See [documentation](https://razrfalcon.github.io/libsvgparser/svgparser/index.html) for details.
 
-### Benefits:
+### Benefits
  - Most of the common data parsed into internal representation, and not just as string
    (unlike typical XML parser). Tag names, attribute names, attributes value, etc.
  - Complete support of paths, so data like `M10-20A5.5.3-4 110-.1` will be parsed correctly.
@@ -32,7 +32,7 @@ See documentation for details.
  - No heap allocations.
  - Pretty fast.
 
-### Limitations:
+### Limitations
  - All keywords must be lowercase. Case-insensitive parsing is not supported.
    Still it's extremely rare.
  - The `<color>` followed by the `<icccolor>` is not supported. As the `<icccolor>` itself.
@@ -44,7 +44,7 @@ See documentation for details.
  - There is no separate `opacity-value` type. It will be parsed as `<number>`,
    but will be bound to 0..1 range.
 
-### Differences between *libsvgparser* and SVG spec.
+### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of `<length>` type.
 
 ### Usage

@@ -5,6 +5,8 @@ authors = ["RazrFalcon <razrfalcon@gmail.com>"]
 keywords = ["svg", "parser", "tokenizer"]
 license = "MPL-2.0"
 description = "Simple streaming, zero-allocation SVG parser."
+repository = "https://github.com/RazrFalcon/libsvgparser"
+documentation = "https://razrfalcon.github.io/libsvgparser/svgparser/index.html"
 readme = "README.md"
 
 [dependencies]
