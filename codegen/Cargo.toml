@@ -1,0 +1,9 @@
+[package]
+name = "codegen"
+version = "0.1.0"
+authors = ["RazrFalcon <razrfalcon@gmail.com>"]
+license = "MPL-2.0"
+
+[dependencies]
+phf = "0.7.*"
+phf_codegen = "0.7.*"

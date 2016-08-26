@@ -1,0 +1,14 @@
+[package]
+name = "svgparser"
+version = "0.0.1"
+authors = ["RazrFalcon <razrfalcon@gmail.com>"]
+keywords = ["svg", "parser", "tokenizer"]
+license = "MPL-2.0"
+description = "Simple streaming, zero-allocation SVG parser."
+readme = "README.md"
+
+[dependencies]
+phf = "0.7.*"
+
+[lib]
+doctest = false
