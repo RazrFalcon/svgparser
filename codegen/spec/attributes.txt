@@ -14,7 +14,6 @@ baseline-shift
 baseProfile
 begin
 bias
-block-progression
 by
 calcMode
 cap-height
@@ -212,7 +211,6 @@ tableValues
 target
 targetX
 targetY
-text-align
 text-anchor
 text-decoration
 text-rendering

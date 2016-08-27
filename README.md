@@ -1,6 +1,6 @@
 ## libsvgparser
 
-**libsvgparser** is a streaming parser/tokenizer for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
+*libsvgparser* is a streaming parser/tokenizer for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
 It's not a XML parser, since it's not only splits the content into the XML nodes,
@@ -59,11 +59,11 @@ svgparser = "0.0.1"
 ### Roadmap
 
 V0.1.0
- - [ ] `f64` from string parsing pretty slow (`Stream::parse_number`).
+ - [ ] Parsing `f64` from a string is pretty slow (`Stream::parse_number`).
 
 V0.2.0
- - [ ] `<angle>` type support.
+ - [ ] Add an `<angle>` type support.
 
 ### License
 
-**libsvgparser** is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).
+*libsvgparser* is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).

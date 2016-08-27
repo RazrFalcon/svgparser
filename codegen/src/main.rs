@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// We don't use cargo build script, since this data will be changed rarely.
+// There are no point in regenerating them each time, only if you want to save a few KiB.
+
 extern crate phf_codegen;
 
 use std::fs::File;
