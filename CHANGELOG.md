@@ -12,4 +12,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/0.0.1...HEAD
