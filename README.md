@@ -6,6 +6,8 @@ data format without heap allocations.
 It's not a XML parser, since it's not only splits the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
+### [Documentation](https://docs.rs/svgparser/)
+
 ### Supported SVG types
  - [\<color\>](https://www.w3.org/TR/SVG/types.html#DataTypeColor)
  - [\<paint\>](https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint)
@@ -18,7 +20,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - [\<transform-list\>](https://www.w3.org/TR/SVG/types.html#DataTypeTransformList)
  - [\<style\>](https://www.w3.org/TR/SVG/styling.html#StyleAttribute)
 
-See [documentation](https://razrfalcon.github.io/libsvgparser/svgparser/index.html) for details.
+See documentation for details.
 
 ### Benefits
  - Most of the common data parsed into internal representation, and not just as string

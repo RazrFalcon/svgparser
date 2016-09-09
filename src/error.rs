@@ -94,7 +94,7 @@ impl fmt::Debug for Error {
                 write!(f, "Attempt to advance to pos {} from {:?}, but total len is {}",
                        expected, pos, total),
             Error::ElementWithoutTagName(ref pos) =>
-                write!(f, "Element without tag name at: {:?}", pos),
+                write!(f, "An element without a tag name at: {:?}", pos),
         }
     }
 }
