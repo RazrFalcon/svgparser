@@ -28,6 +28,15 @@ fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
     val
 }
 
+/// The paint type fallback value in case the FuncIRI is not resolved.
+#[derive(Debug,Clone,Copy,PartialEq)]
+pub enum PaintFallback {
+    /// Can contain only `none` or `currentColor`.
+    PredefValue(ValueId),
+    /// \<color\> type.
+    Color(RgbColor),
+}
+
 /// Representation of SVG attribute value.
 #[derive(Clone,PartialEq)]
 // TODO: FuncIRI + fallback
@@ -44,6 +53,8 @@ pub enum AttributeValue<'a> {
     IRI(&'a [u8]),
     /// \<FuncIRI\> type.
     FuncIRI(&'a [u8]),
+    /// \<FuncIRI\> type.
+    FuncIRIWithFallback(&'a [u8], PaintFallback),
     /// \<number\> type.
     Number(f64),
     /// \<list-of-numbers\> type.
@@ -60,13 +71,15 @@ impl<'a> fmt::Debug for AttributeValue<'a> {
             AttributeValue::Color(color) => write!(f, "Color({:?})", color),
             AttributeValue::EntityRef(name) => write!(f, "EntityRef({})", u8_to_str!(name)),
             AttributeValue::Length(len) => write!(f, "Length({:?})", len),
-            AttributeValue::LengthList(list) => write!(f, "LengthList({})",
-                u8_to_str!(list.0.slice())),
+            AttributeValue::LengthList(list) =>
+                write!(f, "LengthList({})", u8_to_str!(list.0.slice())),
             AttributeValue::IRI(name) => write!(f, "IRI({})", u8_to_str!(name)),
             AttributeValue::FuncIRI(name) => write!(f, "FuncIRI({})", u8_to_str!(name)),
+            AttributeValue::FuncIRIWithFallback(name, ref fallback) =>
+                write!(f, "FuncIRI({}) Fallback({:?})", u8_to_str!(name), fallback),
             AttributeValue::Number(num) => write!(f, "Number({})", num),
-            AttributeValue::NumberList(list) => write!(f, "NumberList({})",
-                u8_to_str!(list.0.slice())),
+            AttributeValue::NumberList(list) =>
+                write!(f, "NumberList({})", u8_to_str!(list.0.slice())),
             AttributeValue::PredefValue(id) => write!(f, "PredefValue({})", id.name()),
             AttributeValue::String(text) => write!(f, "String({})", u8_to_str!(text)),
         }
@@ -180,7 +193,6 @@ impl<'a> AttributeValue<'a> {
                 }
             }
 
-            #[cfg_attr(rustfmt, rustfmt_skip)]
               AId::X1 | AId::Y1
             | AId::X2 | AId::Y2
             | AId::R
@@ -193,14 +205,12 @@ impl<'a> AttributeValue<'a> {
                 Ok(AttributeValue::Length(l))
             }
 
-            #[cfg_attr(rustfmt, rustfmt_skip)]
               AId::StrokeDashoffset
             | AId::StrokeMiterlimit
             | AId::StrokeWidth => {
                 parse_or!(parse_predef!(ValueId::Inherit), parse_length(stream))
             }
 
-            #[cfg_attr(rustfmt, rustfmt_skip)]
               AId::Opacity
             | AId::FillOpacity
             | AId::FloodOpacity
@@ -223,7 +233,6 @@ impl<'a> AttributeValue<'a> {
                 ), Ok(AttributeValue::LengthList(LengthList(stream.clone()))))
             }
 
-            #[cfg_attr(rustfmt, rustfmt_skip)]
             AId::Fill => {
                 // fill in animate-based elements, it's another fill
                 // https://www.w3.org/TR/SVG/animate.html#FillAttribute
@@ -239,7 +248,7 @@ impl<'a> AttributeValue<'a> {
                             ValueId::None,
                             ValueId::CurrentColor,
                             ValueId::Inherit),
-                            parse_or!(parse_func_iri(stream), parse_rgb_color(stream)))
+                            parse_or!(parse_paint_func_iri(stream), parse_rgb_color(stream)))
                     }
                 }
             }
@@ -249,10 +258,9 @@ impl<'a> AttributeValue<'a> {
                     ValueId::None,
                     ValueId::CurrentColor,
                     ValueId::Inherit),
-                    parse_or!(parse_func_iri(stream), parse_rgb_color(stream)))
+                    parse_or!(parse_paint_func_iri(stream), parse_rgb_color(stream)))
             },
 
-            #[cfg_attr(rustfmt, rustfmt_skip)]
               AId::ClipPath
             | AId::Filter
             | AId::Marker
@@ -273,7 +281,6 @@ impl<'a> AttributeValue<'a> {
                     Ok(AttributeValue::Color(try!(RgbColor::from_stream(stream)))))
             }
 
-            #[cfg_attr(rustfmt, rustfmt_skip)]
               AId::LightingColor
             | AId::FloodColor
             | AId::StopColor => {
@@ -675,6 +682,44 @@ macro_rules! try_opt {
             Some(value) => value,
             None => return None
         }
+    }
+}
+
+fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a>> {
+    if !stream.at_end() && stream.is_char_eq_raw(b'u') {
+        try_opt!(stream.advance(5).ok());
+        let link_len = try_opt!(stream.len_to(b')').ok());
+        let link = stream.read_raw(link_len);
+
+        stream.advance_raw(1); // ')'
+        stream.skip_spaces();
+
+        // get fallback
+        if !stream.at_end() {
+            let fallback = stream.slice_tail();
+
+            let vid = match ValueId::from_name(u8_to_str!(fallback)) {
+                Some(v) => {
+                    match v {
+                          ValueId::None
+                        | ValueId::CurrentColor => Some(PaintFallback::PredefValue(v)),
+                        _ => None,
+                    }
+                }
+                None => None,
+            };
+
+            if vid.is_some() {
+                Some(AttributeValue::FuncIRIWithFallback(link, vid.unwrap()))
+            } else {
+                let color = try_opt!(RgbColor::from_stream(stream).ok());
+                Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))
+            }
+        } else {
+            Some(AttributeValue::FuncIRI(link))
+        }
+    } else {
+        None
     }
 }
 

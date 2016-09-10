@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 0.0.2 - 2016-09-09
+## [Unreleased]
+### Added
+- A fallback value parsing from the \<paint\> type.
+
+## [0.0.2] - 2016-09-09
 ### Removed
 - Remove `BlockProgression` and `TextAlign` from `AttributeId` enum since they are not a SVG attributes.
 
@@ -12,4 +16,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/0.0.1...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/0.0.2...HEAD
+[0.0.2]: https://github.com/RazrFalcon/libsvgparser/compare/0.0.1...0.0.2

@@ -13,7 +13,7 @@
 extern crate phf;
 
 pub use attribute::AttributeId;
-pub use attribute_value::AttributeValue;
+pub use attribute_value::{AttributeValue, PaintFallback};
 pub use rgbcolor::RgbColor;
 pub use element::ElementId;
 pub use error::{Error, ErrorPos};

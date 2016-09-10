@@ -42,7 +42,6 @@ See documentation for details.
  - CSS styles does not processed. You should use external CSS parser.
  - Comments inside attributes value supported only for `style` attribute.
  - User agent colors, aka `fill="AppWorkspace"`, is not suppored.
- - Fallback color for `<paint>` type is not supported. Example: `fill="#linearGradient1 #f00"`.
  - There is no separate `opacity-value` type. It will be parsed as `<number>`,
    but will be bound to 0..1 range.
 

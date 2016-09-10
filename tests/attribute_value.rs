@@ -7,6 +7,7 @@ extern crate svgparser;
 use svgparser::{
     AttributeId as AId,
     AttributeValue as AV,
+    PaintFallback,
     ElementId,
     RgbColor,
     Stream,
@@ -43,14 +44,28 @@ test_err!(empty_2, AId::Fill, b" ", Error::UnexpectedEndOfStream(ErrorPos::new(1
 test!(unicode_1, AId::Unicode, b" ", AV::String(b" "));
 
 test!(paint_1, AId::Fill, b"none", AV::PredefValue(ValueId::None));
+
 test!(paint_2, AId::Fill, b"currentColor", AV::PredefValue(ValueId::CurrentColor));
+
 test!(paint_3, AId::Fill, b"inherit", AV::PredefValue(ValueId::Inherit));
+
 test!(paint_4, AId::Fill, b"red", AV::Color(RgbColor::new(255, 0, 0)));
+
 test!(paint_5, AId::Fill, b"url(#link)", AV::FuncIRI(b"link"));
-test!(paint_6, AId::Fill, b"url(#link) red", AV::FuncIRI(b"link")); // TODO: must be error
+
+test!(paint_6, AId::Fill, b"url(#link) red",
+    AV::FuncIRIWithFallback(b"link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
+
+// same as above, but for `stroke`
+test!(paint_7, AId::Stroke, b"url(#link) red",
+    AV::FuncIRIWithFallback(b"link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
+
+test!(paint_8, AId::Fill, b"url(#link) none",
+    AV::FuncIRIWithFallback(b"link", PaintFallback::PredefValue(ValueId::None)));
+
 // color is last type that we check during parsing <paint>, so any error will be like that
 test_err!(paint_err_1, AId::Fill, b"#link", Error::InvalidColor(ErrorPos::new(1, 1)));
 
 test!(ref_1, AId::Class, b"&ref;", AV::EntityRef(b"ref"));
 
-// TODO: test all supported attributes
+// TODO: test all supported attributes, probably via codegen.
