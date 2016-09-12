@@ -667,6 +667,14 @@ impl<'a> AttributeValue<'a> {
                 ), Ok(AttributeValue::String(stream.slice())))
             }
 
+            AId::FontFamily => {
+                // TODO: complete parser
+
+                parse_or!(parse_predef!(
+                    ValueId::Inherit
+                ), Ok(AttributeValue::String(stream.slice())))
+            }
+
             AId::ViewBox => {
                 Ok(AttributeValue::NumberList(NumberList(stream.clone())))
             }
