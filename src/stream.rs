@@ -478,7 +478,7 @@ impl<'a> Stream<'a> {
         self.advance_raw(l);
     }
 
-    /// Jump to end.
+    /// Jump to the end.
     ///
     /// # Examples
     ///

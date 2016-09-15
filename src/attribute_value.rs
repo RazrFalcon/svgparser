@@ -37,7 +37,7 @@ pub enum PaintFallback {
     Color(RgbColor),
 }
 
-/// Representation of SVG attribute value.
+/// Representation of the SVG attribute value.
 #[derive(Clone,PartialEq)]
 // TODO: FuncIRI + fallback
 pub enum AttributeValue<'a> {

@@ -44,6 +44,8 @@ See documentation for details.
  - User agent colors, aka `fill="AppWorkspace"`, is not suppored.
  - There is no separate `opacity-value` type. It will be parsed as `<number>`,
    but will be bound to 0..1 range.
+ - An implicit path commands is not supported. All commands are parsed as explicit.
+ - An implicit MoveTo commands automatically converted to an explicit LineTo.
 
 ### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of `<length>` type.

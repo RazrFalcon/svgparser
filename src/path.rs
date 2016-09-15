@@ -8,236 +8,6 @@
 
 use super::{Stream, Error, ErrorPos};
 
-/// Representation of path command.
-#[derive(Copy,Clone,Debug,PartialEq)]
-pub struct Command(u8);
-
-// TODO: maybe move to DOM
-impl Command {
-    /// Constructs a new `Command` from it's name.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgparser::path::Command;
-    /// assert_eq!(Command::from_cmd(b'M').is_some(), true);
-    /// assert_eq!(Command::from_cmd(b'n').is_some(), false);
-    /// ```
-    pub fn from_cmd(cmd: u8) -> Option<Command> {
-        if Command::is_cmd(cmd) {
-            Some(Command(cmd))
-        } else {
-            None
-        }
-    }
-
-    // TODO: create new_* using macro, somehow.
-
-    /// Constructs a new absolute MoveTo `Command`.
-    pub fn new_move_to() -> Command {
-        Command(b'M')
-    }
-
-    /// Constructs a new absolute ClosePath `Command`.
-    pub fn new_close_path() -> Command {
-        Command(b'Z')
-    }
-
-    /// Constructs a new absolute LineTo `Command`.
-    pub fn new_line_to() -> Command {
-        Command(b'L')
-    }
-
-    /// Constructs a new absolute HorizontalLineTo `Command`.
-    pub fn new_hline_to() -> Command {
-        Command(b'H')
-    }
-
-    /// Constructs a new absolute VerticalLineTo `Command`.
-    pub fn new_vline_to() -> Command {
-        Command(b'V')
-    }
-
-    /// Constructs a new absolute CurveTo `Command`.
-    pub fn new_curve_to() -> Command {
-        Command(b'C')
-    }
-
-    /// Constructs a new absolute SmoothLineTo `Command`.
-    pub fn new_smooth_curve_to() -> Command {
-        Command(b'S')
-    }
-
-    /// Constructs a new absolute QuadTo `Command`.
-    pub fn new_quad_to() -> Command {
-        Command(b'Q')
-    }
-
-    /// Constructs a new absolute SmoothQuadTo `Command`.
-    pub fn new_smooth_quad_to() -> Command {
-        Command(b'T')
-    }
-
-    /// Constructs a new absolute ArcTo `Command`.
-    pub fn new_arc_to() -> Command {
-        Command(b'A')
-    }
-
-    /// Returns content of command.
-    pub fn data(&self) -> u8 {
-        self.0
-    }
-
-    /// Returns `true` if command is MoveTo.
-    pub fn is_move_to(&self) -> bool {
-        self.0 == b'M' || self.0 == b'm'
-    }
-
-    /// Returns `true` if command is ClosePath.
-    pub fn is_close_path(&self) -> bool {
-        self.0 == b'Z' || self.0 == b'z'
-    }
-
-    /// Returns `true` if command is LineTo.
-    pub fn is_line_to(&self) -> bool {
-        self.0 == b'L' || self.0 == b'l'
-    }
-
-    /// Returns `true` if command is HorizontalLineTo.
-    pub fn is_hline_to(&self) -> bool {
-        self.0 == b'H' || self.0 == b'h'
-    }
-
-    /// Returns `true` if command is VerticalLineTo.
-    pub fn is_vline_to(&self) -> bool {
-        self.0 == b'V' || self.0 == b'v'
-    }
-
-    /// Returns `true` if command is CurveTo.
-    pub fn is_curve_to(&self) -> bool {
-        self.0 == b'C' || self.0 == b'c'
-    }
-
-    /// Returns `true` if command is SmoothLineTo.
-    pub fn is_smooth_curve_to(&self) -> bool {
-        self.0 == b'S' || self.0 == b's'
-    }
-
-    /// Returns `true` if command is QuadTo.
-    pub fn is_quad_to(&self) -> bool {
-        self.0 == b'Q' || self.0 == b'q'
-    }
-
-    /// Returns `true` if command is SmoothQuadTo.
-    pub fn is_smooth_quad_to(&self) -> bool {
-        self.0 == b'T' || self.0 == b't'
-    }
-
-    /// Returns `true` if command is ArcTo.
-    pub fn is_arc_to(&self) -> bool {
-        self.0 == b'A' || self.0 == b'a'
-    }
-
-    /// Checks that command is absolute.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgparser::path::Command;
-    /// assert_eq!(Command::new_move_to().is_absolute(), true);
-    /// assert_eq!(Command::new_move_to().to_relative().is_absolute(), false);
-    /// ```
-    pub fn is_absolute(&self) -> bool {
-        match self.0 {
-            b'M' => true,
-            b'Z' => true,
-            b'L' => true,
-            b'H' => true,
-            b'V' => true,
-            b'C' => true,
-            b'S' => true,
-            b'Q' => true,
-            b'T' => true,
-            b'A' => true,
-            _ => false,
-        }
-    }
-
-    /// Checks that command is relative.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgparser::path::Command;
-    /// assert_eq!(Command::new_move_to().is_relative(), false);
-    /// assert_eq!(Command::new_move_to().to_relative().is_relative(), true);
-    /// ```
-    pub fn is_relative(&self) -> bool {
-        !self.is_absolute()
-    }
-
-    /// Converts command into absolute.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgparser::path::Command;
-    /// assert_eq!(Command::from_cmd(b'm').unwrap().to_absolute().is_absolute(), true);
-    /// ```
-    pub fn to_absolute(&self) -> Command {
-        let c = match self.0 {
-            b'm' => b'M',
-            b'z' => b'Z',
-            b'l' => b'L',
-            b'h' => b'H',
-            b'v' => b'V',
-            b'c' => b'C',
-            b's' => b'S',
-            b'q' => b'Q',
-            b't' => b'T',
-            b'a' => b'A',
-            _ => self.0,
-        };
-        Command(c)
-    }
-
-    /// Converts command into relative.
-    ///
-    /// # Examples
-    /// ```
-    /// use svgparser::path::Command;
-    /// assert_eq!(Command::from_cmd(b'M').unwrap().to_relative().is_relative(), true);
-    /// ```
-    pub fn to_relative(&self) -> Command {
-        let c = match self.0 {
-            b'M' => b'm',
-            b'Z' => b'z',
-            b'L' => b'l',
-            b'H' => b'h',
-            b'V' => b'v',
-            b'C' => b'c',
-            b'S' => b's',
-            b'Q' => b'q',
-            b'T' => b't',
-            b'A' => b'a',
-            _ => self.0,
-        };
-        Command(c)
-    }
-
-    fn is_cmd(c: u8) -> bool {
-        match c {
-            b'M' | b'm' => true,
-            b'Z' | b'z' => true,
-            b'L' | b'l' => true,
-            b'H' | b'h' => true,
-            b'V' | b'v' => true,
-            b'C' | b'c' => true,
-            b'S' | b's' => true,
-            b'Q' | b'q' => true,
-            b'T' | b't' => true,
-            b'A' | b'a' => true,
-            _ => false,
-        }
-    }
-}
-
 #[derive(Copy,Clone,Debug,PartialEq)]
 #[allow(missing_docs)]
 pub enum SegmentData {
@@ -294,147 +64,16 @@ pub enum SegmentData {
 /// Representation of path segment.
 #[derive(Copy,Clone,Debug,PartialEq)]
 pub struct Segment {
-    cmd: Command,
-    data: SegmentData,
-}
-
-impl Segment {
-    /// Constructs a new MoveTo `Segment`.
-    pub fn new_move_to(x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_move_to(),
-            data: SegmentData::MoveTo { x: x, y: y },
-        }
-    }
-
-    /// Constructs a new ClosePath `Segment`.
-    pub fn new_close_path() -> Segment {
-        Segment {
-            cmd: Command::new_close_path(),
-            data: SegmentData::ClosePath,
-        }
-    }
-
-    /// Constructs a new LineTo `Segment`.
-    pub fn new_line_to(x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_line_to(),
-            data: SegmentData::LineTo { x: x, y: y },
-        }
-    }
-
-    /// Constructs a new HorizontalLineTo `Segment`.
-    pub fn new_hline_to(x: f64) -> Segment {
-        Segment {
-            cmd: Command::new_hline_to(),
-            data: SegmentData::HorizontalLineTo { x: x },
-        }
-    }
-
-    /// Constructs a new VerticalLineTo `Segment`.
-    pub fn new_vline_to(y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_vline_to(),
-            data: SegmentData::VerticalLineTo { y: y },
-        }
-    }
-
-    /// Constructs a new CurveTo `Segment`.
-    pub fn new_curve_to(x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_curve_to(),
-            data: SegmentData::CurveTo {
-                x1: x1,
-                y1: y1,
-                x2: x2,
-                y2: y2,
-                x: x,
-                y: y,
-            },
-        }
-    }
-
-    /// Constructs a new SmoothCurveTo `Segment`.
-    pub fn new_smooth_curve_to(x2: f64, y2: f64, x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_smooth_curve_to(),
-            data: SegmentData::SmoothCurveTo {
-                x2: x2,
-                y2: y2,
-                x: x,
-                y: y,
-            },
-        }
-    }
-
-    /// Constructs a new QuadTo `Segment`.
-    pub fn new_quad_to(x1: f64, y1: f64, x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_quad_to(),
-            data: SegmentData::Quadratic {
-                x1: x1,
-                y1: y1,
-                x: x,
-                y: y,
-            },
-        }
-    }
-
-    /// Constructs a new SmoothQuadTo `Segment`.
-    pub fn new_smooth_quad_to(x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_smooth_quad_to(),
-            data: SegmentData::SmoothQuadratic {
-                x: x,
-                y: y,
-            },
-        }
-    }
-
-    /// Constructs a new ArcTo `Segment`.
-    pub fn new_arc_to(rx: f64, ry: f64, x_axis_rotation: f64, large_arc: bool, sweep: bool,
-                  x: f64, y: f64) -> Segment {
-        Segment {
-            cmd: Command::new_arc_to(),
-            data: SegmentData::EllipticalArc {
-                rx: rx,
-                ry: ry,
-                x_axis_rotation: x_axis_rotation,
-                large_arc: large_arc,
-                sweep: sweep,
-                x: x,
-                y: y,
-            },
-        }
-    }
-
-    /// Returns segment's command.
-    pub fn cmd(&self) -> &Command {
-        &self.cmd
-    }
-
-    /// Returns segment's data.
-    pub fn data(&self) -> &SegmentData {
-        &self.data
-    }
-
-    /// Returns relative copy of segment.
-    pub fn to_relative(mut self) -> Segment {
-        self.cmd = self.cmd.to_relative();
-        self
-    }
-
-    /// Returns absolute copy of segment.
-    pub fn to_absolute(mut self) -> Segment {
-        self.cmd = self.cmd.to_absolute();
-        self
-    }
+    /// Command type.
+    pub cmd: u8,
+    /// Points.
+    pub data: SegmentData,
 }
 
 /// Tokenizer for \<path\> data.
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
-    prev_cmd: Option<Command>,
+    prev_cmd: Option<u8>,
 }
 
 impl<'a> Tokenizer<'a> {
@@ -499,7 +138,7 @@ impl<'a> Tokenizer<'a> {
         let has_prev_cmd = self.prev_cmd.is_some();
         let first_char = s.curr_char_raw();
 
-        if !has_prev_cmd && !Command::is_cmd(first_char) {
+        if !has_prev_cmd && !is_cmd(first_char) {
             println!("Warning: '{}' not a command. \
                       The remaining data is ignored.", first_char as char);
             return Err(Error::EndOfStream);
@@ -517,24 +156,24 @@ impl<'a> Tokenizer<'a> {
         }
 
         let is_implicit_move_to;
-        let cmd: Command;
-        if Command::is_cmd(first_char) {
+        let cmd: u8;
+        if is_cmd(first_char) {
             is_implicit_move_to = false;
 
-            cmd = Command::from_cmd(first_char).unwrap();
+            cmd = first_char;
             s.advance_raw(1);
         } else if is_digit(first_char) && has_prev_cmd {
             let prev_cmd = self.prev_cmd.unwrap();
 
-            if prev_cmd.data() == b'M' || prev_cmd.data() == b'm' {
+            if prev_cmd == b'M' || prev_cmd == b'm' {
                 // 'If a moveto is followed by multiple pairs of coordinates, the subsequent
                 // pairs are treated as implicit lineto commands.'
                 // So we parse them as lineto.
                 is_implicit_move_to = true;
-                cmd = if prev_cmd.is_absolute() {
-                    Command::from_cmd(b'L').unwrap()
+                cmd = if is_absolute(prev_cmd) {
+                    b'L'
                 } else {
-                    Command::from_cmd(b'l').unwrap()
+                    b'l'
                 };
             } else {
                 is_implicit_move_to = false;
@@ -544,9 +183,9 @@ impl<'a> Tokenizer<'a> {
             data_error!();
         }
 
-        let cmdl = cmd.to_relative();
+        let cmdl = to_relative(cmd);
 
-        let data = match cmdl.data() {
+        let data = match cmdl {
             b'm' => {
                 let x = try_num!(s.parse_list_number());
                 let y = try_num!(s.parse_list_number());
@@ -638,13 +277,13 @@ impl<'a> Tokenizer<'a> {
             _ => unreachable!(),
         };
 
-        if cmdl.data() == b'z' {
+        if cmdl == b'z' {
             self.prev_cmd = None;
         } else if is_implicit_move_to {
-            self.prev_cmd = if cmd.is_absolute() {
-                Some(Command::from_cmd(b'M').unwrap())
+            self.prev_cmd = if is_absolute(cmd) {
+                Some(b'M')
             } else {
-                Some(Command::from_cmd(b'm').unwrap())
+                Some(b'm')
             };
         } else {
             self.prev_cmd = Some(cmd);
@@ -654,6 +293,59 @@ impl<'a> Tokenizer<'a> {
             cmd: cmd,
             data: data,
         })
+    }
+}
+
+/// Returns `true` if the selected char is the command.
+pub fn is_cmd(c: u8) -> bool {
+    match c {
+        b'M' | b'm' => true,
+        b'Z' | b'z' => true,
+        b'L' | b'l' => true,
+        b'H' | b'h' => true,
+        b'V' | b'v' => true,
+        b'C' | b'c' => true,
+        b'S' | b's' => true,
+        b'Q' | b'q' => true,
+        b'T' | b't' => true,
+        b'A' | b'a' => true,
+        _ => false,
+    }
+}
+
+/// Returns `true` if the selected char is the absolute command.
+pub fn is_absolute(c: u8) -> bool {
+    debug_assert!(is_cmd(c));
+    match c {
+        b'M' => true,
+        b'Z' => true,
+        b'L' => true,
+        b'H' => true,
+        b'V' => true,
+        b'C' => true,
+        b'S' => true,
+        b'Q' => true,
+        b'T' => true,
+        b'A' => true,
+        _ => false,
+    }
+}
+
+/// Converts the selected command char into the relative command char.
+pub fn to_relative(c: u8) -> u8 {
+    debug_assert!(is_cmd(c));
+    match c {
+        b'M' => b'm',
+        b'Z' => b'z',
+        b'L' => b'l',
+        b'H' => b'h',
+        b'V' => b'v',
+        b'C' => b'c',
+        b'S' => b's',
+        b'Q' => b'q',
+        b'T' => b't',
+        b'A' => b'a',
+        _ => c,
     }
 }
 
