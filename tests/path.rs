@@ -235,3 +235,11 @@ test!(close_path_2, b"M10 20 L 30 40 zM 100 200 L 300 400",
     Segment { cmd: b'M', data: SegmentData::MoveTo { x: 100.0, y: 200.0 } },
     Segment { cmd: b'L', data: SegmentData::LineTo { x: 300.0, y: 400.0 } }
 );
+
+test!(close_path_3, b"M10 20 L 30 40 Z Z Z",
+    Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } },
+    Segment { cmd: b'L', data: SegmentData::LineTo { x: 30.0, y: 40.0 } },
+    Segment { cmd: b'Z', data: SegmentData::ClosePath },
+    Segment { cmd: b'Z', data: SegmentData::ClosePath },
+    Segment { cmd: b'Z', data: SegmentData::ClosePath }
+);

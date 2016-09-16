@@ -277,9 +277,7 @@ impl<'a> Tokenizer<'a> {
             _ => unreachable!(),
         };
 
-        if cmdl == b'z' {
-            self.prev_cmd = None;
-        } else if is_implicit_move_to {
+        if is_implicit_move_to {
             self.prev_cmd = if is_absolute(cmd) {
                 Some(b'M')
             } else {

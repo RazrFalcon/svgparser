@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `path::Command` struct.
 
+### Fixed
+- In SVG path there can be any command after `ClosePath`, not only `MoveTo`.
+
 ## [0.0.2] - 2016-09-09
 ### Removed
 - Remove `BlockProgression` and `TextAlign` from `AttributeId` enum since they are not a SVG attributes.
