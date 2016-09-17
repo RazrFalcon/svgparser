@@ -63,6 +63,8 @@ svgparser = "0.0.2"
 
 V0.1.0
  - [ ] Parsing `f64` from a string is pretty slow (`Stream::parse_number`).
+ - [ ] Add an `font` attribute parsing support.
+ - [ ] Add an `enable-background` attribute parsing support.
 
 V0.2.0
  - [ ] Add an `<angle>` type support.

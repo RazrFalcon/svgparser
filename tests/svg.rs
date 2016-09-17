@@ -433,3 +433,25 @@ fn stream_end_on_attribute_3() {
     basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
     assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1, 9)));
 }
+
+#[test]
+fn invalid_structure_1() {
+    let mut p = svg::Tokenizer::new(b"<svg><g/><rect/></g></svg>");
+    basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
+    basic_assert_eq!(p, svg::Token::ElementStart(b"g"));
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
+    basic_assert_eq!(p, svg::Token::ElementStart(b"rect"));
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Close(b"g")));
+    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedClosingTag(ErrorPos::new(1, 27)));
+}
+
+#[test]
+fn invalid_structure_2() {
+    let mut p = svg::Tokenizer::new(b"<svg></g></svg>");
+    basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Close(b"g")));
+    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedClosingTag(ErrorPos::new(1, 16)));
+}

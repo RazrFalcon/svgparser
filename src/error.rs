@@ -53,6 +53,8 @@ pub enum Error {
     },
     /// Invalid SVG token.
     InvalidSvgToken(ErrorPos),
+    /// The stream found closing tag without an opening tag.
+    UnexpectedClosingTag(ErrorPos),
     /// Error during a number parsing.
     InvalidNumber(ErrorPos),
     /// Error during a color parsing.
@@ -84,6 +86,8 @@ impl fmt::Debug for Error {
             Error::InvalidChar{ref current, ref expected, ref pos} =>
                 write!(f, "Expected '{}', found '{}' at pos: {:?}", expected, current, pos),
             Error::InvalidSvgToken(ref pos) => write!(f, "Invalid SVG token at: {:?}", pos),
+            Error::UnexpectedClosingTag(ref pos) =>
+                write!(f, "The stream found closing tag without an opening tag at: {:?}", pos),
             Error::InvalidNumber(ref pos) => write!(f, "Invalid number at: {:?}", pos),
             Error::InvalidColor(ref pos) => write!(f, "Invalid color at: {:?}", pos),
             Error::InvalidTransform(ref pos) => write!(f, "Invalid transform at: {:?}", pos),

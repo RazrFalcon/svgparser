@@ -136,6 +136,12 @@ impl<'a> Tokenizer<'a> {
                     let text = try!(self.stream.read_to(b'>'));
                     try!(self.stream.advance(1)); // >
 
+                    if self.depth == 0 {
+                        // Error will occur on the next closing tag after invalid,
+                        // because we only checking depth and not a closing tag names.
+                        return Err(Error::UnexpectedClosingTag(self.stream.gen_error_pos()));
+                    }
+
                     self.depth -= 1;
 
                     return Ok(Token::ElementEnd(ElementEnd::Close(text)));
