@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-/// Position of the error.
+/// The position of the error.
 ///
 /// Position indicates row/line and column. Starting positions is 1:1.
 #[derive(Clone,Copy,PartialEq)]
@@ -34,24 +34,24 @@ impl fmt::Debug for ErrorPos {
 /// List of all supported errors.
 #[derive(Clone,Copy,PartialEq)]
 pub enum Error {
-    /// Technically, `EndOfStream` is not an error.
-    /// It's just indicates reaching the end of the stream.
+    /// Technically, `EndOfStream` is not an error,
+    /// it's just indicates reaching the end of the stream.
     EndOfStream,
     /// The steam ended earlier than we expected.
     ///
     /// Should only appear on invalid input data.
-    /// Errors in valid SVG should be handled by errors below.
+    /// Errors in the valid SVG should be handled by errors below.
     UnexpectedEndOfStream(ErrorPos),
     /// Can appear during consuming expected char.
     InvalidChar {
-        /// Current char in stream.
+        /// Current char in the stream.
         current: char,
         /// Expected char.
         expected: char,
         /// Absolute stream position.
         pos: ErrorPos,
     },
-    /// Invalid SVG/XML token.
+    /// Invalid SVG token.
     InvalidSvgToken(ErrorPos),
     /// Error during a number parsing.
     InvalidNumber(ErrorPos),
@@ -63,14 +63,14 @@ pub enum Error {
     InvalidAttributeValue(ErrorPos),
     /// Can appear during moving along the data stream.
     AdvanceError {
-        /// Advance step.
+        /// The advance step.
         expected: isize,
         /// Full length of the steam.
         total: usize,
         /// Absolute stream position.
         pos: ErrorPos,
     },
-    /// SVG Element must contain tag name.
+    /// An SVG element must contain a tag name.
     ElementWithoutTagName(ErrorPos),
 }
 
@@ -91,7 +91,7 @@ impl fmt::Debug for Error {
                 write!(f, "Invalid attribute at: {:?}", pos)
             }
             Error::AdvanceError{ref expected, ref total, ref pos} =>
-                write!(f, "Attempt to advance to pos {} from {:?}, but total len is {}",
+                write!(f, "Attempt to advance to the pos {} from {:?}, but total len is {}",
                        expected, pos, total),
             Error::ElementWithoutTagName(ref pos) =>
                 write!(f, "An element without a tag name at: {:?}", pos),

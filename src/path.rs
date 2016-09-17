@@ -61,7 +61,7 @@ pub enum SegmentData {
     ClosePath,
 }
 
-/// Representation of path segment.
+/// Representation of the path segment.
 #[derive(Copy,Clone,Debug,PartialEq)]
 pub struct Segment {
     /// Command type.
@@ -70,7 +70,7 @@ pub struct Segment {
     pub data: SegmentData,
 }
 
-/// Tokenizer for \<path\> data.
+/// Tokenizer for the \<path\> data.
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
     prev_cmd: Option<u8>,
@@ -85,27 +85,27 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    /// Extracts next path data segment from stream.
+    /// Extracts next path data segment from the stream.
     ///
     /// # Errors
     ///
-    /// - `Error::EndOfStream` indicates end of parsing, not error.
+    /// - `Error::EndOfStream` indicates the end of parsing, not error.
     /// - Most of the `Error` types can occur.
     ///
     /// # Notes
     ///
-    /// - By SVG spec any invalid data inside path data should stop parsing of this data,
+    /// - By SVG spec any invalid data inside path data should stop the parsing of this data,
     ///   but not the whole document.
     ///
     ///   This function will return `Error::EndOfStream` on any kind of error.
-    ///   Library will print warning to stdout.
+    ///   Library will print a warning to stdout.
     ///
     ///   In other words - you will get as much data as possible.
     ///
     ///   Example: `M 10 20 L 30 40 #!@$1 L 50 60` -> `M 10 20 L 30 40`
     ///
     /// - We don't support implicit commands, so all commands will be converted to explicit one.
-    ///   It's mostly affects implicit MoveTo, which will be converted, according to spec,
+    ///   It mostly affects implicit MoveTo, which will be converted, according to spec,
     ///   into explicit LineTo.
     ///
     ///   Example: `M 10 20 30 40 50 60` -> `M 10 20 L 30 40 L 50 60`
@@ -120,7 +120,7 @@ impl<'a> Tokenizer<'a> {
 
         macro_rules! data_error {
             () => ({
-                println!("Warning: invalid path data at {:?}. \
+                println!("Warning: Invalid path data at {:?}. \
                           The remaining data is ignored.", s.gen_error_pos());
                 return Err(Error::EndOfStream);
             })
@@ -139,7 +139,7 @@ impl<'a> Tokenizer<'a> {
         let first_char = s.curr_char_raw();
 
         if !has_prev_cmd && !is_cmd(first_char) {
-            println!("Warning: '{}' not a command. \
+            println!("Warning: '{}' is not a command. \
                       The remaining data is ignored.", first_char as char);
             return Err(Error::EndOfStream);
         }
@@ -148,7 +148,7 @@ impl<'a> Tokenizer<'a> {
             match first_char {
                 b'M' | b'm' => {}
                 _ => {
-                    println!("Warning: first segment must be MoveTo. \
+                    println!("Warning: First segment must be MoveTo. \
                               The remaining data is ignored.");
                     return Err(Error::EndOfStream);
                 }
@@ -168,7 +168,7 @@ impl<'a> Tokenizer<'a> {
             if prev_cmd == b'M' || prev_cmd == b'm' {
                 // 'If a moveto is followed by multiple pairs of coordinates, the subsequent
                 // pairs are treated as implicit lineto commands.'
-                // So we parse them as lineto.
+                // So we parse them as LineTo.
                 is_implicit_move_to = true;
                 cmd = if is_absolute(prev_cmd) {
                     b'L'
@@ -255,7 +255,7 @@ impl<'a> Tokenizer<'a> {
                 let ry = try_num!(s.parse_list_number());
                 let angle = try_num!(s.parse_list_number());
 
-                // By SVG spec 'large-arc' and 'sweep' must contain only one char,
+                // By SVG spec 'large-arc' and 'sweep' must contain only one char
                 // and can be written without any separators, aka: 10 20 30 01 10 20.
                 let la = try_num!(parse_flag(s));
                 let sweep = try_num!(parse_flag(s));
@@ -369,7 +369,7 @@ fn parse_flag(s: &mut Stream) -> Result<bool, Error> {
             Ok(c == b'1')
         }
         _ => {
-            // error type is not relevant, since it will be ignored
+            // error type is not relevant since it will be ignored
             Err(Error::UnexpectedEndOfStream(ErrorPos::new(0,0)))
         }
     }

@@ -33,17 +33,16 @@ fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
 pub enum PaintFallback {
     /// Can contain only `none` or `currentColor`.
     PredefValue(ValueId),
-    /// \<color\> type.
+    /// The \<color\> type.
     Color(RgbColor),
 }
 
 /// Representation of the SVG attribute value.
 #[derive(Clone,PartialEq)]
-// TODO: FuncIRI + fallback
 pub enum AttributeValue<'a> {
     /// \<color\> type.
     Color(RgbColor),
-    /// Reference to ENTITY. Contains only `name` from `&name;`.
+    /// Reference to the ENTITY. Contains only `name` from `&name;`.
     EntityRef(&'a [u8]),
     /// \<length\> type.
     Length(Length),
@@ -59,7 +58,7 @@ pub enum AttributeValue<'a> {
     Number(f64),
     /// \<list-of-numbers\> type.
     NumberList(NumberList<'a>),
-    /// ID of predefined value.
+    /// ID of the predefined value.
     PredefValue(ValueId),
     /// Unknown data.
     String(&'a [u8]),
@@ -106,19 +105,17 @@ impl<'a> AttributeValue<'a> {
     /// # Errors
     ///
     /// - Most of the `Error` types can occur.
-    /// - Data of unknown attribute will be parsed as `AttributeValue::String`, without errors.
-    /// - Fallback color for `<paint>` type is not supported. It will be skipped.
-    ///   Example: `fill="#linearGradient1 #f00"`.
+    /// - Data of an unknown attribute will be parsed as `AttributeValue::String` without errors.
     ///
     /// # Notes
     ///
     /// - `<transform>`, `<path>` and `<style>` values should be parsed using their
     ///   own tokenizer's. This function will parse them as `AttributeValue::String`, aka ignores.
-    /// - `enable-background` and `cursor` not fully implemented.
+    /// - `enable-background` and `cursor` are not fully implemented.
     ///   This function will try to parse a single predefined value. Other data will be parsed as
     ///   `AttributeValue::String`.
     ///
-    ///   Library will print warning to stdout.
+    ///   Library will print a warning to stdout.
     /// - `viewBox` will be parsed as `AttributeValue::NumberList`.
     /// - `<opacity>` value will be bounded to 0..1 range.
     /// - This function didn't correct most of the numeric values. If value has an incorrect
@@ -178,7 +175,7 @@ impl<'a> AttributeValue<'a> {
         match aid {
               AId::X  | AId::Y
             | AId::Dx | AId::Dy => {
-                // some attributes can contain different data based on element type
+                // some attributes can contain different data based on the element type
                 match eid {
                       ElementId::AltGlyph
                     | ElementId::Text
@@ -234,7 +231,7 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::Fill => {
-                // fill in animate-based elements, it's another fill
+                // 'fill' in animate-based elements it's another 'fill'
                 // https://www.w3.org/TR/SVG/animate.html#FillAttribute
                 match eid {
                       ElementId::Set
@@ -742,7 +739,7 @@ fn parse_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a>> {
 }
 
 fn parse_iri<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    // empty xlink:href is valid attribute
+    // empty xlink:href is a valid attribute
     if !stream.at_end() && stream.is_char_eq_raw(b'#') {
         // extract internal link
         try!(stream.advance(1));

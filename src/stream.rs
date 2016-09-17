@@ -2,13 +2,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// TODO: maybe rename 'unsafe' to an other word
+
 use std::cmp;
 use std::fmt;
 use std::str;
 
 use super::{Length, LengthUnit, Error, ErrorPos};
 
-/// Stream interface for `&[u8]` data.
+/// Streaming interface for `&[u8]` data.
 #[derive(PartialEq,Clone,Copy)]
 pub struct Stream<'a> {
     text: &'a [u8],
@@ -80,7 +82,7 @@ impl<'a> Stream<'a> {
 
     /// Constructs a new `Stream` from exists.
     ///
-    /// Used to properly detect current position on error.
+    /// Used to properly detect a current position on the error.
     #[inline]
     pub fn sub_stream(other: &Stream<'a>, start: usize, end: usize) -> Stream<'a> {
         debug_assert!(start <= end);
@@ -136,7 +138,7 @@ impl<'a> Stream<'a> {
         self.end - self.pos
     }
 
-    /// Returns true if we are at the end of the stream.
+    /// Returns `true` if we are at the end of the stream.
     ///
     /// Any [`pos()`] value larger than original text length indicates stream end.
     ///
@@ -144,8 +146,6 @@ impl<'a> Stream<'a> {
     ///
     /// Accessing stream after reaching end via unsafe/_raw methods will produce
     /// rust bound checking error.
-    /// But if library was build with "use-unsafe" feature
-    /// - we will get segfault or memory corruption.
     ///
     /// [`pos()`]: #method.pos
     ///
@@ -166,7 +166,7 @@ impl<'a> Stream<'a> {
         self.pos >= self.end
     }
 
-    /// Get char from current stream position.
+    /// Returns a char from current stream position.
     ///
     /// # Errors
     ///
@@ -188,7 +188,7 @@ impl<'a> Stream<'a> {
         self.text[self.pos]
     }
 
-    /// Compare selected char with char from current stream position.
+    /// Compares selected char with char from current stream position.
     ///
     /// # Errors
     ///
@@ -210,11 +210,11 @@ impl<'a> Stream<'a> {
         self.curr_char_raw() == c
     }
 
-    /// Returns char at position relative to current.
+    /// Returns char at the position relative to current.
     ///
     /// # Errors
     ///
-    /// Returns `Error::AdvanceError` if we are out of stream bounds.
+    /// Returns `Error::AdvanceError` if we are out of the stream bounds.
     ///
     /// # Examples
     ///
@@ -240,7 +240,7 @@ impl<'a> Stream<'a> {
         Ok(self.text[new_pos as usize])
     }
 
-    /// Move back by `n` chars.
+    /// Moves back by `n` chars.
     // #[inline]
     pub fn back(&mut self, n: usize) -> Result<(), Error> {
         try!(self.back_bound_check(n as isize));
@@ -297,7 +297,7 @@ impl<'a> Stream<'a> {
         self.pos += n;
     }
 
-    /// Check that char at current position is (white)space.
+    /// Checks that char at the current position is (white)space.
     ///
     /// Accepted chars: ' ', '\n', '\r', '\t'.
     ///
@@ -325,7 +325,7 @@ impl<'a> Stream<'a> {
         is_space(self.curr_char_raw())
     }
 
-    /// Skip (white)space's.
+    /// Skips (white)space's.
     ///
     /// # Examples
     ///
@@ -356,7 +356,7 @@ impl<'a> Stream<'a> {
         // }
     }
 
-    /// Calculate length to selected char.
+    /// Calculates length to the selected char.
     ///
     /// # Errors
     ///
@@ -384,7 +384,7 @@ impl<'a> Stream<'a> {
         Err(self.gen_end_of_stream_error())
     }
 
-    /// Calculate length to selected char.
+    /// Calculates length to the selected char.
     ///
     /// If char not found - returns length to the end of the stream.
     ///
@@ -411,7 +411,7 @@ impl<'a> Stream<'a> {
         n
     }
 
-    /// Calculate length to 'space' char.
+    /// Calculates length to the 'space' char.
     ///
     /// Checked according to [`is_space()`] method.
     ///
@@ -439,7 +439,7 @@ impl<'a> Stream<'a> {
         n
     }
 
-    /// Jump to selected char.
+    /// Jumps to the selected char.
     ///
     /// # Errors
     ///
@@ -461,7 +461,7 @@ impl<'a> Stream<'a> {
         Ok(())
     }
 
-    /// Jump to selected char or end of stream.
+    /// Jumps to the selected char or the end of the stream.
     ///
     /// # Examples
     ///
@@ -478,7 +478,7 @@ impl<'a> Stream<'a> {
         self.advance_raw(l);
     }
 
-    /// Jump to the end.
+    /// Jumps to the end of the stream.
     ///
     /// # Examples
     ///
@@ -495,8 +495,6 @@ impl<'a> Stream<'a> {
         self.advance_raw(l);
     }
 
-    /// Read data from stream with selected length.
-    ///
     /// Returns reference to data with length `len` and advance stream to the same length.
     ///
     /// # Examples
@@ -515,7 +513,7 @@ impl<'a> Stream<'a> {
         s
     }
 
-    /// Read data from stream until selected char.
+    /// Returns reference to data until selected char and advance stream by the data length.
     ///
     /// Shorthand for: [`len_to()`] + [`read_raw()`].
     ///
@@ -621,7 +619,7 @@ impl<'a> Stream<'a> {
         self.slice_tail().starts_with(text)
     }
 
-    /// Consume selected char.
+    /// Consumes selected char.
     ///
     /// # Errors
     ///
@@ -651,12 +649,12 @@ impl<'a> Stream<'a> {
         Ok(())
     }
 
-    /// Parse SVGNumber from stream.
+    /// Parses number from the stream.
     ///
-    /// We use own parser instead of Rust parser, because we didn't know number length,
-    /// to pass it to Rust parser and it will not return number of consumed chars, which we need.
-    /// And to detect length we need to actually parse number,
-    /// so getting only length will be pointless.
+    /// We use own parser instead of Rust parser because we didn't know number length,
+    /// to pass it to Rust parser and it will not return a number of consumed chars, which we need.
+    /// And to detect length we need to actually parse the number,
+    /// so getting only a length will be pointless.
     ///
     /// https://www.w3.org/TR/SVG/types.html#DataTypeNumber
     ///
@@ -683,6 +681,10 @@ impl<'a> Stream<'a> {
         }
 
         let start = self.pos();
+
+        // NOTE: code below is port of 'strtod.c' to Rust.
+        // Source: https://opensource.apple.com/source/tcl/tcl-10/tcl/compat/strtod.c
+        // License: https://opensource.apple.com/source/tcl/tcl-10/tcl/license.terms
 
         let mut sign = false;
         match try!(self.curr_char()) {
@@ -868,7 +870,7 @@ impl<'a> Stream<'a> {
         Ok(fraction)
     }
 
-    /// Parse SVGNumber from list of numbers.
+    /// Parses number from the list of numbers.
     ///
     /// # Examples
     ///
@@ -889,7 +891,7 @@ impl<'a> Stream<'a> {
         Ok(n)
     }
 
-    /// Parse integer number from stream.
+    /// Parses integer number from the stream.
     ///
     /// Same as [`parse_number()`], but only for integer. Does not refer to any SVG type.
     /// [`parse_number()`]: #method.parse_number
@@ -927,7 +929,7 @@ impl<'a> Stream<'a> {
         Ok(v)
     }
 
-    /// Parse integer from list of numbers.
+    /// Parses integer from the list of numbers.
     pub fn parse_list_integer(&mut self) -> Result<i32, Error> {
         let n = try!(self.parse_integer());
         self.skip_spaces();
@@ -935,7 +937,7 @@ impl<'a> Stream<'a> {
         Ok(n)
     }
 
-    /// Parse SVGLength from list of lengths.
+    /// Parses length from the stream.
     ///
     /// https://www.w3.org/TR/SVG/types.html#DataTypeLength
     ///
@@ -993,7 +995,7 @@ impl<'a> Stream<'a> {
         Ok(Length::new(n, u))
     }
 
-    /// Parse SVGLength from list of numbers.
+    /// Parses length from the list of lengths.
     pub fn parse_list_length(&mut self) -> Result<Length, Error> {
         let l = try!(self.parse_length());
         self.skip_spaces();
@@ -1045,7 +1047,7 @@ impl<'a> Stream<'a> {
         col
     }
 
-    /// Calculates the current absoulte position.
+    /// Calculates a current absolute position.
     // #[inline]
     pub fn gen_error_pos(&self) -> ErrorPos {
         let row = self.calc_current_row();

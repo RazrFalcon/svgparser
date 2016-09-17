@@ -56,7 +56,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    /// Extracts next transform from stream.
+    /// Extracts next transform from the stream.
     ///
     /// # Errors
     ///
@@ -66,9 +66,9 @@ impl<'a> Tokenizer<'a> {
     /// # Notes
     ///
     /// - There are no separate `rotate(<rotate-angle> <cx> <cy>)` type.
-    ///   It will be automatically split into tree `Transform` tokens:
+    ///   It will be automatically split into three `Transform` tokens:
     ///   `translate(<cx> <cy>) rotate(<rotate-angle>) translate(-<cx> -<cy>)`.
-    ///   Just like spec is stated.
+    ///   Just like the spec is stated.
     pub fn parse_next(&mut self) -> Result<Transform, Error> {
 
         match self.last_angle {

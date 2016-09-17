@@ -4,7 +4,7 @@
 
 use super::{Stream, Length, Error};
 
-/// Iterator over list of \<number\> types.
+/// Iterator over a list of \<number\> types.
 #[derive(Copy,Clone,PartialEq)]
 pub struct NumberList<'a>(pub Stream<'a>);
 
@@ -20,7 +20,7 @@ impl<'a> Iterator for NumberList<'a> {
     }
 }
 
-/// Iterator over list of \<length\> types.
+/// Iterator over a list of \<length\> types.
 #[derive(Copy,Clone,PartialEq)]
 pub struct LengthList<'a>(pub Stream<'a>);
 

@@ -3,7 +3,7 @@
 *libsvgparser* is a streaming parser/tokenizer for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
-It's not a XML parser, since it's not only splits the content into the XML nodes,
+It's not an XML parser since it does not only split the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
 ### [Documentation](https://docs.rs/svgparser/)
@@ -20,31 +20,31 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - [\<transform-list\>](https://www.w3.org/TR/SVG/types.html#DataTypeTransformList)
  - [\<style\>](https://www.w3.org/TR/SVG/styling.html#StyleAttribute)
 
-See documentation for details.
+See the documentation for details.
 
 ### Benefits
  - Most of the common data parsed into internal representation, and not just as string
    (unlike typical XML parser). Tag names, attribute names, attributes value, etc.
  - Complete support of paths, so data like `M10-20A5.5.3-4 110-.1` will be parsed correctly.
  - [Predefined SVG values](https://www.w3.org/TR/SVG/propidx.html) for presentation attributes,
-   like `auto`, `normal`, `none`, `inherit`, etc. are parsed as enum, not as string.
- - Every type can be parsed separately, so you can parse just paths, or transform
+   like `auto`, `normal`, `none`, `inherit`, etc. are parsed as `enum`, not as `String`.
+ - Every type can be parsed separately, so you can parse just paths or transform
    or any other SVG value.
- - Good error processing. All error types contains position (line:column) where it occurred.
+ - Good error processing. All error types contain position (line:column) where it occurred.
  - No heap allocations.
  - Pretty fast.
 
 ### Limitations
  - All keywords must be lowercase. Case-insensitive parsing is not supported.
-   Still it's extremely rare.
+   Still, it's extremely rare.
  - The `<color>` followed by the `<icccolor>` is not supported. As the `<icccolor>` itself.
- - Only ENTITY objects are parsed from DOCTYPE. Other ignored.
- - CSS styles does not processed. You should use external CSS parser.
- - Comments inside attributes value supported only for `style` attribute.
- - User agent colors, aka `fill="AppWorkspace"`, is not suppored.
+ - Only ENTITY objects are parsed from the DOCTYPE. Other ignored.
+ - CSS styles does not processed. You should use an external CSS parser.
+ - Comments inside attributes value supported only for the `style` attribute.
+ - User agent colors, aka `fill="AppWorkspace"`, is not supported.
  - There is no separate `opacity-value` type. It will be parsed as `<number>`,
    but will be bound to 0..1 range.
- - An implicit path commands is not supported. All commands are parsed as explicit.
+ - An implicit path commands are not supported. All commands are parsed as explicit.
  - An implicit MoveTo commands automatically converted to an explicit LineTo.
 
 ### Differences between *libsvgparser* and SVG spec

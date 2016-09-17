@@ -44,7 +44,7 @@ impl<'a> Tokenizer<'a> {
         Tokenizer { stream: stream }
     }
 
-    /// Extracts next style object from stream.
+    /// Extracts next style object from the stream.
     ///
     /// # Errors
     ///
@@ -54,9 +54,9 @@ impl<'a> Tokenizer<'a> {
     /// # Notes
     ///
     /// - By SVG spec `style` attribute can contain any style sheet language,
-    ///   but we only support CSS2, which is default.
-    /// - Objects with `-` prefix will be ignored, since we can't write them as XML attributes.
-    ///   Library will print warning to stdout.
+    ///   but we only support CSS2, which is the default.
+    /// - Objects with `-` prefix will be ignored since we can't write them as XML attributes.
+    ///   Library will print a warning to stdout.
     /// - All comments are automatically skipped.
     pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
         self.stream.skip_spaces();
@@ -73,10 +73,10 @@ impl<'a> Tokenizer<'a> {
             self.stream.skip_spaces();
         }
 
-        // prefixed attributes is not supported, aka '-webkit-*'
+        // prefixed attributes are not supported, aka '-webkit-*'
         if try!(self.stream.is_char_eq(b'-')) {
             let l = self.stream.len_to_char_or_end(b';');
-            println!("Warning: style attribute '{}' is skipped.",
+            println!("Warning: Style attribute '{}' is skipped.",
                      u8_to_str!(self.stream.slice_next_raw(l)));
 
             self.stream.advance_raw(l);
@@ -101,7 +101,7 @@ impl<'a> Tokenizer<'a> {
         try!(self.stream.advance(1)); // ':'
         self.stream.skip_spaces();
 
-        // skip quote
+        // skip start quote
         if try!(self.stream.is_char_eq(b'\'')) {
             try!(self.stream.advance(1));
         }

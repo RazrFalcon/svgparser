@@ -8,7 +8,7 @@ use super::{Stream, Error, LengthUnit};
 use stream::bound;
 use colors::rgb_color_from_name;
 
-/// Representation of the [`<color>`] SVG type.
+/// Representation of the [`<color>`] type.
 /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
 #[derive(Copy,Clone,PartialEq,Debug)]
 pub struct RgbColor {
@@ -27,7 +27,7 @@ impl RgbColor {
         RgbColor { red: red, green: green, blue: blue }
     }
 
-    /// Parses `RgbColor` from `Stream`.
+    /// Parses `RgbColor` from the `Stream`.
     ///
     /// Parsing is done according to [`spec`]:
     ///
@@ -39,12 +39,12 @@ impl RgbColor {
     /// hexdigit ::= [0-9A-Fa-f]
     /// comma    ::= wsp* "," wsp*
     /// ```
-    /// \* SVG spec has an error. There should be a `number`,
+    /// \* The SVG spec has an error. There should be `number`,
     /// not an `integer` for percent values ([`details`]).
     ///
     /// # Errors
     ///
-    ///  - Returns error if color has invalid format.
+    ///  - Returns error if a color has an invalid format.
     ///
     ///  - Returns error if `color-keyword` or `rgb` prefix are in in the lowercase.
     ///    It's not supported.
@@ -127,7 +127,7 @@ impl RgbColor {
             }
         }
 
-        // Check that we are at the end of the stream. Otherwise color can be followed by icccolor
+        // Check that we are at the end of the stream. Otherwise color can be followed by icccolor,
         // which is not supported.
         s.skip_spaces();
         if !s.at_end() {

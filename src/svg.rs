@@ -12,7 +12,7 @@ use super::{Stream, Error};
 /// ElementEnd token.
 #[derive(Debug,PartialEq,Clone)]
 pub enum ElementEnd<'a> {
-    /// Indicates `>` token
+    /// Indicates `>`
     Open,
     /// Indicates `</name>`
     Close(&'a [u8]),
@@ -23,13 +23,13 @@ pub enum ElementEnd<'a> {
 /// SVG token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
-    /// Tuple contains tag name of element.
+    /// Tuple contains tag name of the element.
     ElementStart(&'a [u8]),
-    /// Tuple contains type of enclosing tag.
+    /// Tuple contains the type of enclosing tag.
     ElementEnd(ElementEnd<'a>),
     /// Tuple contains attribute name and value.
     Attribute(&'a [u8], Stream<'a>),
-    /// Tuple contains text object.
+    /// Tuple contains a text object.
     Text(Stream<'a>),
     /// Tuple contains CDATA object without `<![CDATA[` and `]]>`.
     Cdata(Stream<'a>),
@@ -37,11 +37,11 @@ pub enum Token<'a> {
     Whitespace(&'a [u8]),
     /// Tuple contains comment object without `<!--` and `-->`.
     Comment(&'a [u8]),
-    /// Tuple contains title of empty DOCTYPE.
+    /// Tuple contains a title of empty DOCTYPE.
     DtdEmpty(&'a [u8]),
-    /// Tuple contains title of DOCTYPE.
+    /// Tuple contains a title of DOCTYPE.
     DtdStart(&'a [u8]),
-    /// Tuple contains name and value of ENITITY.
+    /// Tuple contains name and value of ENTITY.
     Entity(&'a [u8], Stream<'a>),
     /// Tuple indicates DOCTYPE end.
     DtdEnd,
@@ -104,7 +104,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    /// Extracts next SVG node from stream.
+    /// Extracts next SVG node from the stream.
     ///
     /// # Errors
     ///
@@ -113,8 +113,8 @@ impl<'a> Tokenizer<'a> {
     ///
     /// # Notes
     ///
-    /// - Only ENTITY objects are extracted form DOCTYPE. Library will print warning to stdout.
-    /// - Parsed doesn't check file encoding, assuming that it's UTF-8.
+    /// - Only ENTITY objects are extracted from DOCTYPE. Library will print a warning to stdout.
+    /// - The parser doesn't check file encoding, assuming that it's UTF-8.
     pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
         match self.state {
             State::Unknown => {
@@ -165,7 +165,7 @@ impl<'a> Tokenizer<'a> {
                         return Ok(Token::Text(substream));
                     }
                 } else if try!(self.stream.is_space()) {
-                    // ignore spaces outside root element
+                    // ignore spaces outside the root element
                     assert!(self.depth == 0);
                     self.stream.skip_spaces();
                     return self.parse_next();
@@ -276,7 +276,7 @@ impl<'a> Tokenizer<'a> {
             // [
             self.state = State::Dtd;
 
-            // skip space at end
+            // skip space at the end
             let text = self.stream.slice_region_raw(start, self.stream.pos() - 1);
             try!(self.stream.advance(1)); // [
             self.stream.skip_spaces();

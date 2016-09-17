@@ -19,7 +19,7 @@ pub enum LengthUnit
     Percent,
 }
 
-/// Representation of the [`<length>`] SVG type.
+/// Representation of the [`<length>`] type.
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 #[derive(Clone,Copy,Debug,PartialEq)]
 pub struct Length {

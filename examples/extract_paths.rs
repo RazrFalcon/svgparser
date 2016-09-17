@@ -31,7 +31,7 @@ fn main() {
         // Check that it's ok.
         match item {
             Ok(t) => {
-                // Filter Attribute token.
+                // Filter 'Attribute' token.
                 match t {
                     svg::Token::Attribute(name, value) => {
                         // Process only 'd' attributes.
@@ -43,7 +43,7 @@ fn main() {
                                 match item {
                                     Ok(segment) => println!("  {:?}", segment),
                                     Err(e) => {
-                                        // By SVG spec, invalid data occurred in path should
+                                        // By SVG spec, invalid data occurred in the path should
                                         // stop parsing of this path, but not the whole document.
                                         // So we just show a warning and continue parsing.
                                         println!("Warning: {:?}.", e);
