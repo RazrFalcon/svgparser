@@ -101,12 +101,25 @@ impl<'a> Tokenizer<'a> {
         try!(self.stream.advance(1)); // ':'
         self.stream.skip_spaces();
 
-        // skip start quote
+        let end_char;
+
         if try!(self.stream.is_char_eq(b'\'')) {
+            // skip start quote
             try!(self.stream.advance(1));
+            end_char = b';';
+        } else if try!(self.stream.is_char_eq(b'&')) {
+            // skip escaped start quote aka '&apos;'
+            if self.stream.starts_with(b"&apos;") {
+                self.stream.advance_raw(6);
+                end_char = b'&';
+            } else {
+                return Err(Error::InvalidAttributeValue(self.stream.gen_error_pos()));
+            }
+        } else {
+            end_char = b';';
         }
 
-        let mut value_len = self.stream.len_to_char_or_end(b';');
+        let mut value_len = self.stream.len_to_char_or_end(end_char);
 
         // skip end quote
         if try!(self.stream.char_at(value_len as isize - 1)) == b'\'' {
@@ -118,8 +131,16 @@ impl<'a> Tokenizer<'a> {
 
         self.stream.advance_raw(value_len);
 
-        if !self.stream.at_end() && self.stream.is_char_eq_raw(b'\'') {
-            self.stream.advance_raw(1);
+        if !self.stream.at_end() {
+            if self.stream.is_char_eq_raw(b'\'') {
+                self.stream.advance_raw(1);
+            } else if self.stream.is_char_eq_raw(b'&') {
+                if self.stream.starts_with(b"&apos;") {
+                    self.stream.advance_raw(6);
+                } else {
+                    return Err(Error::InvalidAttributeValue(self.stream.gen_error_pos()));
+                }
+            }
         }
 
         // ';;;' is valid style data, we need to skip it

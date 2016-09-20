@@ -56,8 +56,12 @@ test_attr!(parse_style_6, b"fill:none;-webkit:hi",
     (b"fill", b"none")
 );
 
+test_attr!(parse_style_7, b"font-family:&apos;Verdana&apos;",
+    (b"font-family", b"Verdana")
+);
+
 #[test]
-fn parse_style_7() {
+fn parse_style_8() {
     let stream = Stream::new(b"&st0; &st1;");
     let mut s = style::Tokenizer::new(stream);
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef(b"st0"));

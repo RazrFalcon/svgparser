@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - In SVG path there can be any command after `ClosePath`, not only `MoveTo`.
+- Fix `&apos;` parsing inside the style attribute.
 
 ## [0.0.2] - 2016-09-09
 ### Removed
