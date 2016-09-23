@@ -208,7 +208,7 @@ static ELEMENTS: ::phf::Map<&'static str, ElementId> = ::phf::Map {
 impl ElementId {
     /// Converts name into id.
     pub fn from_name(text: &str) -> Option<ElementId> {
-        ELEMENTS.get(text).map(|x| *x)
+        ELEMENTS.get(text).cloned()
     }
 
     /// Converts id into name.

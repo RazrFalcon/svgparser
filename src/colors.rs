@@ -192,5 +192,5 @@ static COLORS: ::phf::Map<&'static str, RgbColor> = ::phf::Map {
 };
 
 pub fn rgb_color_from_name(text: &str) -> Option<RgbColor> {
-    COLORS.get(text).map(|x| *x)
+    COLORS.get(text).cloned()
 }

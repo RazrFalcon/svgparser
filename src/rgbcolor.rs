@@ -152,7 +152,7 @@ fn from_hex(c: u8) -> u8 {
 #[inline]
 fn short_hex(c: u8) -> u8 {
     let h = from_hex(c);
-    return (h << 4) | h;
+    (h << 4) | h
 }
 
 #[inline]

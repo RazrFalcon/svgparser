@@ -44,10 +44,10 @@ fn is_digit(c: u8) -> bool {
 #[inline]
 fn is_space(c: u8) -> bool {
     match c {
-        b' ' => true,
-        b'\t' => true,
-        b'\n' => true,
-        b'\r' => true,
+          b' '
+        | b'\t'
+        | b'\n'
+        | b'\r' => true,
         _ => false,
     }
 }
@@ -99,7 +99,7 @@ impl<'a> Stream<'a> {
             }
             None => {
                 Stream {
-                    parent_text: Some(&other.text),
+                    parent_text: Some(other.text),
                     text: &other.text[start..end],
                     pos: 0,
                     end: end - start,
@@ -265,7 +265,7 @@ impl<'a> Stream<'a> {
     /// s.advance(2).unwrap(); // also ok, we at end now
     /// assert_eq!(s.pos(), 4);
     /// // fail
-    /// assert_eq!(s.advance(2).err().unwrap(), Error::AdvanceError{
+    /// assert_eq!(s.advance(2).err().unwrap(), Error::InvalidAdvance{
     ///     expected: 6,
     ///     total: 4,
     ///     pos: ErrorPos::new(1, 5),
@@ -730,7 +730,7 @@ impl<'a> Stream<'a> {
 
         // Temporarily holds location of exponent in string.
         let p_exp = self.pos();
-        self.pos = self.pos - mant_size as usize;
+        self.pos -= mant_size as usize;
 
         if dec_pt < 0 {
             dec_pt = mant_size;
@@ -820,7 +820,7 @@ impl<'a> Stream<'a> {
         if exp_sign {
             exp = frac_exp - exp;
         } else {
-            exp = frac_exp + exp;
+            exp += frac_exp;
         }
 
         // Generate a floating-point number that represents the exponent.
@@ -849,7 +849,7 @@ impl<'a> Stream<'a> {
 
         let mut i = 0;
         while exp != 0 {
-            if (exp & 01) > 0 {
+            if (exp & 1) > 0 {
                 dbl_exp *= POWERS_OF_10[i];
             }
 
@@ -1023,12 +1023,7 @@ impl<'a> Stream<'a> {
         let text = self.get_parent_text();
         let mut row = 1;
         let end = self.pos + self.parent_pos;
-        for n in 0..end {
-            if text[n] == b'\n' {
-                row += 1;
-            }
-        }
-
+        row += text.iter().take(end).filter(|c| **c == b'\n').count();
         row
     }
 
@@ -1065,7 +1060,7 @@ impl<'a> Stream<'a> {
     fn adv_bound_check(&self, n: usize) -> Result<(), Error> {
         let new_pos = self.pos + n;
         if new_pos > self.end {
-            return Err(Error::AdvanceError{
+            return Err(Error::InvalidAdvance{
                 expected: new_pos as isize,
                 total: self.end,
                 pos: self.gen_error_pos(),
@@ -1079,7 +1074,7 @@ impl<'a> Stream<'a> {
     fn back_bound_check(&self, n: isize) -> Result<(), Error> {
         let new_pos: isize = self.pos as isize + n;
         if new_pos < 0 {
-            return Err(Error::AdvanceError{
+            return Err(Error::InvalidAdvance{
                 expected: new_pos,
                 total: self.end,
                 pos: self.gen_error_pos(),

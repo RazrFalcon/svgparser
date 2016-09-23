@@ -57,7 +57,7 @@ fn gen_colors() {
 
     writeln!(&mut file,
 "pub fn rgb_color_from_name(text: &str) -> Option<{}> {{
-    {}.get(text).map(|x| *x)
+    {}.get(text).cloned()
 }}", struct_name, map_name).unwrap();
 }
 
@@ -94,7 +94,7 @@ fn gen_file(spec_path: &str, enum_name: &str, map_name: &str, doc: &str, out_pat
     writeln!(&mut file, "impl {} {{", enum_name).unwrap();
     writeln!(&mut file, "    /// Converts name into id.").unwrap();
     writeln!(&mut file, "    pub fn from_name(text: &str) -> Option<{}> {{", enum_name).unwrap();
-    writeln!(&mut file, "        {}.get(text).map(|x| *x)", map_name).unwrap();
+    writeln!(&mut file, "        {}.get(text).cloned()", map_name).unwrap();
     writeln!(&mut file, "    }}").unwrap();
     writeln!(&mut file, "").unwrap();
     writeln!(&mut file, "    /// Converts id into name.").unwrap();
@@ -143,7 +143,7 @@ fn gen_names(spec_path: &str) -> Vec<Name> {
 // some:string -> SomeString
 // 100 -> N100
 fn prepare_enum_name(name: &str) -> String {
-    let mut chars: Vec<u8> = name.as_bytes().iter().map(|x| *x).collect();
+    let mut chars: Vec<u8> = name.as_bytes().iter().cloned().collect();
 
 
     if (chars[0] as char).is_digit(10) {

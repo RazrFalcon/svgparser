@@ -124,13 +124,13 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 if self.stream.starts_with(b"<?") {
-                    return self.parse_declaration();
+                    self.parse_declaration()
                 } else if self.stream.starts_with(b"<!--") {
-                    return self.parse_comment();
+                    self.parse_comment()
                 } else if self.stream.starts_with(b"<![") {
-                    return self.parse_cdata();
+                    self.parse_cdata()
                 } else if self.stream.starts_with(b"<!DOCTYPE") {
-                    return self.parse_dtd();
+                    self.parse_dtd()
                 } else if self.stream.starts_with(b"</") {
                     try!(self.stream.advance(2)); // </
                     let text = try!(self.stream.read_to(b'>'));
@@ -144,10 +144,10 @@ impl<'a> Tokenizer<'a> {
 
                     self.depth -= 1;
 
-                    return Ok(Token::ElementEnd(ElementEnd::Close(text)));
+                    Ok(Token::ElementEnd(ElementEnd::Close(text)))
                 } else if self.stream.is_char_eq_raw(b'<') {
                     self.depth += 1;
-                    return self.parse_element();
+                    self.parse_element()
                 } else if self.depth > 0 {
                     let start = self.stream.pos();
 
@@ -160,7 +160,7 @@ impl<'a> Tokenizer<'a> {
 
                     if try!(self.stream.is_char_eq(b'<')) {
                         let text = self.stream.slice_region_raw(start, self.stream.pos());
-                        return Ok(Token::Whitespace(text));
+                        Ok(Token::Whitespace(text))
                     } else {
                         let b = self.stream.pos() - start;
                         try!(self.stream.back(b));
@@ -168,22 +168,22 @@ impl<'a> Tokenizer<'a> {
                         let substream = Stream::sub_stream(&self.stream, self.stream.pos(), end);
                         self.stream.advance_raw(substream.left());
 
-                        return Ok(Token::Text(substream));
+                        Ok(Token::Text(substream))
                     }
                 } else if try!(self.stream.is_space()) {
                     // ignore spaces outside the root element
                     assert!(self.depth == 0);
                     self.stream.skip_spaces();
-                    return self.parse_next();
+                    self.parse_next()
                 } else {
-                    return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
+                    Err(Error::InvalidSvgToken(self.stream.gen_error_pos()))
                 }
             }
             State::Dtd => {
-                return self.parse_entity();
+                self.parse_entity()
             }
             State::Attributes => {
-                return self.parse_attribute();
+                self.parse_attribute()
             }
             State::AtStart => {
                 if self.stream.at_end() {
@@ -197,10 +197,10 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 self.state = State::Unknown;
-                return self.parse_next();
+                self.parse_next()
             }
             State::Finished => {
-                return Err(Error::EndOfStream);
+                Err(Error::EndOfStream)
             }
         }
     }
@@ -277,7 +277,7 @@ impl<'a> Tokenizer<'a> {
             // empty DOCTYPE
             let text = self.stream.slice_region_raw(start, self.stream.pos());
             try!(self.stream.advance(1));
-            return Ok(Token::DtdEmpty(text));
+            Ok(Token::DtdEmpty(text))
         } else {
             // [
             self.state = State::Dtd;
@@ -287,7 +287,7 @@ impl<'a> Tokenizer<'a> {
             try!(self.stream.advance(1)); // [
             self.stream.skip_spaces();
 
-            return Ok(Token::DtdStart(text));
+            Ok(Token::DtdStart(text))
         }
     }
 
@@ -312,12 +312,12 @@ impl<'a> Tokenizer<'a> {
             try!(self.stream.consume_char(b'>'));
             self.stream.skip_spaces();
 
-            return Ok(Token::Entity(key, substream));
+            Ok(Token::Entity(key, substream))
         } else if self.stream.starts_with(b"]>") {
             try!(self.stream.advance(2)); // ]>
             self.state = State::Unknown;
 
-            return Ok(Token::DtdEnd);
+            Ok(Token::DtdEnd)
         } else {
             // skip unsupported elements
 
@@ -327,7 +327,7 @@ impl<'a> Tokenizer<'a> {
             self.stream.advance_raw(l);
 
             self.stream.skip_spaces();
-            return self.parse_next();
+            self.parse_next()
         }
     }
 

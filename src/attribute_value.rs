@@ -146,7 +146,7 @@ impl<'a> AttributeValue<'a> {
         macro_rules! invalid_attr {
             () => ({
                 stream.set_pos_raw(start_pos);
-                return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+                Err(Error::InvalidAttributeValue(stream.gen_error_pos()))
             })
         }
 
@@ -181,7 +181,7 @@ impl<'a> AttributeValue<'a> {
                     | ElementId::Text
                     | ElementId::Tref
                     | ElementId::Tspan => {
-                        Ok(AttributeValue::LengthList(LengthList(stream.clone())))
+                        Ok(AttributeValue::LengthList(LengthList(*stream)))
                     },
                     _ => {
                         let l = try!(stream.parse_length());
@@ -227,7 +227,7 @@ impl<'a> AttributeValue<'a> {
                 parse_or!(parse_predef!(
                     ValueId::None,
                     ValueId::Inherit
-                ), Ok(AttributeValue::LengthList(LengthList(stream.clone()))))
+                ), Ok(AttributeValue::LengthList(LengthList(*stream))))
             }
 
             AId::Fill => {
@@ -288,11 +288,11 @@ impl<'a> AttributeValue<'a> {
               AId::StdDeviation
             | AId::BaseFrequency => {
                 // TODO: this attributes can contain only one or two numbers
-                Ok(AttributeValue::NumberList(NumberList(stream.clone())))
+                Ok(AttributeValue::NumberList(NumberList(*stream)))
             }
 
             AId::Points => {
-                Ok(AttributeValue::NumberList(NumberList(stream.clone())))
+                Ok(AttributeValue::NumberList(NumberList(*stream)))
             }
 
             AId::AlignmentBaseline => {
@@ -673,7 +673,7 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::ViewBox => {
-                Ok(AttributeValue::NumberList(NumberList(stream.clone())))
+                Ok(AttributeValue::NumberList(NumberList(*stream)))
             }
 
             _ => Ok(AttributeValue::String(stream.slice())),

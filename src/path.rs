@@ -297,16 +297,16 @@ impl<'a> Tokenizer<'a> {
 /// Returns `true` if the selected char is the command.
 pub fn is_cmd(c: u8) -> bool {
     match c {
-        b'M' | b'm' => true,
-        b'Z' | b'z' => true,
-        b'L' | b'l' => true,
-        b'H' | b'h' => true,
-        b'V' | b'v' => true,
-        b'C' | b'c' => true,
-        b'S' | b's' => true,
-        b'Q' | b'q' => true,
-        b'T' | b't' => true,
-        b'A' | b'a' => true,
+          b'M' | b'm'
+        | b'Z' | b'z'
+        | b'L' | b'l'
+        | b'H' | b'h'
+        | b'V' | b'v'
+        | b'C' | b'c'
+        | b'S' | b's'
+        | b'Q' | b'q'
+        | b'T' | b't'
+        | b'A' | b'a' => true,
         _ => false,
     }
 }
@@ -315,16 +315,16 @@ pub fn is_cmd(c: u8) -> bool {
 pub fn is_absolute(c: u8) -> bool {
     debug_assert!(is_cmd(c));
     match c {
-        b'M' => true,
-        b'Z' => true,
-        b'L' => true,
-        b'H' => true,
-        b'V' => true,
-        b'C' => true,
-        b'S' => true,
-        b'Q' => true,
-        b'T' => true,
-        b'A' => true,
+          b'M'
+        | b'Z'
+        | b'L'
+        | b'H'
+        | b'V'
+        | b'C'
+        | b'S'
+        | b'Q'
+        | b'T'
+        | b'A' => true,
         _ => false,
     }
 }
@@ -349,8 +349,7 @@ pub fn to_relative(c: u8) -> u8 {
 
 fn is_digit(c: u8) -> bool {
     match c {
-        b'0'...b'9' => true,
-        b'.' | b'-' | b'+' => true,
+        b'0'...b'9' | b'.' | b'-' | b'+' => true,
         _ => false,
     }
 }

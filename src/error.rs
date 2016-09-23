@@ -64,7 +64,7 @@ pub enum Error {
     /// Invalid attribute value.
     InvalidAttributeValue(ErrorPos),
     /// Can appear during moving along the data stream.
-    AdvanceError {
+    InvalidAdvance {
         /// The advance step.
         expected: isize,
         /// Full length of the steam.
@@ -94,7 +94,7 @@ impl fmt::Debug for Error {
             Error::InvalidAttributeValue(ref pos) => {
                 write!(f, "Invalid attribute at: {:?}", pos)
             }
-            Error::AdvanceError{ref expected, ref total, ref pos} =>
+            Error::InvalidAdvance{ref expected, ref total, ref pos} =>
                 write!(f, "Attempt to advance to the pos {} from {:?}, but total len is {}",
                        expected, pos, total),
             Error::ElementWithoutTagName(ref pos) =>

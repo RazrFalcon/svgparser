@@ -296,7 +296,7 @@ static VALUES: ::phf::Map<&'static str, ValueId> = ::phf::Map {
 impl ValueId {
     /// Converts name into id.
     pub fn from_name(text: &str) -> Option<ValueId> {
-        VALUES.get(text).map(|x| *x)
+        VALUES.get(text).cloned()
     }
 
     /// Converts id into name.

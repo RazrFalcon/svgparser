@@ -71,25 +71,19 @@ impl<'a> Tokenizer<'a> {
     ///   Just like the spec is stated.
     pub fn parse_next(&mut self) -> Result<Transform, Error> {
 
-        match self.last_angle {
-            Some(a) => {
-                self.last_angle = None;
-                return Ok(Transform::Rotate {
-                    angle: a,
-                });
-            }
-            None => {}
+        if let Some(a) = self.last_angle {
+            self.last_angle = None;
+            return Ok(Transform::Rotate {
+                angle: a,
+            });
         }
 
-        match self.rotate_ts {
-            Some((x, y)) => {
+        if let Some((x, y)) = self.rotate_ts {
                 self.rotate_ts = None;
                 return Ok(Transform::Translate {
                     tx: -x,
                     ty: -y,
                 });
-            }
-            None => {}
         }
 
         let s = &mut self.stream;
@@ -135,13 +129,12 @@ impl<'a> Tokenizer<'a> {
                 let x = try!(s.parse_list_number());
                 s.skip_spaces();
 
-                let y;
-                if try!(s.is_char_eq(b')')) {
+                let y = if try!(s.is_char_eq(b')')) {
                     // 'If <ty> is not provided, it is assumed to be zero.'
-                    y = 0.0;
+                    0.0
                 } else {
-                    y = try!(s.parse_list_number());
-                }
+                    try!(s.parse_list_number())
+                };
 
                 Transform::Translate {
                     tx: x,
@@ -156,13 +149,12 @@ impl<'a> Tokenizer<'a> {
                 let x = try!(s.parse_list_number());
                 s.skip_spaces();
 
-                let y;
-                if try!(s.is_char_eq(b')')) {
+                let y = if try!(s.is_char_eq(b')')) {
                     // 'If <sy> is not provided, it is assumed to be equal to <sx>.'
-                    y = x;
+                    x
                 } else {
-                    y = try!(s.parse_list_number());
-                }
+                    try!(s.parse_list_number())
+                };
 
                 Transform::Scale {
                     sx: x,

@@ -611,7 +611,7 @@ static ATTRIBUTES: ::phf::Map<&'static str, AttributeId> = ::phf::Map {
 impl AttributeId {
     /// Converts name into id.
     pub fn from_name(text: &str) -> Option<AttributeId> {
-        ATTRIBUTES.get(text).map(|x| *x)
+        ATTRIBUTES.get(text).cloned()
     }
 
     /// Converts id into name.
