@@ -82,23 +82,23 @@ impl fmt::Debug for Error {
         match *self {
             Error::EndOfStream => write!(f, "End of stream"),
             Error::UnexpectedEndOfStream(ref pos) =>
-                write!(f, "Unexpected end of stream at: {:?}", pos),
+                write!(f, "Unexpected end of stream at {:?}", pos),
             Error::InvalidChar{ref current, ref expected, ref pos} =>
-                write!(f, "Expected '{}', found '{}' at pos: {:?}", expected, current, pos),
-            Error::InvalidSvgToken(ref pos) => write!(f, "Invalid SVG token at: {:?}", pos),
+                write!(f, "Expected '{}', found '{}' at pos {:?}", expected, current, pos),
+            Error::InvalidSvgToken(ref pos) => write!(f, "Invalid SVG token at {:?}", pos),
             Error::UnexpectedClosingTag(ref pos) =>
-                write!(f, "The stream found closing tag without an opening tag at: {:?}", pos),
-            Error::InvalidNumber(ref pos) => write!(f, "Invalid number at: {:?}", pos),
-            Error::InvalidColor(ref pos) => write!(f, "Invalid color at: {:?}", pos),
-            Error::InvalidTransform(ref pos) => write!(f, "Invalid transform at: {:?}", pos),
+                write!(f, "The stream found closing tag without an opening tag at {:?}", pos),
+            Error::InvalidNumber(ref pos) => write!(f, "Invalid number at {:?}", pos),
+            Error::InvalidColor(ref pos) => write!(f, "Invalid color at {:?}", pos),
+            Error::InvalidTransform(ref pos) => write!(f, "Invalid transform at {:?}", pos),
             Error::InvalidAttributeValue(ref pos) => {
-                write!(f, "Invalid attribute at: {:?}", pos)
+                write!(f, "Invalid attribute at {:?}", pos)
             }
             Error::InvalidAdvance{ref expected, ref total, ref pos} =>
                 write!(f, "Attempt to advance to the pos {} from {:?}, but total len is {}",
                        expected, pos, total),
             Error::ElementWithoutTagName(ref pos) =>
-                write!(f, "An element without a tag name at: {:?}", pos),
+                write!(f, "An element without a tag name at {:?}", pos),
         }
     }
 }
