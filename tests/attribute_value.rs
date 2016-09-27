@@ -68,4 +68,6 @@ test_err!(paint_err_1, AId::Fill, b"#link", Error::InvalidColor(ErrorPos::new(1,
 
 test!(ref_1, AId::Class, b"&ref;", AV::EntityRef(b"ref"));
 
+test!(eb_1, AId::EnableBackground, b"new    ", AV::String(b"new"));
+
 // TODO: test all supported attributes, probably via codegen.

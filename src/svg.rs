@@ -370,8 +370,15 @@ impl<'a> Tokenizer<'a> {
             return Ok(Token::ElementEnd(ElementEnd::Open));
         }
 
-        let key = try!(self.stream.read_to(b'='));
+        let mut key = try!(self.stream.read_to(b'='));
+
+        // trim spaces at the end of the key
+        if let Some(p) = key.iter().position(|c| *c == b' ') {
+            key = &key[0..p];
+        }
+
         try!(self.stream.advance(1)); // =
+        self.stream.skip_spaces();
 
         if !(try!(self.stream.is_char_eq(b'"')) || try!(self.stream.is_char_eq(b'\''))) {
             return Err(Error::InvalidChar {

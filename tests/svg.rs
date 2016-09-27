@@ -294,10 +294,20 @@ fn parse_attributes_6() {
 
 #[test]
 fn parse_attributes_7() {
-    // I don't know how much correct is this
+    // I don't know how much correct is this.
     let mut p = svg::Tokenizer::new(b"<svg version=\"1.0' color='red\"/>");
     basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
     attr_assert_eq!(p, b"version", b"1.0' color='red");
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
+    assert_eq!(p.next().is_none(), true);
+}
+
+#[test]
+fn parse_attributes_8() {
+    // '=' can be surrounded by spaces
+    let mut p = svg::Tokenizer::new(b"<svg version  =  '1.0'/>");
+    basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
+    attr_assert_eq!(p, b"version", b"1.0");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
     assert_eq!(p.next().is_none(), true);
 }

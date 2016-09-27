@@ -162,6 +162,7 @@ impl<'a> AttributeValue<'a> {
         // 'unicode' attribute can contain spaces
         if aid != AId::Unicode {
             stream.skip_spaces();
+            stream.trim_trailing_spaces();
         }
 
         if !stream.at_end() && try!(stream.curr_char()) == b'&' {
@@ -656,7 +657,7 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::EnableBackground => {
-                // TODO: parse 'new(x y h w)'
+                // TODO: parse 'new x y h w'
 
                 parse_or!(parse_predef!(
                     ValueId::Accumulate,

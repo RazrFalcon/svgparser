@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- The `trim_trailing_spaces` method to the `Stream`.
+- Support spaces around `=` while attribute parsing.
+- Trim spaces from both sides of the attribute value.
+
 ### Changed
 - Rename `AdvanceError` into `InvalidAdvance`.
 

@@ -344,16 +344,29 @@ impl<'a> Stream<'a> {
         }
     }
 
+    /// Decreases the stream size by removing trailing spaces.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use svgparser::Stream;
+    ///
+    /// let mut s = Stream::new(b"Some text  ");
+    /// assert_eq!(s.left(), 11);
+    /// s.trim_trailing_spaces();
+    /// assert_eq!(s.left(), 9);
+    /// ```
+    #[inline]
+    pub fn trim_trailing_spaces(&mut self) {
+        while !self.at_end() && is_space(self.get_char_raw(self.end - 1)) {
+            self.end -= 1;
+        }
+    }
+
     #[inline]
     fn get_char_raw(&self, pos: usize) -> u8 {
-        // if cfg!(feature = "use-unsafe") {
-        //     // almost twice faster
-        //     unsafe {
-        //         *self.text.get_unchecked(pos)
-        //     }
-        // } else {
-            self.text[pos]
-        // }
+        // TODO: maybe via unsafe to avoid bound checking
+        self.text[pos]
     }
 
     /// Calculates length to the selected char.
@@ -583,7 +596,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn slice(&self) -> &'a [u8] {
-        &self.text[..]
+        &self.text[..self.end]
     }
 
     /// Returns tail data of stream.
@@ -599,7 +612,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn slice_tail(&self) -> &'a [u8] {
-        &self.text[self.pos..]
+        &self.text[self.pos..self.end]
     }
 
     /// Returns `true` if stream data at current position starts with selected text.
