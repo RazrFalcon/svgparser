@@ -7,7 +7,7 @@
 use std::fmt;
 
 /// List of all values for presentation attributes.
-#[derive(Copy,Clone,PartialEq)]
+#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord)]
 #[allow(missing_docs)]
 pub enum ValueId {
     Accumulate,

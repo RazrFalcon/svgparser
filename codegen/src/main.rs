@@ -73,7 +73,7 @@ fn gen_file(spec_path: &str, enum_name: &str, map_name: &str, doc: &str, out_pat
 
     // enum
     writeln!(&mut file, "/// {}", doc).unwrap();
-    writeln!(&mut file, "#[derive(Copy,Clone,PartialEq)]").unwrap();
+    writeln!(&mut file, "#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord)]").unwrap();
     writeln!(&mut file, "#[allow(missing_docs)]").unwrap();
     writeln!(&mut file, "pub enum {} {{", enum_name).unwrap();
     for name in &names {

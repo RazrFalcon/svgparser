@@ -685,7 +685,7 @@ impl<'a> Stream<'a> {
     /// assert_eq!(s.at_end(), true);
     /// ```
     pub fn parse_number(&mut self) -> Result<f64, Error> {
-        // strip off leading blanks and check for a sign
+        // strip off leading blanks
         self.skip_spaces();
 
         if self.at_end() {
@@ -699,6 +699,7 @@ impl<'a> Stream<'a> {
         // Source: https://opensource.apple.com/source/tcl/tcl-10/tcl/compat/strtod.c
         // License: https://opensource.apple.com/source/tcl/tcl-10/tcl/license.terms
 
+        // check for a sign
         let mut sign = false;
         match try!(self.curr_char()) {
             b'-' => {
@@ -711,10 +712,13 @@ impl<'a> Stream<'a> {
             _ => {}
         }
 
-        if !is_digit(try!(self.curr_char())) && !try!(self.is_char_eq(b'.')) {
-            // back to start
-            self.pos = start;
-            return Err(Error::InvalidNumber(self.gen_error_pos()));
+        {
+            let c = try!(self.curr_char());
+            if !is_digit(c) && c != b'.' {
+                // back to start
+                self.pos = start;
+                return Err(Error::InvalidNumber(self.gen_error_pos()));
+            }
         }
 
         // Count the number of digits in the mantissa (including the decimal
@@ -753,12 +757,12 @@ impl<'a> Stream<'a> {
         }
 
         // Exponent that derives from the fractional
-        // part.  Under normal circumstances, it is
+        // part. Under normal circumstances, it is
         // the negative of the number of digits in F.
         // However, if I is very long, the last digits
         // of I get dropped (otherwise a long I with a
         // large negative exponent could cause an
-        // unnecessary overflow on I alone).  In this
+        // unnecessary overflow on I alone). In this
         // case, frac_exp is incremented one for each
         // dropped digit.
         let frac_exp: i32;
@@ -777,11 +781,11 @@ impl<'a> Stream<'a> {
             let mut frac2 = 0.0;
 
             while mant_size > 9 {
-                let mut c = try!(self.curr_char());
-                try!(self.advance(1));
+                let mut c = self.curr_char_raw();
+                self.advance_raw(1);
                 if c == b'.' {
-                    c = try!(self.curr_char());
-                    try!(self.advance(1));
+                    c = self.curr_char_raw();
+                    self.advance_raw(1);
                 }
 
                 frac1 = 10.0 * frac1 + (c - b'0') as f64;
@@ -789,11 +793,11 @@ impl<'a> Stream<'a> {
             }
 
             while mant_size > 0 {
-                let mut c = try!(self.curr_char());
-                try!(self.advance(1));
+                let mut c = self.curr_char_raw();
+                self.advance_raw(1);
                 if c == b'.' {
-                    c = try!(self.curr_char());
-                    try!(self.advance(1));
+                    c = self.curr_char_raw();
+                    self.advance_raw(1);
                 }
 
                 frac2 = 10.0 * frac2 + (c - b'0') as f64;
@@ -812,10 +816,10 @@ impl<'a> Stream<'a> {
 
         // check that 'e' does not belong to em/ex
         if !self.at_end() && self.left() > 1 {
-            let c1 = try!(self.curr_char());
-            let c2 = try!(self.char_at(1));
+            let c1 = self.curr_char_raw();
+            let c2 = self.text[self.pos + 1];
             if (c1 == b'E' || c1 == b'e') && c2 != b'm' && c2 != b'x' {
-                try!(self.advance(1));
+                self.advance_raw(1);
                 if try!(self.is_char_eq(b'-')) {
                     exp_sign = true;
                     try!(self.advance(1));
@@ -825,7 +829,7 @@ impl<'a> Stream<'a> {
 
                 while !self.at_end() && is_digit(try!(self.curr_char())) {
                     exp = exp * 10 + (self.curr_char_raw() - b'0') as i32;
-                    try!(self.advance(1));
+                    self.advance_raw(1);
                 }
             }
         }
@@ -836,44 +840,48 @@ impl<'a> Stream<'a> {
             exp += frac_exp;
         }
 
-        // Generate a floating-point number that represents the exponent.
-        // Do this by processing the exponent one bit at a time to combine
-        // many powers of 2 of 10. Then combine the exponent with the
-        // fraction.
+        if exp != 0 {
 
-        if exp < 0 {
-            exp_sign = true;
-            exp = -exp;
-        } else {
-            exp_sign = false;
-        }
+            // Generate a floating-point number that represents the exponent.
+            // Do this by processing the exponent one bit at a time to combine
+            // many powers of 2 of 10. Then combine the exponent with the
+            // fraction.
 
-        // Largest possible base 10 exponent.  Any
-        // exponent larger than this will already
-        // produce underflow or overflow, so there's
-        // no need to worry about additional digit.
-        let max_exponent = 511;
-
-        if exp > max_exponent {
-            exp = max_exponent;
-        }
-
-        let mut dbl_exp = 1.0;
-
-        let mut i = 0;
-        while exp != 0 {
-            if (exp & 1) > 0 {
-                dbl_exp *= POWERS_OF_10[i];
+            if exp < 0 {
+                exp_sign = true;
+                exp = -exp;
+            } else {
+                exp_sign = false;
             }
 
-            exp >>= 1;
-            i += 1;
-        }
+            // Largest possible base 10 exponent. Any
+            // exponent larger than this will already
+            // produce underflow or overflow, so there's
+            // no need to worry about additional digit.
+            let max_exponent = 511;
 
-        if exp_sign {
-            fraction /= dbl_exp;
-        } else {
-            fraction *= dbl_exp;
+            if exp > max_exponent {
+                exp = max_exponent;
+            }
+
+            let mut dbl_exp = 1.0;
+
+            let mut i = 0;
+            while exp != 0 {
+                if (exp & 1) > 0 {
+                    dbl_exp *= POWERS_OF_10[i];
+                }
+
+                exp >>= 1;
+                i += 1;
+            }
+
+
+            if exp_sign {
+                fraction /= dbl_exp;
+            } else {
+                fraction *= dbl_exp;
+            }
         }
 
         if sign {
