@@ -370,12 +370,7 @@ impl<'a> Tokenizer<'a> {
             return Ok(Token::ElementEnd(ElementEnd::Open));
         }
 
-        let mut key = try!(self.stream.read_to(b'='));
-
-        // trim spaces at the end of the key
-        if let Some(p) = key.iter().position(|c| *c == b' ') {
-            key = &key[0..p];
-        }
+        let key = try!(self.stream.read_to_trimmed(b'='));
 
         try!(self.stream.advance(1)); // =
         self.stream.skip_spaces();

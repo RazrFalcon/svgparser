@@ -75,7 +75,7 @@ impl<'a> Tokenizer<'a> {
 
         // prefixed attributes are not supported, aka '-webkit-*'
         if try!(self.stream.is_char_eq(b'-')) {
-            let l = self.stream.len_to_char_or_end(b';');
+            let l = self.stream.len_to_or_end(b';');
             println!("Warning: Style attribute '{}' is skipped.",
                      u8_to_str!(self.stream.slice_next_raw(l)));
 
@@ -119,7 +119,7 @@ impl<'a> Tokenizer<'a> {
             end_char = b';';
         }
 
-        let mut value_len = self.stream.len_to_char_or_end(end_char);
+        let mut value_len = self.stream.len_to_or_end(end_char);
 
         // skip end quote
         if try!(self.stream.char_at(value_len as isize - 1)) == b'\'' {

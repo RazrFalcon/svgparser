@@ -7,7 +7,7 @@
 use std::fmt;
 
 /// List of all SVG elements.
-#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord)]
+#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord,Hash)]
 #[allow(missing_docs)]
 pub enum ElementId {
     A,

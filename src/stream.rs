@@ -407,11 +407,11 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let s = Stream::new(b"Some long text.");
-    /// assert_eq!(s.len_to_char_or_end(b'l'), 5);
-    /// assert_eq!(s.len_to_char_or_end(b'q'), 15);
+    /// assert_eq!(s.len_to_or_end(b'l'), 5);
+    /// assert_eq!(s.len_to_or_end(b'q'), 15);
     /// ```
     #[inline]
-    pub fn len_to_char_or_end(&self, c: u8) -> usize {
+    pub fn len_to_or_end(&self, c: u8) -> usize {
         let mut n = 0;
         while self.pos + n != self.end {
             if self.get_char_raw(self.pos + n) == c {
@@ -482,12 +482,12 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::new(b"Some text.");
-    /// s.jump_to_char_or_end(b'q');
+    /// s.jump_to_or_end(b'q');
     /// assert_eq!(s.at_end(), true);
     /// ```
     #[inline]
-    pub fn jump_to_char_or_end(&mut self, c: u8) {
-        let l = self.len_to_char_or_end(c);
+    pub fn jump_to_or_end(&mut self, c: u8) {
+        let l = self.len_to_or_end(c);
         self.advance_raw(l);
     }
 
@@ -526,7 +526,7 @@ impl<'a> Stream<'a> {
         s
     }
 
-    /// Returns reference to data until selected char and advance stream by the data length.
+    /// Returns reference to the data until selected char and advance stream by the data length.
     ///
     /// Shorthand for: [`len_to()`] + [`read_raw()`].
     ///
@@ -550,6 +550,40 @@ impl<'a> Stream<'a> {
     pub fn read_to(&mut self, c: u8) -> Result<&'a [u8], Error> {
         let len = try!(self.len_to(c));
         let s = self.read_raw(len);
+        Ok(s)
+    }
+
+    /// Returns reference to the trimmed data until selected char and
+    /// advance stream by the data length.
+    ///
+    /// Same as `read_to()`, but also trim spaces from the both sides.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Error::UnexpectedEndOfStream` if no such char.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use svgparser::Stream;
+    ///
+    /// let mut s = Stream::new(b"  Some text  .");
+    /// assert_eq!(s.read_to_trimmed(b'.').unwrap(), b"Some text");
+    ///
+    /// let mut s = Stream::new(b"Some text.");
+    /// assert_eq!(s.read_to_trimmed(b'.').unwrap(), b"Some text");
+    /// ```
+    #[inline]
+    pub fn read_to_trimmed(&mut self, c: u8) -> Result<&'a [u8], Error> {
+        self.skip_spaces();
+
+        let mut s = try!(self.read_to(c));
+
+        // trim spaces at the end of the key
+        if let Some(p) = s.iter().rposition(|c| !is_space(*c)) {
+            s = &s[0..(p + 1)];
+        }
+
         Ok(s)
     }
 

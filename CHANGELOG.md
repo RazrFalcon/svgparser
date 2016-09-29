@@ -6,12 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- The `trim_trailing_spaces` method to the `Stream`.
+- `trim_trailing_spaces`, `read_to_trimmed` methods to the `Stream`.
 - Support spaces around `=` while attribute parsing.
 - Trim spaces from both sides of the attribute value.
+- Hash impl for enums.
 
 ### Changed
 - Rename `AdvanceError` into `InvalidAdvance`.
+- Rename `len_to_char_or_end` into `len_to_or_end`.
+- Rename `jump_to_char_or_end` into `jump_to_or_end`.
 
 ## [0.0.3] - 2016-09-20
 ### Added
