@@ -347,7 +347,13 @@ impl<'a> AttributeValue<'a> {
             }
 
               AId::ClipPathUnits
-            | AId::GradientUnits => {
+            | AId::FilterUnits
+            | AId::GradientUnits
+            | AId::MaskContentUnits
+            | AId::MaskUnits
+            | AId::PatternContentUnits
+            | AId::PatternUnits
+            | AId::PrimitiveUnits => {
                 parse_or_err!(parse_predef!(
                     ValueId::UserSpaceOnUse,
                     ValueId::ObjectBoundingBox

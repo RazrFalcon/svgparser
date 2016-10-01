@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support spaces around `=` while attribute parsing.
 - Trim spaces from both sides of the attribute value.
 - Hash impl for enums.
+- All *Units attribute values are parsed now.
 
 ### Changed
 - Rename `AdvanceError` into `InvalidAdvance`.
