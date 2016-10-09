@@ -82,6 +82,7 @@ test_length!(length_9,  b"1pc", Length::new(1.0, LengthUnit::Pc));
 test_length!(length_10, b"1%",  Length::new(1.0, LengthUnit::Percent));
 test_length!(length_11, b"1,",  Length::new(1.0, LengthUnit::None));
 test_length!(length_12, b"1 ,", Length::new(1.0, LengthUnit::None));
+test_length!(length_13, b"1 1", Length::new(1.0, LengthUnit::None));
 
 #[test]
 fn length_err_1() {

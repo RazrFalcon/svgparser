@@ -1037,12 +1037,14 @@ impl<'a> Stream<'a> {
         } else {
             self.skip_spaces();
 
-            if self.starts_with(b",") {
-                // if number ends with ',' - it's fine
-                u = LengthUnit::None;
-            } else {
-                // unknown suffix is error
-                return Err(Error::InvalidLength(self.gen_error_pos()));
+            match self.curr_char_raw() {
+                b'0'...b'9' | b'.' | b',' | b'+' | b'-' => {
+                    u = LengthUnit::None;
+                }
+                _ => {
+                    // unknown suffix is error
+                    return Err(Error::InvalidLength(self.gen_error_pos()));
+                }
             }
         }
 
