@@ -56,7 +56,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgparser = "0.0.3"
+svgparser = "0.1.0"
 ```
 
 ### License
