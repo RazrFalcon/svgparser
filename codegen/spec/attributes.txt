@@ -12,6 +12,7 @@ azimuth
 baseFrequency
 baseline-shift
 baseProfile
+bbox
 begin
 bias
 by
@@ -147,6 +148,7 @@ opacity
 operator
 order
 orient
+orientation
 origin
 overflow
 overline-position
@@ -180,6 +182,7 @@ rotate
 rx
 ry
 scale
+seed
 shape-rendering
 slope
 spacing
@@ -251,6 +254,7 @@ xChannelSelector
 xlink:actuate
 xlink:arcrole
 xlink:href
+xlink:role
 xlink:show
 xlink:title
 xlink:type
