@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// TODO: maybe rename 'unsafe' to an other word
-
 use std::cmp;
 use std::fmt;
 use std::str;
@@ -1007,7 +1005,7 @@ impl<'a> Stream<'a> {
     ///
     /// # Notes
     ///
-    /// - Suffix must be lowercase, otherwise it will be skipped.
+    /// - Suffix must be lowercase, otherwise it will be an error.
     pub fn parse_length(&mut self) -> Result<Length, Error> {
         self.skip_spaces();
 
@@ -1037,8 +1035,15 @@ impl<'a> Stream<'a> {
         } else if self.starts_with(b"pc") {
             u = LengthUnit::Pc;
         } else {
-            // TODO: should be error
-            u = LengthUnit::None;
+            self.skip_spaces();
+
+            if self.starts_with(b",") {
+                // if number ends with ',' - it's fine
+                u = LengthUnit::None;
+            } else {
+                // unknown suffix is error
+                return Err(Error::InvalidLength(self.gen_error_pos()));
+            }
         }
 
         match u {

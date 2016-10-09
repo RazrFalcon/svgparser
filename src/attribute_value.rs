@@ -214,14 +214,15 @@ impl<'a> AttributeValue<'a> {
             | AId::FloodOpacity
             | AId::StrokeOpacity
             | AId::StopOpacity => {
-                // TODO: rewrite
-                if try!(stream.is_char_eq(b'i')) {
-                    Ok(AttributeValue::PredefValue(ValueId::Inherit))
-                } else {
-                    let mut n = try!(stream.parse_number());
+                fn get_opacity<'a>(s: &mut Stream) -> Result<AttributeValue<'a>, Error> {
+                    let mut n = try!(s.parse_number());
                     n = f64_bound(0.0, n, 1.0);
                     Ok(AttributeValue::Number(n))
                 }
+
+                parse_or!(parse_predef!(
+                    ValueId::Inherit
+                ), get_opacity(stream))
             }
 
             AId::StrokeDasharray => {

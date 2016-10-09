@@ -57,6 +57,8 @@ pub enum Error {
     UnexpectedClosingTag(ErrorPos),
     /// Error during a number parsing.
     InvalidNumber(ErrorPos),
+    /// Error during a length parsing.
+    InvalidLength(ErrorPos),
     /// Error during a color parsing.
     InvalidColor(ErrorPos),
     /// Error during a transform parsing.
@@ -89,6 +91,7 @@ impl fmt::Debug for Error {
             Error::UnexpectedClosingTag(ref pos) =>
                 write!(f, "The stream found closing tag without an opening tag at {:?}", pos),
             Error::InvalidNumber(ref pos) => write!(f, "Invalid number at {:?}", pos),
+            Error::InvalidLength(ref pos) => write!(f, "Invalid length at {:?}", pos),
             Error::InvalidColor(ref pos) => write!(f, "Invalid color at {:?}", pos),
             Error::InvalidTransform(ref pos) => write!(f, "Invalid transform at {:?}", pos),
             Error::InvalidAttributeValue(ref pos) => {

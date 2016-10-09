@@ -80,4 +80,11 @@ test_length!(length_7,  b"1mm", Length::new(1.0, LengthUnit::Mm));
 test_length!(length_8,  b"1pt", Length::new(1.0, LengthUnit::Pt));
 test_length!(length_9,  b"1pc", Length::new(1.0, LengthUnit::Pc));
 test_length!(length_10, b"1%",  Length::new(1.0, LengthUnit::Percent));
-test_length!(length_11, b"1q",  Length::new(1.0, LengthUnit::None)); // TODO: probably wrong
+test_length!(length_11, b"1,",  Length::new(1.0, LengthUnit::None));
+test_length!(length_12, b"1 ,", Length::new(1.0, LengthUnit::None));
+
+#[test]
+fn length_err_1() {
+    let mut s = Stream::new(b"1q");
+    assert_eq!(s.parse_length().err().unwrap(), Error::InvalidLength(ErrorPos::new(1,2)));
+}
