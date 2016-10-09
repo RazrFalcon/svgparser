@@ -59,16 +59,6 @@ Add this to your `Cargo.toml`:
 svgparser = "0.0.3"
 ```
 
-### Roadmap
-
-V0.1.0
- - [ ] Parsing `f64` from a string is pretty slow (`Stream::parse_number`).
- - [ ] Add an `font` attribute parsing support.
- - [ ] Add an `enable-background` attribute parsing support.
-
-V0.2.0
- - [ ] Add an `<angle>` type support.
-
 ### License
 
 *libsvgparser* is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).
