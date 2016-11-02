@@ -12,8 +12,8 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - [\<color\>](https://www.w3.org/TR/SVG/types.html#DataTypeColor)
  - [\<paint\>](https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint)
  - [\<path\>](https://www.w3.org/TR/SVG/paths.html#PathData)
- - [\<number\>](https://www.w3.org/TR/SVG/types.html#DataTypeNumber) and \<list-of-number\>
- - [\<length\>](https://www.w3.org/TR/SVG/types.html#DataTypeLength) and \<list-of-length\>
+ - [\<number\>](https://www.w3.org/TR/SVG/types.html#DataTypeNumber) and \<list-of-numbers\>
+ - [\<length\>](https://www.w3.org/TR/SVG/types.html#DataTypeLength) and \<list-of-lengths\>
  - [\<coordinate\>](https://www.w3.org/TR/SVG/types.html#DataTypeCoordinate)
  - [\<IRI\>](https://www.w3.org/TR/SVG/types.html#DataTypeIRI)
  - [\<FuncIRI\>](https://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI)
@@ -44,11 +44,11 @@ See the documentation for details.
  - User agent colors, aka `fill="AppWorkspace"`, is not supported.
  - There is no separate `opacity-value` type. It will be parsed as `<number>`,
    but will be bound to 0..1 range.
- - An implicit path commands are not supported. All commands are parsed as explicit.
- - An implicit MoveTo commands automatically converted to an explicit LineTo.
+ - Implicit path commands are not supported. All commands are parsed as explicit.
+ - Implicit MoveTo commands will be automatically converted into explicit LineTo.
 
 ### Differences between *libsvgparser* and SVG spec
- - `<percentage>` type is part of `<length>` type.
+ - `<percentage>` type is part of the `<length>` type.
 
 ### Usage
 
