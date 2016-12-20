@@ -38,7 +38,7 @@ pub enum Transform {
     },
 }
 
-/// Transform token.
+/// Transform tokenizer.
 #[derive(Clone,PartialEq)]
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,

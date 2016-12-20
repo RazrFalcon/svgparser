@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Added
+- `Stream::global_pos`.
+- `Stream::parent_text`.
+
 ## [0.1.0] - 2016-10-09
 ### Added
 - `trim_trailing_spaces`, `read_to_trimmed` methods to the `Stream`.

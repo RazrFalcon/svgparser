@@ -119,6 +119,18 @@ impl<'a> Stream<'a> {
         self.pos = pos;
     }
 
+    /// Returns current position including parent stream.
+    #[inline]
+    pub fn global_pos(&self) -> usize {
+        self.parent_pos + self.pos
+    }
+
+    /// Returns parent text.
+    #[inline]
+    pub fn parent_text(&self) -> Option<&'a [u8]> {
+        self.parent_text
+    }
+
     /// Returns number of chars left.
     ///
     /// # Examples
@@ -226,7 +238,7 @@ impl<'a> Stream<'a> {
     /// assert_eq!(s.char_at(0).unwrap(),  b'x');
     /// assert_eq!(s.char_at(1).unwrap(),  b't');
     /// ```
-    // #[inline]
+    #[inline]
     pub fn char_at(&self, pos: isize) -> Result<u8, Error> {
         if pos < 0 {
             try!(self.back_bound_check(pos));
@@ -239,7 +251,7 @@ impl<'a> Stream<'a> {
     }
 
     /// Moves back by `n` chars.
-    // #[inline]
+    #[inline]
     pub fn back(&mut self, n: usize) -> Result<(), Error> {
         try!(self.back_bound_check(n as isize));
         self.pos -= n;
@@ -577,7 +589,7 @@ impl<'a> Stream<'a> {
 
         let mut s = try!(self.read_to(c));
 
-        // trim spaces at the end of the key
+        // trim spaces at the end of the string
         if let Some(p) = s.iter().rposition(|c| !is_space(*c)) {
             s = &s[0..(p + 1)];
         }
@@ -952,7 +964,6 @@ impl<'a> Stream<'a> {
         self.skip_spaces();
 
         if self.at_end() {
-            // return Err(Error::InvalidNumber(str::from_utf8(self.slice_tail()).unwrap().to_string()));
             return Err(Error::InvalidNumber(self.gen_error_pos()));
         }
 
@@ -1065,7 +1076,7 @@ impl<'a> Stream<'a> {
         Ok(l)
     }
 
-    // #[inline]
+    #[inline]
     fn parse_list_separator(&mut self) {
         // manually check for end, because reaching the end is not error for this function
         if !self.at_end() && self.is_char_eq_raw(b',') {
@@ -1073,7 +1084,7 @@ impl<'a> Stream<'a> {
         }
     }
 
-    // #[inline]
+    #[inline]
     fn get_parent_text(&self) -> &[u8] {
         match self.parent_text {
             Some(text) => text,
@@ -1105,7 +1116,6 @@ impl<'a> Stream<'a> {
     }
 
     /// Calculates a current absolute position.
-    // #[inline]
     pub fn gen_error_pos(&self) -> ErrorPos {
         let row = self.calc_current_row();
         let col = self.calc_current_col();
@@ -1113,12 +1123,11 @@ impl<'a> Stream<'a> {
     }
 
     /// Generates a new `UnexpectedEndOfStream` error from the current position.
-    // #[inline]
+    #[inline]
     pub fn gen_end_of_stream_error(&self) -> Error {
         Error::UnexpectedEndOfStream(self.gen_error_pos())
     }
 
-    // #[inline]
     fn adv_bound_check(&self, n: usize) -> Result<(), Error> {
         let new_pos = self.pos + n;
         if new_pos > self.end {
@@ -1132,7 +1141,6 @@ impl<'a> Stream<'a> {
         Ok(())
     }
 
-    // #[inline]
     fn back_bound_check(&self, n: isize) -> Result<(), Error> {
         let new_pos: isize = self.pos as isize + n;
         if new_pos < 0 {

@@ -31,9 +31,13 @@ impl fmt::Debug for ErrorPos {
     }
 }
 
+// TODO: move EndOfStream to tokens, because it's not an error
+
 /// List of all supported errors.
 #[derive(Clone,Copy,PartialEq)]
 pub enum Error {
+    /// End of stream.
+    ///
     /// Technically, `EndOfStream` is not an error,
     /// it's just indicates reaching the end of the stream.
     EndOfStream,
@@ -82,22 +86,27 @@ impl fmt::Debug for Error {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Error::EndOfStream => write!(f, "End of stream"),
+            Error::EndOfStream =>
+                write!(f, "End of stream"),
             Error::UnexpectedEndOfStream(ref pos) =>
                 write!(f, "Unexpected end of stream at {:?}", pos),
             Error::InvalidChar{ref current, ref expected, ref pos} =>
                 write!(f, "Expected '{}', found '{}' at pos {:?}", expected, current, pos),
-            Error::InvalidSvgToken(ref pos) => write!(f, "Invalid SVG token at {:?}", pos),
+            Error::InvalidSvgToken(ref pos) =>
+                write!(f, "Invalid SVG token at {:?}", pos),
             Error::UnexpectedClosingTag(ref pos) =>
                 write!(f, "The stream found closing tag without an opening tag at {:?}", pos),
-            Error::InvalidNumber(ref pos) => write!(f, "Invalid number at {:?}", pos),
-            Error::InvalidLength(ref pos) => write!(f, "Invalid length at {:?}", pos),
-            Error::InvalidColor(ref pos) => write!(f, "Invalid color at {:?}", pos),
-            Error::InvalidTransform(ref pos) => write!(f, "Invalid transform at {:?}", pos),
-            Error::InvalidAttributeValue(ref pos) => {
-                write!(f, "Invalid attribute at {:?}", pos)
-            }
-            Error::InvalidAdvance{ref expected, ref total, ref pos} =>
+            Error::InvalidNumber(ref pos) =>
+                write!(f, "Invalid number at {:?}", pos),
+            Error::InvalidLength(ref pos) =>
+                write!(f, "Invalid length at {:?}", pos),
+            Error::InvalidColor(ref pos) =>
+                write!(f, "Invalid color at {:?}", pos),
+            Error::InvalidTransform(ref pos) =>
+                write!(f, "Invalid transform at {:?}", pos),
+            Error::InvalidAttributeValue(ref pos) =>
+                write!(f, "Invalid attribute at {:?}", pos),
+            Error::InvalidAdvance{ ref expected, ref total, ref pos } =>
                 write!(f, "Attempt to advance to the pos {} from {:?}, but total len is {}",
                        expected, pos, total),
             Error::ElementWithoutTagName(ref pos) =>
