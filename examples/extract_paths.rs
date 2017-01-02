@@ -27,9 +27,9 @@ fn main() {
     // Begin parsing.
     let mut p = svg::Tokenizer::new(&v);
     // Get next token.
-    while let Some(item) = p.next() {
+    loop {
         // Check that it's ok.
-        match item {
+        match p.parse_next() {
             Ok(t) => {
                 // Filter 'Attribute' token.
                 match t {
@@ -38,10 +38,17 @@ fn main() {
                         if name == b"d" {
                             println!("New path:");
 
-                            let p = path::Tokenizer::new(value);
-                            for item in p {
-                                match item {
-                                    Ok(segment) => println!("  {:?}", segment),
+                            let mut p = path::Tokenizer::new(value);
+                            loop {
+                                match p.parse_next() {
+                                    Ok(segment_token) => {
+                                        match segment_token {
+                                            path::SegmentToken::Segment(segment) =>
+                                                println!("  {:?}", segment),
+                                            path::SegmentToken::EndOfStream =>
+                                                break,
+                                        }
+                                    }
                                     Err(e) => {
                                         // By SVG spec, invalid data occurred in the path should
                                         // stop parsing of this path, but not the whole document.
@@ -53,6 +60,7 @@ fn main() {
                             }
                         }
                     }
+                    svg::Token::EndOfStream => break,
                     _ => {}
                 }
             }

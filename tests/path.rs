@@ -4,8 +4,8 @@
 
 extern crate svgparser;
 
-use svgparser::{Stream, Error};
-use svgparser::path::{Tokenizer, Segment, SegmentData};
+use svgparser::Stream;
+use svgparser::path::{Tokenizer, SegmentToken, Segment, SegmentData};
 
 macro_rules! test {
     ($name:ident, $text:expr, $( $seg:expr ),*) => (
@@ -14,9 +14,9 @@ macro_rules! test {
             let stream = Stream::new($text);
             let mut s = Tokenizer::new(stream);
             $(
-                assert_eq!(s.parse_next().unwrap(), $seg);
+                assert_eq!(s.parse_next().unwrap(), SegmentToken::Segment($seg));
             )*
-            assert_eq!(s.parse_next().is_err(), true);
+            assert_eq!(s.parse_next().unwrap(), SegmentToken::EndOfStream);
         }
     )
 }
@@ -28,28 +28,6 @@ test!(stop_on_err_1, b"M 10 20 L 30 40 L 50",
     Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } },
     Segment { cmd: b'L', data: SegmentData::LineTo { x: 30.0, y: 40.0 } }
 );
-
-#[test]
-fn stop_on_err_2() {
-    let stream = Stream::new(b"M 10 20 L 30 40 L 50");
-    let mut s = Tokenizer::new(stream);
-    let mut vec = Vec::new();
-    loop {
-        match s.parse_next() {
-            Ok(seg) => vec.push(seg),
-            Err(e) => {
-                match e {
-                    Error::EndOfStream => break,
-                    _ => panic!("{:?}", e),
-                }
-            },
-        }
-    }
-
-    assert_eq!(vec.len(), 2);
-    assert_eq!(vec[0], Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } });
-    assert_eq!(vec[1], Segment { cmd: b'L', data: SegmentData::LineTo { x: 30.0, y: 40.0 } });
-}
 
 test!(move_to_1, b"M 10 20", Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } });
 test!(move_to_2, b"m 10 20", Segment { cmd: b'm', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } });

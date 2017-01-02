@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Stream::global_pos`.
 - `Stream::parent_text`.
 
+### Changed
+- `Error::EndOfStream` removed. Now all tokens enum contains it's own EndOfStream.
+  It's allowed to simplify tokenization loops.
+- All tokenizers does not implement `Iterator` trait now.
+- Rename `Transform` into `TransformToken`.
+
 ## [0.1.0] - 2016-10-09
 ### Added
 - `trim_trailing_spaces`, `read_to_trimmed` methods to the `Stream`.

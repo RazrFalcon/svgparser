@@ -22,7 +22,7 @@ macro_rules! test_attr {
                     _ => unreachable!(),
                 }
             )*
-            assert_eq!(s.next().is_none(), true);
+            assert_eq!(s.parse_next().unwrap(), style::Token::EndOfStream);
         }
     )
 }
@@ -66,5 +66,5 @@ fn parse_style_8() {
     let mut s = style::Tokenizer::new(stream);
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef(b"st0"));
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef(b"st1"));
-    assert_eq!(s.next().is_none(), true);
+    assert_eq!(s.parse_next().unwrap(), style::Token::EndOfStream);
 }

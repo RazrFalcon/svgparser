@@ -18,17 +18,19 @@ pub enum Token<'a> {
     Attribute(&'a [u8], Stream<'a>),
     /// Tuple contains ENTITY reference. Just a name without `&` and `;`.
     EntityRef(&'a [u8]),
+    /// The end of the stream.
+    EndOfStream,
 }
 
 impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Token::Attribute(name, ref value) => {
-                write!(f, "Token({}, {:?})", u8_to_str!(name), value)
-            }
-            Token::EntityRef(name) => {
-                write!(f, "EntityRef({})", u8_to_str!(name))
-            }
+            Token::Attribute(name, ref value) =>
+                write!(f, "Token({}, {:?})", u8_to_str!(name), value),
+            Token::EntityRef(name) =>
+                write!(f, "EntityRef({})", u8_to_str!(name)),
+            Token::EndOfStream =>
+                write!(f, "EndOfStream"),
         }
     }
 }
@@ -48,7 +50,6 @@ impl<'a> Tokenizer<'a> {
     ///
     /// # Errors
     ///
-    /// - `Error::EndOfStream` indicates end of parsing, not error.
     /// - Most of the `Error` types can occur.
     ///
     /// # Notes
@@ -62,7 +63,7 @@ impl<'a> Tokenizer<'a> {
         self.stream.skip_spaces();
 
         if self.stream.at_end() {
-            return Err(Error::EndOfStream);
+            return Ok(Token::EndOfStream);
         }
 
         // skip comments inside attribute value
@@ -152,5 +153,3 @@ impl<'a> Tokenizer<'a> {
         Ok(Token::Attribute(name, substream))
     }
 }
-
-impl_iter_for_tokenizer!(Token<'a>);

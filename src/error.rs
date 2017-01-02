@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-/// The position of the error.
+/// Position of an error.
 ///
 /// Position indicates row/line and column. Starting positions is 1:1.
 #[derive(Clone,Copy,PartialEq)]
@@ -36,11 +36,6 @@ impl fmt::Debug for ErrorPos {
 /// List of all supported errors.
 #[derive(Clone,Copy,PartialEq)]
 pub enum Error {
-    /// End of stream.
-    ///
-    /// Technically, `EndOfStream` is not an error,
-    /// it's just indicates reaching the end of the stream.
-    EndOfStream,
     /// The steam ended earlier than we expected.
     ///
     /// Should only appear on invalid input data.
@@ -86,8 +81,6 @@ impl fmt::Debug for Error {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Error::EndOfStream =>
-                write!(f, "End of stream"),
             Error::UnexpectedEndOfStream(ref pos) =>
                 write!(f, "Unexpected end of stream at {:?}", pos),
             Error::InvalidChar{ref current, ref expected, ref pos} =>

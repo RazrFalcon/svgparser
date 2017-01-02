@@ -47,6 +47,8 @@ pub enum Token<'a> {
     DtdEnd,
     /// Tuple contains declaration object without `<?` and `?>`.
     Declaration(&'a [u8]),
+    /// The end of the stream.
+    EndOfStream,
 }
 
 impl<'a> fmt::Debug for Token<'a> {
@@ -75,6 +77,7 @@ impl<'a> fmt::Debug for Token<'a> {
             }
             Token::DtdEnd => write!(f, "DtdEnd"),
             Token::Declaration(s) => write!(f, "Declaration({})", u8_to_str!(s)),
+            Token::EndOfStream => write!(f, "EndOfStream"),
         }
     }
 }
@@ -108,7 +111,6 @@ impl<'a> Tokenizer<'a> {
     ///
     /// # Errors
     ///
-    /// - `Error::EndOfStream` indicates end of parsing, not error.
     /// - Most of the `Error` types can occur.
     ///
     /// # Notes
@@ -120,7 +122,7 @@ impl<'a> Tokenizer<'a> {
             State::Unknown => {
                 if self.stream.at_end() {
                     self.state = State::Finished;
-                    return Err(Error::EndOfStream);
+                    return Ok(Token::EndOfStream);
                 }
 
                 if self.stream.starts_with(b"<?") {
@@ -188,7 +190,7 @@ impl<'a> Tokenizer<'a> {
             State::AtStart => {
                 if self.stream.at_end() {
                     self.state = State::Finished;
-                    return Err(Error::EndOfStream);
+                    return Ok(Token::EndOfStream);
                 }
 
                 // skip byte order
@@ -200,7 +202,7 @@ impl<'a> Tokenizer<'a> {
                 self.parse_next()
             }
             State::Finished => {
-                Err(Error::EndOfStream)
+                Ok(Token::EndOfStream)
             }
         }
     }
@@ -397,5 +399,3 @@ impl<'a> Tokenizer<'a> {
         Ok(Token::Attribute(key, substream))
     }
 }
-
-impl_iter_for_tokenizer!(Token<'a>);

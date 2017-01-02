@@ -70,6 +70,18 @@ pub struct Segment {
     pub data: SegmentData,
 }
 
+/// Path's segment token.
+#[derive(Copy,Clone,Debug,PartialEq)]
+pub enum SegmentToken {
+    /// Path's segment.
+    ///
+    /// We use a separate enum for a segment to be able to
+    /// reuse it depending applications.
+    Segment(Segment),
+    /// The end of the stream.
+    EndOfStream,
+}
+
 /// Tokenizer for the \<path\> data.
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
@@ -89,7 +101,6 @@ impl<'a> Tokenizer<'a> {
     ///
     /// # Errors
     ///
-    /// - `Error::EndOfStream` indicates the end of parsing, not error.
     /// - Most of the `Error` types can occur.
     ///
     /// # Notes
@@ -97,7 +108,7 @@ impl<'a> Tokenizer<'a> {
     /// - By SVG spec any invalid data inside path data should stop the parsing of this data,
     ///   but not the whole document.
     ///
-    ///   This function will return `Error::EndOfStream` on any kind of error.
+    ///   This function will return `EndOfStream` on any kind of error.
     ///   Library will print a warning to stdout.
     ///
     ///   In other words - you will get as much data as possible.
@@ -109,20 +120,20 @@ impl<'a> Tokenizer<'a> {
     ///   into explicit LineTo.
     ///
     ///   Example: `M 10 20 30 40 50 60` -> `M 10 20 L 30 40 L 50 60`
-    pub fn parse_next(&mut self) -> Result<Segment, Error> {
+    pub fn parse_next(&mut self) -> Result<SegmentToken, Error> {
         let s = &mut self.stream;
 
         s.skip_spaces();
 
         if s.at_end() {
-            return Err(Error::EndOfStream);
+            return Ok(SegmentToken::EndOfStream);
         }
 
         macro_rules! data_error {
             () => ({
                 println!("Warning: Invalid path data at {:?}. \
                           The remaining data is ignored.", s.gen_error_pos());
-                return Err(Error::EndOfStream);
+                return Ok(SegmentToken::EndOfStream);
             })
         }
 
@@ -141,7 +152,7 @@ impl<'a> Tokenizer<'a> {
         if !has_prev_cmd && !is_cmd(first_char) {
             println!("Warning: '{}' is not a command. \
                       The remaining data is ignored.", first_char as char);
-            return Err(Error::EndOfStream);
+            return Ok(SegmentToken::EndOfStream);
         }
 
         if !has_prev_cmd {
@@ -150,7 +161,7 @@ impl<'a> Tokenizer<'a> {
                 _ => {
                     println!("Warning: First segment must be MoveTo. \
                               The remaining data is ignored.");
-                    return Err(Error::EndOfStream);
+                    return Ok(SegmentToken::EndOfStream);
                 }
             }
         }
@@ -287,10 +298,10 @@ impl<'a> Tokenizer<'a> {
             self.prev_cmd = Some(cmd);
         }
 
-        Ok(Segment {
+        Ok(SegmentToken::Segment(Segment {
             cmd: cmd,
             data: data,
-        })
+        }))
     }
 }
 
@@ -373,5 +384,3 @@ fn parse_flag(s: &mut Stream) -> Result<bool, Error> {
         }
     }
 }
-
-impl_iter_for_tokenizer!(Segment);

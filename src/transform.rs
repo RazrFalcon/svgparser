@@ -8,9 +8,9 @@
 
 use super::{Stream, Error};
 
-#[allow(missing_docs)]
 #[derive(PartialEq,Debug)]
-pub enum Transform {
+#[allow(missing_docs)]
+pub enum TransformToken {
     Matrix {
         a: f64,
         b: f64,
@@ -36,6 +36,7 @@ pub enum Transform {
     SkewY {
         angle: f64,
     },
+    EndOfStream,
 }
 
 /// Transform tokenizer.
@@ -60,7 +61,6 @@ impl<'a> Tokenizer<'a> {
     ///
     /// # Errors
     ///
-    /// - `Error::EndOfStream` indicates end of parsing, not error.
     /// - Most of the `Error` types can occur.
     ///
     /// # Notes
@@ -69,18 +69,18 @@ impl<'a> Tokenizer<'a> {
     ///   It will be automatically split into three `Transform` tokens:
     ///   `translate(<cx> <cy>) rotate(<rotate-angle>) translate(-<cx> -<cy>)`.
     ///   Just like the spec is stated.
-    pub fn parse_next(&mut self) -> Result<Transform, Error> {
+    pub fn parse_next(&mut self) -> Result<TransformToken, Error> {
 
         if let Some(a) = self.last_angle {
             self.last_angle = None;
-            return Ok(Transform::Rotate {
+            return Ok(TransformToken::Rotate {
                 angle: a,
             });
         }
 
         if let Some((x, y)) = self.rotate_ts {
                 self.rotate_ts = None;
-                return Ok(Transform::Translate {
+                return Ok(TransformToken::Translate {
                     tx: -x,
                     ty: -y,
                 });
@@ -92,7 +92,7 @@ impl<'a> Tokenizer<'a> {
 
         if s.at_end() {
             // empty attribute is still a valid value
-            return Err(Error::EndOfStream);
+            return Ok(TransformToken::EndOfStream);
         }
 
         if s.left() < 5 {
@@ -112,7 +112,7 @@ impl<'a> Tokenizer<'a> {
                 let e = try!(s.parse_list_number());
                 let f = try!(s.parse_list_number());
 
-                Transform::Matrix {
+                TransformToken::Matrix {
                     a: a,
                     b: b,
                     c: c,
@@ -136,7 +136,7 @@ impl<'a> Tokenizer<'a> {
                     try!(s.parse_list_number())
                 };
 
-                Transform::Translate {
+                TransformToken::Translate {
                     tx: x,
                     ty: y,
                 }
@@ -156,7 +156,7 @@ impl<'a> Tokenizer<'a> {
                     try!(s.parse_list_number())
                 };
 
-                Transform::Scale {
+                TransformToken::Scale {
                     sx: x,
                     sy: y,
                 }
@@ -179,12 +179,12 @@ impl<'a> Tokenizer<'a> {
                     self.rotate_ts = Some((cx, cy));
                     self.last_angle = Some(a);
 
-                    Transform::Translate {
+                    TransformToken::Translate {
                         tx: cx,
                         ty: cy,
                     }
                 } else {
-                    Transform::Rotate {
+                    TransformToken::Rotate {
                         angle: a,
                     }
                 }
@@ -196,7 +196,7 @@ impl<'a> Tokenizer<'a> {
 
                 let a = try!(s.parse_list_number());
 
-                Transform::SkewX {
+                TransformToken::SkewX {
                     angle: a,
                 }
             }
@@ -207,7 +207,7 @@ impl<'a> Tokenizer<'a> {
 
                 let a = try!(s.parse_list_number());
 
-                Transform::SkewY {
+                TransformToken::SkewY {
                     angle: a,
                 }
             }
@@ -222,5 +222,3 @@ impl<'a> Tokenizer<'a> {
         Ok(t)
     }
 }
-
-impl_iter_for_tokenizer!(Transform);

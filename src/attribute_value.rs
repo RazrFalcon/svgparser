@@ -17,17 +17,6 @@ use super::{
     ValueId,
 };
 
-#[inline]
-fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
-    if val > max {
-        return max;
-    } else if val < min {
-        return min;
-    }
-
-    val
-}
-
 /// The paint type fallback value in case the FuncIRI is not resolved.
 #[derive(Debug,Clone,Copy,PartialEq)]
 pub enum PaintFallback {
@@ -67,20 +56,28 @@ pub enum AttributeValue<'a> {
 impl<'a> fmt::Debug for AttributeValue<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            AttributeValue::Color(color) => write!(f, "Color({:?})", color),
-            AttributeValue::EntityRef(name) => write!(f, "EntityRef({})", u8_to_str!(name)),
-            AttributeValue::Length(len) => write!(f, "Length({:?})", len),
+            AttributeValue::Color(color) =>
+                write!(f, "Color({:?})", color),
+            AttributeValue::EntityRef(name) =>
+                write!(f, "EntityRef({})", u8_to_str!(name)),
+            AttributeValue::Length(len) =>
+                write!(f, "Length({:?})", len),
             AttributeValue::LengthList(list) =>
                 write!(f, "LengthList({})", u8_to_str!(list.0.slice())),
-            AttributeValue::IRI(name) => write!(f, "IRI({})", u8_to_str!(name)),
-            AttributeValue::FuncIRI(name) => write!(f, "FuncIRI({})", u8_to_str!(name)),
+            AttributeValue::IRI(name) =>
+                write!(f, "IRI({})", u8_to_str!(name)),
+            AttributeValue::FuncIRI(name) =>
+                write!(f, "FuncIRI({})", u8_to_str!(name)),
             AttributeValue::FuncIRIWithFallback(name, ref fallback) =>
                 write!(f, "FuncIRI({}) Fallback({:?})", u8_to_str!(name), fallback),
-            AttributeValue::Number(num) => write!(f, "Number({})", num),
+            AttributeValue::Number(num) =>
+                write!(f, "Number({})", num),
             AttributeValue::NumberList(list) =>
                 write!(f, "NumberList({})", u8_to_str!(list.0.slice())),
-            AttributeValue::PredefValue(id) => write!(f, "PredefValue({})", id.name()),
-            AttributeValue::String(text) => write!(f, "String({})", u8_to_str!(text)),
+            AttributeValue::PredefValue(id) =>
+                write!(f, "PredefValue({})", id.name()),
+            AttributeValue::String(text) =>
+                write!(f, "String({})", u8_to_str!(text)),
         }
     }
 }
@@ -771,4 +768,15 @@ fn parse_number<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error
 fn parse_rgb_color<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     let c = try!(RgbColor::from_stream(stream));
     Ok(AttributeValue::Color(c))
+}
+
+#[inline]
+fn f64_bound(min: f64, val: f64, max: f64) -> f64 {
+    if val > max {
+        return max;
+    } else if val < min {
+        return min;
+    }
+
+    val
 }
