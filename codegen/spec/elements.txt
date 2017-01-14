@@ -38,10 +38,6 @@ feSpotLight
 feTile
 feTurbulence
 filter
-flowPara
-flowRegion
-flowRoot
-flowSpan
 font
 font-face
 font-face-format

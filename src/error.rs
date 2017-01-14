@@ -31,8 +31,6 @@ impl fmt::Debug for ErrorPos {
     }
 }
 
-// TODO: move EndOfStream to tokens, because it's not an error
-
 /// List of all supported errors.
 #[derive(Clone,Copy,PartialEq)]
 pub enum Error {

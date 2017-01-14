@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - All tokenizers does not implement `Iterator` trait now.
 - Rename `Transform` into `TransformToken`.
 
+### Removed
+- Non-SVG elements: `flowPara`, `flowRegion`, `flowRoot` and `flowSpan` from the list of
+  known elements.
+
 ## [0.1.0] - 2016-10-09
 ### Added
 - `trim_trailing_spaces`, `read_to_trimmed` methods to the `Stream`.
