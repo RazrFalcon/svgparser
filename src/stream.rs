@@ -114,6 +114,7 @@ impl<'a> Stream<'a> {
     }
 
     /// Sets current position.
+    // TODO: remove parser should be consuming only
     #[inline]
     pub fn set_pos_raw(&mut self, pos: usize) {
         self.pos = pos;
@@ -251,6 +252,7 @@ impl<'a> Stream<'a> {
     }
 
     /// Moves back by `n` chars.
+    // TODO: remove parser should be consuming only
     #[inline]
     pub fn back(&mut self, n: usize) -> Result<(), Error> {
         try!(self.back_bound_check(n as isize));
