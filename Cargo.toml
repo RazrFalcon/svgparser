@@ -10,4 +10,4 @@ documentation = "https://docs.rs/svgparser/"
 readme = "README.md"
 
 [dependencies]
-phf = "0.7.20"
+phf = "=0.7.20"
