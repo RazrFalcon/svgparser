@@ -65,7 +65,7 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "ElementEnd({})", c)
             }
             Token::Attribute(k, ref v) =>
-                write!(f, "Attribute({}, {:?})", u8_to_str!(k), v)
+                write!(f, "Attribute({}, {:?})", u8_to_str!(k), v),
             Token::Text(ref s) =>
                 write!(f, "Text({:?})", s),
             Token::Cdata(ref s) =>
@@ -79,7 +79,7 @@ impl<'a> fmt::Debug for Token<'a> {
             Token::DtdStart(s) =>
                 write!(f, "DtdStart({})", u8_to_str!(s)),
             Token::Entity(k, ref v) =>
-                write!(f, "ENTITY({}, {:?})", u8_to_str!(k), v)
+                write!(f, "ENTITY({}, {:?})", u8_to_str!(k), v),
             Token::DtdEnd =>
                 write!(f, "DtdEnd"),
             Token::Declaration(s) =>
