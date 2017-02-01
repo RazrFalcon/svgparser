@@ -9,6 +9,7 @@
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+#![deny(unused_import_braces)]
 
 extern crate phf;
 

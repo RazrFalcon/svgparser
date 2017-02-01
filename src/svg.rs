@@ -54,7 +54,8 @@ pub enum Token<'a> {
 impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Token::ElementStart(s) => write!(f, "ElementStart({})", u8_to_str!(s)),
+            Token::ElementStart(s) =>
+                write!(f, "ElementStart({})", u8_to_str!(s)),
             Token::ElementEnd(ref e) => {
                 let c = match *e {
                     ElementEnd::Open => ">",
@@ -63,21 +64,28 @@ impl<'a> fmt::Debug for Token<'a> {
                 };
                 write!(f, "ElementEnd({})", c)
             }
-            Token::Attribute(k, ref v) => {
+            Token::Attribute(k, ref v) =>
                 write!(f, "Attribute({}, {:?})", u8_to_str!(k), v)
-            }
-            Token::Text(ref s) => write!(f, "Text({:?})", s),
-            Token::Cdata(ref s) => write!(f, "CDATA({:?})", s),
-            Token::Whitespace(s) => write!(f, "Whitespace({})", u8_to_str!(s)),
-            Token::Comment(s) => write!(f, "Comment({})", u8_to_str!(s)),
-            Token::DtdEmpty(s) => write!(f, "DtdEmpty({})", u8_to_str!(s)),
-            Token::DtdStart(s) => write!(f, "DtdStart({})", u8_to_str!(s)),
-            Token::Entity(k, ref v) => {
+            Token::Text(ref s) =>
+                write!(f, "Text({:?})", s),
+            Token::Cdata(ref s) =>
+                write!(f, "CDATA({:?})", s),
+            Token::Whitespace(s) =>
+                write!(f, "Whitespace({})", u8_to_str!(s)),
+            Token::Comment(s) =>
+                write!(f, "Comment({})", u8_to_str!(s)),
+            Token::DtdEmpty(s) =>
+                write!(f, "DtdEmpty({})", u8_to_str!(s)),
+            Token::DtdStart(s) =>
+                write!(f, "DtdStart({})", u8_to_str!(s)),
+            Token::Entity(k, ref v) =>
                 write!(f, "ENTITY({}, {:?})", u8_to_str!(k), v)
-            }
-            Token::DtdEnd => write!(f, "DtdEnd"),
-            Token::Declaration(s) => write!(f, "Declaration({})", u8_to_str!(s)),
-            Token::EndOfStream => write!(f, "EndOfStream"),
+            Token::DtdEnd =>
+                write!(f, "DtdEnd"),
+            Token::Declaration(s) =>
+                write!(f, "Declaration({})", u8_to_str!(s)),
+            Token::EndOfStream =>
+                write!(f, "EndOfStream"),
         }
     }
 }
