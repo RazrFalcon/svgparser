@@ -143,9 +143,9 @@ impl<'a> Tokenizer<'a> {
                 } else if self.stream.starts_with(b"<!DOCTYPE") {
                     self.parse_dtd()
                 } else if self.stream.starts_with(b"</") {
-                    try!(self.stream.advance(2)); // </
-                    let text = try!(self.stream.read_to(b'>'));
-                    try!(self.stream.advance(1)); // >
+                    self.stream.advance(2)?; // </
+                    let text = self.stream.read_to(b'>')?;
+                    self.stream.advance(1)?; // >
 
                     if self.depth == 0 {
                         // Error will occur on the next closing tag after invalid,
@@ -166,22 +166,22 @@ impl<'a> Tokenizer<'a> {
                         if !self.stream.is_space_raw() {
                             break;
                         }
-                        try!(self.stream.advance(1));
+                        self.stream.advance(1)?;
                     }
 
-                    if try!(self.stream.is_char_eq(b'<')) {
+                    if self.stream.is_char_eq(b'<')? {
                         let text = self.stream.slice_region_raw(start, self.stream.pos());
                         Ok(Token::Whitespace(text))
                     } else {
                         let b = self.stream.pos() - start;
-                        try!(self.stream.back(b));
-                        let end = self.stream.pos() + try!(self.stream.len_to(b'<'));
+                        self.stream.back(b)?;
+                        let end = self.stream.pos() + self.stream.len_to(b'<')?;
                         let substream = Stream::sub_stream(&self.stream, self.stream.pos(), end);
                         self.stream.advance_raw(substream.left());
 
                         Ok(Token::Text(substream))
                     }
-                } else if try!(self.stream.is_space()) {
+                } else if self.stream.is_space()? {
                     // ignore spaces outside the root element
                     assert!(self.depth == 0);
                     self.stream.skip_spaces();
@@ -203,8 +203,8 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 // skip byte order
-                if try!(self.stream.is_char_eq(0xEF)) {
-                    try!(self.stream.advance(3)); // EF BB BF
+                if self.stream.is_char_eq(0xEF)? {
+                    self.stream.advance(3)?; // EF BB BF
                 }
 
                 self.state = State::Unknown;
@@ -217,45 +217,45 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn parse_declaration(&mut self) -> Result<Token<'a>, Error> {
-        let l = try!(self.stream.len_to(b'>'));
-        try!(self.stream.advance(6)); // '<?xml '
+        let l = self.stream.len_to(b'>')?;
+        self.stream.advance(6)?; // '<?xml '
         let s = self.stream.read_raw(l - 7);
-        try!(self.stream.advance(2)); // '?>'
+        self.stream.advance(2)?; // '?>'
 
         Ok(Token::Declaration(s))
     }
 
     fn parse_comment(&mut self) -> Result<Token<'a>, Error> {
-        try!(self.stream.advance(4)); // skip <!--
+        self.stream.advance(4)?; // skip <!--
         let comment_start_pos = self.stream.pos();
 
         // read all until -->
         loop {
-            try!(self.stream.jump_to(b'>'));
-            if try!(self.stream.char_at(-1)) == b'-' && try!(self.stream.char_at(-2)) == b'-' {
+            self.stream.jump_to(b'>')?;
+            if self.stream.char_at(-1)? == b'-' && self.stream.char_at(-2)? == b'-' {
                 break;
             }
-            try!(self.stream.advance(1));
+            self.stream.advance(1)?;
         }
 
         // save data between <!-- and -->
         let comment_end_pos = self.stream.pos() - 2;
         let s = self.stream.slice_region_raw(comment_start_pos, comment_end_pos);
-        try!(self.stream.advance(1));
+        self.stream.advance(1)?;
 
         Ok(Token::Comment(s))
     }
 
     fn parse_cdata(&mut self) -> Result<Token<'a>, Error> {
-        try!(self.stream.advance(9)); // skip <![CDATA[
+        self.stream.advance(9)?; // skip <![CDATA[
         let start_pos = self.stream.pos();
 
         loop {
-            try!(self.stream.jump_to(b']'));
+            self.stream.jump_to(b']')?;
             if self.stream.starts_with(b"]]>") {
                 break;
             }
-            try!(self.stream.advance(1));
+            self.stream.advance(1)?;
         }
 
         // go back to CDATA start to properly init substream.
@@ -266,7 +266,7 @@ impl<'a> Tokenizer<'a> {
 
         // go to end of CDATA again
         self.stream.set_pos_raw(end);
-        try!(self.stream.advance(3));
+        self.stream.advance(3)?;
 
         Ok(Token::Cdata(substream))
     }
@@ -275,19 +275,19 @@ impl<'a> Tokenizer<'a> {
         // if first occurred char is '[' - than DTD has content
         // if first occurred char is '>' - than DTD is empty
 
-        try!(self.stream.advance(10)); // '<!DOCTYPE '
+        self.stream.advance(10)?; // '<!DOCTYPE '
         let start = self.stream.pos();
 
         let l = self.stream.slice_tail().into_iter().position(|x| *x == b'[' || *x == b'>');
         match l {
-            Some(l) => try!(self.stream.advance(l)),
+            Some(l) => self.stream.advance(l)?,
             None => return Err(self.stream.gen_end_of_stream_error()),
         }
 
-        if try!(self.stream.is_char_eq(b'>')) {
+        if self.stream.is_char_eq(b'>')? {
             // empty DOCTYPE
             let text = self.stream.slice_region_raw(start, self.stream.pos());
-            try!(self.stream.advance(1));
+            self.stream.advance(1)?;
             Ok(Token::DtdEmpty(text))
         } else {
             // [
@@ -295,7 +295,7 @@ impl<'a> Tokenizer<'a> {
 
             // skip space at the end
             let text = self.stream.slice_region_raw(start, self.stream.pos() - 1);
-            try!(self.stream.advance(1)); // [
+            self.stream.advance(1)?; // [
             self.stream.skip_spaces();
 
             Ok(Token::DtdStart(text))
@@ -304,35 +304,35 @@ impl<'a> Tokenizer<'a> {
 
     fn parse_entity(&mut self) -> Result<Token<'a>, Error> {
         if self.stream.starts_with(b"<!ENTITY") {
-            try!(self.stream.advance(9)); // '<!ENTITY '
+            self.stream.advance(9)?; // '<!ENTITY '
 
-            let key = try!(self.stream.read_to(b' '));
+            let key = self.stream.read_to(b' ')?;
 
             self.stream.skip_spaces();
-            try!(self.stream.consume_char(b'"'));
+            self.stream.consume_char(b'"')?;
 
-            let value_len = try!(self.stream.len_to(b'"'));
+            let value_len = self.stream.len_to(b'"')?;
 
             let substream = Stream::sub_stream(&self.stream, self.stream.pos(),
                                                self.stream.pos() + value_len);
 
             self.stream.advance_raw(value_len);
 
-            try!(self.stream.consume_char(b'"'));
+            self.stream.consume_char(b'"')?;
             self.stream.skip_spaces();
-            try!(self.stream.consume_char(b'>'));
+            self.stream.consume_char(b'>')?;
             self.stream.skip_spaces();
 
             Ok(Token::Entity(key, substream))
         } else if self.stream.starts_with(b"]>") {
-            try!(self.stream.advance(2)); // ]>
+            self.stream.advance(2)?; // ]>
             self.state = State::Unknown;
 
             Ok(Token::DtdEnd)
         } else {
             // skip unsupported elements
 
-            let l = try!(self.stream.len_to(b'>')) + 1;
+            let l = self.stream.len_to(b'>')? + 1;
             println!("Warning: Unsupported DOCTYPE object: '{}'.",
                      str::from_utf8(self.stream.slice_next_raw(l))?);
             self.stream.advance_raw(l);
@@ -343,7 +343,7 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn parse_element(&mut self) -> Result<Token<'a>, Error> {
-        try!(self.stream.advance(1)); // <
+        self.stream.advance(1)?; // <
 
         let start_pos = self.stream.pos();
 
@@ -351,7 +351,7 @@ impl<'a> Tokenizer<'a> {
               && !self.stream.is_space_raw()
               && !self.stream.is_char_eq_raw(b'/')
               && !self.stream.is_char_eq_raw(b'>') {
-            try!(self.stream.advance(1));
+            self.stream.advance(1)?;
         }
 
         // check that element has tag name
@@ -367,26 +367,26 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn parse_attribute(&mut self) -> Result<Token<'a>, Error> {
-        if try!(self.stream.is_char_eq(b'/')) {
+        if self.stream.is_char_eq(b'/')? {
             self.depth -= 1;
-            try!(self.stream.advance(2));
+            self.stream.advance(2)?;
             self.state = State::Unknown;
             return Ok(Token::ElementEnd(ElementEnd::Empty));
         }
 
-        if try!(self.stream.is_char_eq(b'>')) {
+        if self.stream.is_char_eq(b'>')? {
             self.stream.advance_raw(1);
             self.state = State::Unknown;
 
             return Ok(Token::ElementEnd(ElementEnd::Open));
         }
 
-        let key = try!(self.stream.read_to_trimmed(b'='));
+        let key = self.stream.read_to_trimmed(b'=')?;
 
-        try!(self.stream.advance(1)); // =
+        self.stream.advance(1)?; // =
         self.stream.skip_spaces();
 
-        if !(try!(self.stream.is_char_eq(b'"')) || try!(self.stream.is_char_eq(b'\''))) {
+        if !(self.stream.is_char_eq(b'"')? || self.stream.is_char_eq(b'\'')?) {
             return Err(Error::InvalidChar {
                 current: self.stream.curr_char_raw() as char,
                 expected: '"',
@@ -394,14 +394,14 @@ impl<'a> Tokenizer<'a> {
             });
         }
 
-        let quote = try!(self.stream.curr_char());
-        try!(self.stream.advance(1)); // quote
+        let quote = self.stream.curr_char()?;
+        self.stream.advance(1)?; // quote
 
-        let end = self.stream.pos() + try!(self.stream.len_to(quote));
+        let end = self.stream.pos() + self.stream.len_to(quote)?;
         let substream = Stream::sub_stream(&self.stream, self.stream.pos(), end);
 
         self.stream.advance_raw(substream.left());
-        try!(self.stream.advance(1)); // quote
+        self.stream.advance(1)?; // quote
 
         self.stream.skip_spaces();
 

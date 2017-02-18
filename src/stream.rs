@@ -242,9 +242,9 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn char_at(&self, pos: isize) -> Result<u8, Error> {
         if pos < 0 {
-            try!(self.back_bound_check(pos));
+            self.back_bound_check(pos)?;
         } else {
-            try!(self.adv_bound_check(pos as usize));
+            self.adv_bound_check(pos as usize)?;
         }
 
         let new_pos: isize = self.pos as isize + pos;
@@ -255,7 +255,7 @@ impl<'a> Stream<'a> {
     // TODO: remove parser should be consuming only
     #[inline]
     pub fn back(&mut self, n: usize) -> Result<(), Error> {
-        try!(self.back_bound_check(n as isize));
+        self.back_bound_check(n as isize)?;
         self.pos -= n;
         Ok(())
     }
@@ -285,7 +285,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn advance(&mut self, n: usize) -> Result<(), Error> {
-        try!(self.adv_bound_check(n));
+        self.adv_bound_check(n)?;
         self.pos += n;
         Ok(())
     }
@@ -325,7 +325,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn is_space(&self) -> Result<bool, Error> {
-        let c = try!(self.curr_char());
+        let c = self.curr_char()?;
         Ok(is_space(c))
     }
 
@@ -481,7 +481,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn jump_to(&mut self, c: u8) -> Result<(), Error> {
-        let l = try!(self.len_to(c));
+        let l = self.len_to(c)?;
         self.advance_raw(l);
         Ok(())
     }
@@ -560,7 +560,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn read_to(&mut self, c: u8) -> Result<&'a [u8], Error> {
-        let len = try!(self.len_to(c));
+        let len = self.len_to(c)?;
         let s = self.read_raw(len);
         Ok(s)
     }
@@ -589,7 +589,7 @@ impl<'a> Stream<'a> {
     pub fn read_to_trimmed(&mut self, c: u8) -> Result<&'a [u8], Error> {
         self.skip_spaces();
 
-        let mut s = try!(self.read_to(c));
+        let mut s = self.read_to(c)?;
 
         // trim spaces at the end of the string
         if let Some(p) = s.iter().rposition(|c| !is_space(*c)) {
@@ -697,7 +697,7 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn consume_char(&mut self, c: u8) -> Result<(), Error> {
-        if !try!(self.is_char_eq(c)) {
+        if !self.is_char_eq(c)? {
             return Err(Error::InvalidChar {
                 current: self.curr_char_raw() as char,
                 expected: c as char,
@@ -747,7 +747,7 @@ impl<'a> Stream<'a> {
 
         // check for a sign
         let mut sign = false;
-        match try!(self.curr_char()) {
+        match self.curr_char()? {
             b'-' => {
                 sign = true;
                 self.advance_raw(1);
@@ -759,7 +759,7 @@ impl<'a> Stream<'a> {
         }
 
         {
-            let c = try!(self.curr_char());
+            let c = self.curr_char()?;
             if !is_digit(c) && c != b'.' {
                 // back to start
                 self.pos = start;
@@ -866,14 +866,14 @@ impl<'a> Stream<'a> {
             let c2 = self.text[self.pos + 1];
             if (c1 == b'E' || c1 == b'e') && c2 != b'm' && c2 != b'x' {
                 self.advance_raw(1);
-                if try!(self.is_char_eq(b'-')) {
+                if self.is_char_eq(b'-')? {
                     exp_sign = true;
-                    try!(self.advance(1));
-                } else if try!(self.is_char_eq(b'+')) {
-                    try!(self.advance(1));
+                    self.advance(1)?;
+                } else if self.is_char_eq(b'+')? {
+                    self.advance(1)?;
                 }
 
-                while !self.at_end() && is_digit(try!(self.curr_char())) {
+                while !self.at_end() && is_digit(self.curr_char()?) {
                     exp = exp * 10 + (self.curr_char_raw() - b'0') as i32;
                     self.advance_raw(1);
                 }
@@ -952,7 +952,7 @@ impl<'a> Stream<'a> {
     /// assert_eq!(s.parse_list_number().unwrap(), -4.0);
     /// ```
     pub fn parse_list_number(&mut self) -> Result<f64, Error> {
-        let n = try!(self.parse_number());
+        let n = self.parse_number()?;
         self.skip_spaces();
         self.parse_list_separator();
         Ok(n)
@@ -970,7 +970,7 @@ impl<'a> Stream<'a> {
         }
 
         let mut sign = false;
-        match try!(self.curr_char()) {
+        match self.curr_char()? {
             b'-' => {
                 sign = true;
                 self.advance_raw(1);
@@ -983,7 +983,7 @@ impl<'a> Stream<'a> {
 
         let mut v = 0i32;
         // TODO: detect overflow
-        while is_digit(try!(self.curr_char())) {
+        while is_digit(self.curr_char()?) {
             v = 10 * v + (self.curr_char_raw() - b'0') as i32;
             self.advance_raw(1);
         }
@@ -997,7 +997,7 @@ impl<'a> Stream<'a> {
 
     /// Parses integer from the list of numbers.
     pub fn parse_list_integer(&mut self) -> Result<i32, Error> {
-        let n = try!(self.parse_integer());
+        let n = self.parse_integer()?;
         self.skip_spaces();
         self.parse_list_separator();
         Ok(n)
@@ -1022,7 +1022,7 @@ impl<'a> Stream<'a> {
     pub fn parse_length(&mut self) -> Result<Length, Error> {
         self.skip_spaces();
 
-        let n = try!(self.parse_number());
+        let n = self.parse_number()?;
 
         if self.at_end() {
             return Ok(Length::new(n, LengthUnit::None));
@@ -1062,9 +1062,9 @@ impl<'a> Stream<'a> {
         }
 
         match u {
-            LengthUnit::Percent => try!(self.advance(1)),
+            LengthUnit::Percent => self.advance(1)?,
             LengthUnit::None => {},
-            _ => try!(self.advance(2)),
+            _ => self.advance(2)?,
         }
 
         Ok(Length::new(n, u))
@@ -1072,7 +1072,7 @@ impl<'a> Stream<'a> {
 
     /// Parses length from the list of lengths.
     pub fn parse_list_length(&mut self) -> Result<Length, Error> {
-        let l = try!(self.parse_length());
+        let l = self.parse_length()?;
         self.skip_spaces();
         self.parse_list_separator();
         Ok(l)

@@ -162,9 +162,9 @@ impl<'a> AttributeValue<'a> {
             stream.trim_trailing_spaces();
         }
 
-        if !stream.at_end() && try!(stream.curr_char()) == b'&' {
+        if !stream.at_end() && stream.curr_char()? == b'&' {
             stream.advance_raw(1);
-            let len = try!(stream.len_to(b';'));
+            let len = stream.len_to(b';')?;
             // TODO: attribute can contain many refs, not only one.
             // TODO: advance to the end of the stream
             return Ok(AttributeValue::EntityRef(stream.slice_next_raw(len)));
@@ -182,7 +182,7 @@ impl<'a> AttributeValue<'a> {
                         Ok(AttributeValue::LengthList(LengthList(*stream)))
                     },
                     _ => {
-                        let l = try!(stream.parse_length());
+                        let l = stream.parse_length()?;
                         Ok(AttributeValue::Length(l))
                     },
                 }
@@ -196,7 +196,7 @@ impl<'a> AttributeValue<'a> {
             | AId::Fx | AId::Fy
             | AId::Offset
             | AId::Width | AId::Height => {
-                let l = try!(stream.parse_length());
+                let l = stream.parse_length()?;
                 Ok(AttributeValue::Length(l))
             }
 
@@ -212,7 +212,7 @@ impl<'a> AttributeValue<'a> {
             | AId::StrokeOpacity
             | AId::StopOpacity => {
                 fn get_opacity<'a>(s: &mut Stream) -> Result<AttributeValue<'a>, Error> {
-                    let mut n = try!(s.parse_number());
+                    let mut n = s.parse_number()?;
                     n = f64_bound(0.0, n, 1.0);
                     Ok(AttributeValue::Number(n))
                 }
@@ -747,7 +747,7 @@ fn parse_iri<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     // empty xlink:href is a valid attribute
     if !stream.at_end() && stream.is_char_eq_raw(b'#') {
         // extract internal link
-        try!(stream.advance(1));
+        stream.advance(1)?;
         let link = stream.slice_tail();
         Ok(AttributeValue::IRI(link))
     } else {
@@ -756,17 +756,17 @@ fn parse_iri<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
 }
 
 fn parse_length<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let l = try!(stream.parse_length());
+    let l = stream.parse_length()?;
     Ok(AttributeValue::Length(l))
 }
 
 fn parse_number<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let l = try!(stream.parse_number());
+    let l = stream.parse_number()?;
     Ok(AttributeValue::Number(l))
 }
 
 fn parse_rgb_color<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let c = try!(RgbColor::from_stream(stream));
+    let c = RgbColor::from_stream(stream)?;
     Ok(AttributeValue::Color(c))
 }
 

@@ -65,12 +65,12 @@ impl RgbColor {
 
         let mut color = RgbColor::new(0, 0, 0);
 
-        if try!(s.is_char_eq(b'#')) {
+        if s.is_char_eq(b'#')? {
             // get color data len until first space or stream end
             match s.len_to_space_or_end() {
                 7 => {
                     // #rrggbb
-                    try!(s.advance(1));
+                    s.advance(1)?;
                     color.red = hex_pair(s.read_raw(2));
                     color.green = hex_pair(s.read_raw(2));
                     color.blue = hex_pair(s.read_raw(2));
@@ -91,9 +91,9 @@ impl RgbColor {
                 }
             }
         } else if s.starts_with(b"rgb(") {
-            try!(s.advance(4));
+            s.advance(4)?;
 
-            let l = try!(s.parse_list_length());
+            let l = s.parse_list_length()?;
 
             if l.unit == LengthUnit::Percent {
                 fn from_persent(v: f64) -> u8 {
@@ -103,16 +103,16 @@ impl RgbColor {
                 }
 
                 color.red = from_persent(l.num);
-                color.green = from_persent(try!(s.parse_list_length()).num);
-                color.blue = from_persent(try!(s.parse_list_length()).num);
+                color.green = from_persent(s.parse_list_length()?.num);
+                color.blue = from_persent(s.parse_list_length()?.num);
             } else {
                 color.red = bound(0, l.num as i32, 255) as u8;
-                color.green = bound(0, try!(s.parse_list_integer()), 255) as u8;
-                color.blue = bound(0, try!(s.parse_list_integer()), 255) as u8;
+                color.green = bound(0, s.parse_list_integer()?, 255) as u8;
+                color.blue = bound(0, s.parse_list_integer()?, 255) as u8;
             }
 
             s.skip_spaces();
-            try!(s.consume_char(b')'));
+            s.consume_char(b')')?;
         } else {
             let l = s.len_to_space_or_end();
             match rgb_color_from_name(str::from_utf8(s.slice_next_raw(l))?) {

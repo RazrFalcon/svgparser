@@ -368,12 +368,12 @@ fn is_digit(c: u8) -> bool {
 
 fn parse_flag(s: &mut Stream) -> Result<bool, Error> {
     s.skip_spaces();
-    let c = try!(s.curr_char());
+    let c = s.curr_char()?;
     match c {
         b'0' | b'1' => {
-            try!(s.advance(1));
-            if try!(s.is_char_eq(b',')) {
-                try!(s.advance(1));
+            s.advance(1)?;
+            if s.is_char_eq(b',')? {
+                s.advance(1)?;
             }
             s.skip_spaces();
 

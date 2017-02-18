@@ -67,15 +67,15 @@ impl<'a> Tokenizer<'a> {
         }
 
         // skip comments inside attribute value
-        if try!(self.stream.is_char_eq(b'/')) {
-            try!(self.stream.advance(2)); // skip /*
-            try!(self.stream.jump_to(b'*'));
-            try!(self.stream.advance(2)); // skip */
+        if self.stream.is_char_eq(b'/')? {
+            self.stream.advance(2)?; // skip /*
+            self.stream.jump_to(b'*')?;
+            self.stream.advance(2)?; // skip */
             self.stream.skip_spaces();
         }
 
         // prefixed attributes are not supported, aka '-webkit-*'
-        if try!(self.stream.is_char_eq(b'-')) {
+        if self.stream.is_char_eq(b'-')? {
             let l = self.stream.len_to_or_end(b';');
             println!("Warning: Style attribute '{}' is skipped.",
                      str::from_utf8(self.stream.slice_next_raw(l))?);
@@ -87,28 +87,28 @@ impl<'a> Tokenizer<'a> {
             return self.parse_next();
         }
 
-        if try!(self.stream.is_char_eq(b'&')) {
+        if self.stream.is_char_eq(b'&')? {
             // extract 'text' from '&text;'
-            try!(self.stream.advance(1)); // &
+            self.stream.advance(1)?; // &
             let len = self.stream.len_to_space_or_end() - 1; // ;
             let name = self.stream.read_raw(len);
-            try!(self.stream.advance(1));
+            self.stream.advance(1)?;
 
             return Ok(Token::EntityRef(name));
         }
 
-        let name = try!(self.stream.read_to(b':'));
+        let name = self.stream.read_to(b':')?;
 
-        try!(self.stream.advance(1)); // ':'
+        self.stream.advance(1)?; // ':'
         self.stream.skip_spaces();
 
         let end_char;
 
-        if try!(self.stream.is_char_eq(b'\'')) {
+        if self.stream.is_char_eq(b'\'')? {
             // skip start quote
-            try!(self.stream.advance(1));
+            self.stream.advance(1)?;
             end_char = b';';
-        } else if try!(self.stream.is_char_eq(b'&')) {
+        } else if self.stream.is_char_eq(b'&')? {
             // skip escaped start quote aka '&apos;'
             if self.stream.starts_with(b"&apos;") {
                 self.stream.advance_raw(6);
@@ -123,7 +123,7 @@ impl<'a> Tokenizer<'a> {
         let mut value_len = self.stream.len_to_or_end(end_char);
 
         // skip end quote
-        if try!(self.stream.char_at(value_len as isize - 1)) == b'\'' {
+        if self.stream.char_at(value_len as isize - 1)? == b'\'' {
             value_len -= 1;
         }
 
