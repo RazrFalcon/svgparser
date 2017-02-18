@@ -131,7 +131,7 @@ impl<'a> Tokenizer<'a> {
 
         macro_rules! data_error {
             () => ({
-                println!("Warning: Invalid path data at {:?}. \
+                println!("Warning: Invalid path data at {}. \
                           The remaining data is ignored.", s.gen_error_pos());
                 return Ok(SegmentToken::EndOfStream);
             })
@@ -174,6 +174,7 @@ impl<'a> Tokenizer<'a> {
             cmd = first_char;
             s.advance_raw(1);
         } else if is_digit(first_char) && has_prev_cmd {
+            // unwrap is safe, because we checked 'has_prev_cmd'
             let prev_cmd = self.prev_cmd.unwrap();
 
             if prev_cmd == b'M' || prev_cmd == b'm' {

@@ -115,7 +115,7 @@ impl RgbColor {
             try!(s.consume_char(b')'));
         } else {
             let l = s.len_to_space_or_end();
-            match rgb_color_from_name(u8_to_str!(s.slice_next_raw(l))) {
+            match rgb_color_from_name(str::from_utf8(s.slice_next_raw(l))?) {
                 Some(c) => {
                     color = c;
                     s.advance_raw(l);

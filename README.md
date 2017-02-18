@@ -41,7 +41,7 @@ See the documentation for details.
  - Only ENTITY objects are parsed from the DOCTYPE. Other ignored.
  - CSS styles does not processed. You should use an external CSS parser.
  - Comments inside attributes value supported only for the `style` attribute.
- - User agent colors, aka `fill="AppWorkspace"`, is not supported.
+ - [System colors](https://www.w3.org/TR/css3-color/#css2-system), like `fill="AppWorkspace"`, are not supported.
  - There is no separate `opacity-value` type. It will be parsed as `<number>`,
    but will be bound to 0..1 range.
  - Implicit path commands are not supported. All commands are parsed as explicit.

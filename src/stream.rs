@@ -21,7 +21,7 @@ pub struct Stream<'a> {
 impl<'a> fmt::Debug for Stream<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Stream {{ text: {}, pos: {}, end: {}, has_parent: {}, parent_pos: {} }}",
-               u8_to_str!(self.text), self.pos, self.end, self.parent_text.is_some(),
+               str::from_utf8(self.text).unwrap(), self.pos, self.end, self.parent_text.is_some(),
                self.parent_pos)
     }
 }

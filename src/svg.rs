@@ -55,7 +55,7 @@ impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Token::ElementStart(s) =>
-                write!(f, "ElementStart({})", u8_to_str!(s)),
+                write!(f, "ElementStart({})", str::from_utf8(s).unwrap()),
             Token::ElementEnd(ref e) => {
                 let c = match *e {
                     ElementEnd::Open => ">",
@@ -65,25 +65,25 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "ElementEnd({})", c)
             }
             Token::Attribute(k, ref v) =>
-                write!(f, "Attribute({}, {:?})", u8_to_str!(k), v),
+                write!(f, "Attribute({}, {:?})", str::from_utf8(k).unwrap(), v),
             Token::Text(ref s) =>
                 write!(f, "Text({:?})", s),
             Token::Cdata(ref s) =>
                 write!(f, "CDATA({:?})", s),
             Token::Whitespace(s) =>
-                write!(f, "Whitespace({})", u8_to_str!(s)),
+                write!(f, "Whitespace({})", str::from_utf8(s).unwrap()),
             Token::Comment(s) =>
-                write!(f, "Comment({})", u8_to_str!(s)),
+                write!(f, "Comment({})", str::from_utf8(s).unwrap()),
             Token::DtdEmpty(s) =>
-                write!(f, "DtdEmpty({})", u8_to_str!(s)),
+                write!(f, "DtdEmpty({})", str::from_utf8(s).unwrap()),
             Token::DtdStart(s) =>
-                write!(f, "DtdStart({})", u8_to_str!(s)),
+                write!(f, "DtdStart({})", str::from_utf8(s).unwrap()),
             Token::Entity(k, ref v) =>
-                write!(f, "ENTITY({}, {:?})", u8_to_str!(k), v),
+                write!(f, "ENTITY({}, {:?})", str::from_utf8(k).unwrap(), v),
             Token::DtdEnd =>
                 write!(f, "DtdEnd"),
             Token::Declaration(s) =>
-                write!(f, "Declaration({})", u8_to_str!(s)),
+                write!(f, "Declaration({})", str::from_utf8(s).unwrap()),
             Token::EndOfStream =>
                 write!(f, "EndOfStream"),
         }
@@ -124,7 +124,8 @@ impl<'a> Tokenizer<'a> {
     /// # Notes
     ///
     /// - Only ENTITY objects are extracted from DOCTYPE. Library will print a warning to stdout.
-    /// - The parser doesn't check file encoding, assuming that it's UTF-8.
+    /// - The parser doesn't check an input encoding, assuming that it's UTF-8.
+    ///   You should evaluate it by yourself or you will get `Error::Utf8Error`.
     pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
         match self.state {
             State::Unknown => {
@@ -333,7 +334,7 @@ impl<'a> Tokenizer<'a> {
 
             let l = try!(self.stream.len_to(b'>')) + 1;
             println!("Warning: Unsupported DOCTYPE object: '{}'.",
-                u8_to_str!(self.stream.slice_next_raw(l)));
+                     str::from_utf8(self.stream.slice_next_raw(l))?);
             self.stream.advance_raw(l);
 
             self.stream.skip_spaces();

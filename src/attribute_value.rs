@@ -59,25 +59,25 @@ impl<'a> fmt::Debug for AttributeValue<'a> {
             AttributeValue::Color(color) =>
                 write!(f, "Color({:?})", color),
             AttributeValue::EntityRef(name) =>
-                write!(f, "EntityRef({})", u8_to_str!(name)),
+                write!(f, "EntityRef({})", str::from_utf8(name).unwrap()),
             AttributeValue::Length(len) =>
                 write!(f, "Length({:?})", len),
             AttributeValue::LengthList(list) =>
-                write!(f, "LengthList({})", u8_to_str!(list.0.slice())),
+                write!(f, "LengthList({})", str::from_utf8(list.0.slice()).unwrap()),
             AttributeValue::IRI(name) =>
-                write!(f, "IRI({})", u8_to_str!(name)),
+                write!(f, "IRI({})", str::from_utf8(name).unwrap()),
             AttributeValue::FuncIRI(name) =>
-                write!(f, "FuncIRI({})", u8_to_str!(name)),
+                write!(f, "FuncIRI({})", str::from_utf8(name).unwrap()),
             AttributeValue::FuncIRIWithFallback(name, ref fallback) =>
-                write!(f, "FuncIRI({}) Fallback({:?})", u8_to_str!(name), fallback),
+                write!(f, "FuncIRI({}) Fallback({:?})", str::from_utf8(name).unwrap(), fallback),
             AttributeValue::Number(num) =>
                 write!(f, "Number({})", num),
             AttributeValue::NumberList(list) =>
-                write!(f, "NumberList({})", u8_to_str!(list.0.slice())),
+                write!(f, "NumberList({})", str::from_utf8(list.0.slice()).unwrap()),
             AttributeValue::PredefValue(id) =>
                 write!(f, "PredefValue({})", id.name()),
             AttributeValue::String(text) =>
-                write!(f, "String({})", u8_to_str!(text)),
+                write!(f, "String({})", str::from_utf8(text).unwrap()),
         }
     }
 }
@@ -126,7 +126,7 @@ impl<'a> AttributeValue<'a> {
 
         macro_rules! parse_predef {
             ($($cmp:pat),+) => (
-                match ValueId::from_name(u8_to_str!(stream.slice_tail())) {
+                match ValueId::from_name(str::from_utf8(stream.slice_tail())?) {
                     Some(v) => {
                         match v {
                             $(
@@ -708,7 +708,7 @@ fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a
         if !stream.at_end() {
             let fallback = stream.slice_tail();
 
-            let vid = match ValueId::from_name(u8_to_str!(fallback)) {
+            let vid = match ValueId::from_name(try_opt!(str::from_utf8(fallback).ok())) {
                 Some(v) => {
                     match v {
                           ValueId::None
@@ -719,8 +719,8 @@ fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a
                 None => None,
             };
 
-            if vid.is_some() {
-                Some(AttributeValue::FuncIRIWithFallback(link, vid.unwrap()))
+            if let Some(v) = vid {
+                Some(AttributeValue::FuncIRIWithFallback(link, v))
             } else {
                 let color = try_opt!(RgbColor::from_stream(stream).ok());
                 Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))

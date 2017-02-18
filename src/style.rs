@@ -26,9 +26,9 @@ impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Token::Attribute(name, ref value) =>
-                write!(f, "Token({}, {:?})", u8_to_str!(name), value),
+                write!(f, "Token({}, {:?})", str::from_utf8(name).unwrap(), value),
             Token::EntityRef(name) =>
-                write!(f, "EntityRef({})", u8_to_str!(name)),
+                write!(f, "EntityRef({})", str::from_utf8(name).unwrap()),
             Token::EndOfStream =>
                 write!(f, "EndOfStream"),
         }
@@ -78,7 +78,7 @@ impl<'a> Tokenizer<'a> {
         if try!(self.stream.is_char_eq(b'-')) {
             let l = self.stream.len_to_or_end(b';');
             println!("Warning: Style attribute '{}' is skipped.",
-                     u8_to_str!(self.stream.slice_next_raw(l)));
+                     str::from_utf8(self.stream.slice_next_raw(l))?);
 
             self.stream.advance_raw(l);
             if !self.stream.at_end() {

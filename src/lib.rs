@@ -23,13 +23,6 @@ pub use stream::Stream;
 pub use value_id::ValueId;
 pub use values_list::{NumberList, LengthList};
 
-// TODO: maybe use from_utf8_unchecked() as an option
-/// `str::from_utf8($text).unwrap()`
-#[macro_export]
-macro_rules! u8_to_str {
-    ($text:expr) => (str::from_utf8($text).unwrap())
-}
-
 pub mod path;
 pub mod style;
 pub mod svg;

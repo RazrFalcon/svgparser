@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `Error::Utf8Error` instead of panic during `str::from_utf8` unwrap.
+
+### Removed
+- The `u8_to_str` macro.
 
 ## [0.2.1] - 2017-02-01
 ### Fixed
