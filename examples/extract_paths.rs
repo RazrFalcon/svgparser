@@ -2,6 +2,7 @@ extern crate svgparser;
 
 use std::env;
 use std::fs;
+use std::str;
 use std::io::Read;
 
 use svgparser::svg;
@@ -19,6 +20,9 @@ fn main() {
     let mut file = fs::File::open(&args[1]).unwrap();
     let mut v = Vec::new();
     file.read_to_end(&mut v).unwrap();
+
+    // Check that input file is a valid UTF-8 text.
+    str::from_utf8(&v).unwrap();
 
     // Begin parsing.
     let mut p = svg::Tokenizer::new(&v);

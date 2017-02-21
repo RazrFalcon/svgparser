@@ -5,8 +5,7 @@
 /// List of all SVG length units.
 #[derive(Clone,Copy,Debug,PartialEq)]
 #[allow(missing_docs)]
-pub enum LengthUnit
-{
+pub enum LengthUnit {
     None,
     Em,
     Ex,

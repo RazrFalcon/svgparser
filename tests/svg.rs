@@ -108,6 +108,13 @@ fn parse_comment_3() {
 }
 
 #[test]
+fn parse_comment_4() {
+    let mut p = svg::Tokenizer::new(b"<!---->");
+    basic_assert_eq!(p, svg::Token::Comment(b""));
+    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+}
+
+#[test]
 fn parse_cdata_1() {
     let mut p = svg::Tokenizer::new(b"<![CDATA[content]]>");
     cdata_assert_eq!(p, b"content");
@@ -313,6 +320,17 @@ fn parse_attributes_8() {
 }
 
 #[test]
+fn parse_attributes_9() {
+    let mut p = svg::Tokenizer::new(b"<svg stroke-width='1.0' x1='1.0' xlink:href='#link'/>");
+    basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
+    attr_assert_eq!(p, b"stroke-width", b"1.0");
+    attr_assert_eq!(p, b"x1", b"1.0");
+    attr_assert_eq!(p, b"xlink:href", b"#link");
+    basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
+    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+}
+
+#[test]
 fn parse_text_1() {
     let mut p = svg::Tokenizer::new(b"<p>text</p>");
     basic_assert_eq!(p, svg::Token::ElementStart(b"p"));
@@ -399,7 +417,7 @@ fn stream_end_on_element_2() {
 #[test]
 fn stream_end_on_element_4() {
     let mut p = svg::Tokenizer::new(b"<");
-    assert_eq!(p.parse_next().err().unwrap(), Error::ElementWithoutTagName(ErrorPos::new(1, 2)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 2)));
 }
 
 #[test]
@@ -407,27 +425,26 @@ fn stream_end_on_element_5() {
     let mut p = svg::Tokenizer::new(b"<svg><");
     basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
-    assert_eq!(p.parse_next().err().unwrap(), Error::ElementWithoutTagName(ErrorPos::new(1, 7)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 7)));
 }
 
 #[test]
 fn stream_end_on_element_6() {
     let mut p = svg::Tokenizer::new(b"< svg");
-    assert_eq!(p.parse_next().err().unwrap(), Error::ElementWithoutTagName(ErrorPos::new(1, 2)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 2)));
 }
 
 #[test]
 fn stream_end_on_element_7() {
     let mut p = svg::Tokenizer::new(b"<svg");
-    basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
-    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1, 5)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 5)));
 }
 
 #[test]
 fn stream_end_on_attribute_1() {
     let mut p = svg::Tokenizer::new(b"<svg x");
     basic_assert_eq!(p, svg::Token::ElementStart(b"svg"));
-    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1, 6)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1, 7)));
 }
 
 #[test]
@@ -464,4 +481,42 @@ fn invalid_structure_2() {
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Close(b"g")));
     assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedClosingTag(ErrorPos::new(1, 16)));
+}
+
+#[test]
+fn invalid_structure_3() {
+    let mut p = svg::Tokenizer::new(b"\n<<<!W<\x03>");
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(2, 2)));
+}
+
+#[test]
+fn invalid_structure_4() {
+    let mut p = svg::Tokenizer::new(b"<?></g");
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 1)));
+}
+
+#[test]
+fn invalid_structure_5() {
+    let mut p = svg::Tokenizer::new(b"<!DOCTYPE [");
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 11)));
+}
+
+#[test]
+fn invalid_structure_6() {
+    let mut p = svg::Tokenizer::new(b"<!DOCTYPEE");
+    assert_eq!(p.parse_next().err().unwrap(),
+               Error::InvalidChar{ current: 'E', expected: ' ', pos: ErrorPos::new(1, 10) });
+}
+
+#[test]
+fn invalid_structure_7() {
+    let mut p = svg::Tokenizer::new(b"<a\r)-=!DO)-<!E");
+    basic_assert_eq!(p, svg::Token::ElementStart(b"a"));
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 4)));
+}
+
+#[test]
+fn invalid_structure_8() {
+    let mut p = svg::Tokenizer::new(b"<!-->");
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 5)));
 }

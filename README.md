@@ -52,6 +52,8 @@ See the documentation for details.
 
 ### Usage
 
+Dependency: Rust >= 1.13
+
 Add this to your `Cargo.toml`:
 
 ```toml

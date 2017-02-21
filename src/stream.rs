@@ -50,6 +50,14 @@ fn is_space(c: u8) -> bool {
     }
 }
 
+#[inline]
+fn is_letter(c: u8) -> bool {
+    match c {
+        b'A'...b'Z' | b'a'...b'z' => true,
+        _ => false,
+    }
+}
+
 // Table giving binary powers of 10.
 // Entry is 10^2^i. Used to convert decimal
 // exponents into floating-point numbers.
@@ -309,7 +317,7 @@ impl<'a> Stream<'a> {
         self.pos += n;
     }
 
-    /// Checks that char at the current position is (white)space.
+    /// Checks that the current char is (white)space.
     ///
     /// Accepted chars: ' ', '\n', '\r', '\t'.
     ///
@@ -372,6 +380,27 @@ impl<'a> Stream<'a> {
     pub fn trim_trailing_spaces(&mut self) {
         while !self.at_end() && is_space(self.get_char_raw(self.end - 1)) {
             self.end -= 1;
+        }
+    }
+
+    /// Checks that the current char is a letter.
+    #[inline]
+    pub fn is_letter_raw(&self) -> bool {
+        is_letter(self.curr_char_raw())
+    }
+
+    /// Checks that the current char is a valid part of an ident token.
+    #[inline]
+    pub fn is_ident_raw(&self) -> bool {
+        let c = self.curr_char_raw();
+        match c {
+              b'0'...b'9'
+            | b'A'...b'Z'
+            | b'a'...b'z'
+            | b'-'
+            | b'_'
+            | b':' => true,
+            _ => false,
         }
     }
 
@@ -562,40 +591,6 @@ impl<'a> Stream<'a> {
     pub fn read_to(&mut self, c: u8) -> Result<&'a [u8], Error> {
         let len = self.len_to(c)?;
         let s = self.read_raw(len);
-        Ok(s)
-    }
-
-    /// Returns reference to the trimmed data until selected char and
-    /// advance stream by the data length.
-    ///
-    /// Same as `read_to()`, but also trim spaces from the both sides.
-    ///
-    /// # Errors
-    ///
-    /// Returns `Error::UnexpectedEndOfStream` if no such char.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use svgparser::Stream;
-    ///
-    /// let mut s = Stream::new(b"  Some text  .");
-    /// assert_eq!(s.read_to_trimmed(b'.').unwrap(), b"Some text");
-    ///
-    /// let mut s = Stream::new(b"Some text.");
-    /// assert_eq!(s.read_to_trimmed(b'.').unwrap(), b"Some text");
-    /// ```
-    #[inline]
-    pub fn read_to_trimmed(&mut self, c: u8) -> Result<&'a [u8], Error> {
-        self.skip_spaces();
-
-        let mut s = self.read_to(c)?;
-
-        // trim spaces at the end of the string
-        if let Some(p) = s.iter().rposition(|c| !is_space(*c)) {
-            s = &s[0..(p + 1)];
-        }
-
         Ok(s)
     }
 
@@ -873,9 +868,17 @@ impl<'a> Stream<'a> {
                     self.advance(1)?;
                 }
 
-                while !self.at_end() && is_digit(self.curr_char()?) {
+                while !self.at_end() && is_digit(self.curr_char()?) && exp < 100 {
+                    // TODO: use checked multiply
                     exp = exp * 10 + (self.curr_char_raw() - b'0') as i32;
                     self.advance_raw(1);
+                }
+
+                // check that 'exp' is less than 100 to prevent multiply overflow
+                if exp >= 100 {
+                    // back to start
+                    self.pos = start;
+                    return Err(Error::InvalidNumber(self.gen_error_pos()));
                 }
             }
         }

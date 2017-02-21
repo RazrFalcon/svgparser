@@ -57,6 +57,7 @@ test_number_err!(number_err_2, b"",     Error::InvalidNumber(ErrorPos::new(1,1))
 test_number_err!(number_err_3, b"-",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
 test_number_err!(number_err_4, b"+",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
 test_number_err!(number_err_5, b"-q",   Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_6, b"1e1111", Error::InvalidNumber(ErrorPos::new(1,1)));
 
 // ---
 

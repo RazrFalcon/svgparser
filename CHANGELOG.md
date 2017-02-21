@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `Error::Utf8Error` instead of panic during `str::from_utf8` unwrap.
+- `Stream::is_letter_raw`.
+
+### Changed
+- Maximum numeric exponent is 100 now. It's needed to prevent multiply overflow.
 
 ### Removed
 - The `u8_to_str` macro.
+- `Error::ElementWithoutTagName`. `Error::InvalidSvgToken` will be emitted instead.
+- `Stream::read_to_trimmed`.
+
+### Fixed
+- Few panics that can be triggered by an invalid input.
 
 ## [0.2.1] - 2017-02-01
 ### Fixed

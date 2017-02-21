@@ -217,21 +217,39 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn parse_declaration(&mut self) -> Result<Token<'a>, Error> {
-        let l = self.stream.len_to(b'>')?;
-        self.stream.advance(6)?; // '<?xml '
-        let s = self.stream.read_raw(l - 7);
-        self.stream.advance(2)?; // '?>'
+        debug_assert!(self.stream.starts_with(b"<?"));
+
+        // we are parsing the Declaration, not the Processing Instruction
+        if !self.stream.starts_with(b"<?xml ") {
+            return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
+        }
+        self.stream.advance_raw(6); // '<?xml '
+
+        // TODO: ? can be inside the string
+        let l = self.stream.len_to(b'?')?;
+        let s = self.stream.read_raw(l);
+
+        self.stream.consume_char(b'?')?;
+        self.stream.consume_char(b'>')?;
 
         Ok(Token::Declaration(s))
     }
 
     fn parse_comment(&mut self) -> Result<Token<'a>, Error> {
         self.stream.advance(4)?; // skip <!--
-        let comment_start_pos = self.stream.pos();
+        let start_pos = self.stream.pos();
 
         // read all until -->
         loop {
-            self.stream.jump_to(b'>')?;
+            let len = self.stream.len_to(b'>')?;
+
+            // length should be at least 2 to prevent '-' chars overlap
+            // like this: '<!-->'
+            if len < 2 {
+                return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
+            }
+
+            self.stream.advance_raw(len);
             if self.stream.char_at(-1)? == b'-' && self.stream.char_at(-2)? == b'-' {
                 break;
             }
@@ -239,8 +257,8 @@ impl<'a> Tokenizer<'a> {
         }
 
         // save data between <!-- and -->
-        let comment_end_pos = self.stream.pos() - 2;
-        let s = self.stream.slice_region_raw(comment_start_pos, comment_end_pos);
+        let end_pos = self.stream.pos() - 2;
+        let s = self.stream.slice_region_raw(start_pos, end_pos);
         self.stream.advance(1)?;
 
         Ok(Token::Comment(s))
@@ -275,13 +293,20 @@ impl<'a> Tokenizer<'a> {
         // if first occurred char is '[' - than DTD has content
         // if first occurred char is '>' - than DTD is empty
 
-        self.stream.advance(10)?; // '<!DOCTYPE '
+        debug_assert!(self.stream.starts_with(b"<!DOCTYPE"));
+
+        self.stream.advance_raw(9); // '<!DOCTYPE'
+        self.stream.consume_char(b' ')?;
         let start = self.stream.pos();
 
         let l = self.stream.slice_tail().into_iter().position(|x| *x == b'[' || *x == b'>');
         match l {
             Some(l) => self.stream.advance(l)?,
             None => return Err(self.stream.gen_end_of_stream_error()),
+        }
+
+        if start == self.stream.pos() {
+            return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
 
         if self.stream.is_char_eq(b'>')? {
@@ -343,20 +368,36 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn parse_element(&mut self) -> Result<Token<'a>, Error> {
+        debug_assert!(self.stream.is_char_eq_raw(b'<'));
         self.stream.advance(1)?; // <
 
         let start_pos = self.stream.pos();
 
-        while    !self.stream.at_end()
-              && !self.stream.is_space_raw()
-              && !self.stream.is_char_eq_raw(b'/')
-              && !self.stream.is_char_eq_raw(b'>') {
+        // consume a tag name
+        while !self.stream.at_end() && self.stream.is_ident_raw() {
             self.stream.advance(1)?;
+        }
+
+        // check that current char is a valid one:
+        // '<tagname '
+        // '<tagname/'
+        // '<tagname>'
+        if !self.stream.at_end() {
+            if     !self.stream.is_space_raw()
+                && !self.stream.is_char_eq_raw(b'/')
+                && !self.stream.is_char_eq_raw(b'>')
+            {
+                return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
+            }
+        } else {
+            // stream can't end here
+            return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
 
         // check that element has tag name
         if start_pos == self.stream.pos() {
-            return Err(Error::ElementWithoutTagName(self.stream.gen_error_pos()));
+            // return Err(Error::ElementWithoutTagName(self.stream.gen_error_pos()));
+            return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
 
         let tag_name = self.stream.slice_region_raw(start_pos, self.stream.pos());
@@ -377,13 +418,29 @@ impl<'a> Tokenizer<'a> {
         if self.stream.is_char_eq(b'>')? {
             self.stream.advance_raw(1);
             self.state = State::Unknown;
-
             return Ok(Token::ElementEnd(ElementEnd::Open));
         }
 
-        let key = self.stream.read_to_trimmed(b'=')?;
+        self.stream.skip_spaces();
 
-        self.stream.advance(1)?; // =
+        let name = {
+            let start = self.stream.pos();
+            // consume an attribute name
+            while !self.stream.at_end() && self.stream.is_ident_raw() {
+                self.stream.advance(1)?;
+            }
+
+            let len = self.stream.pos() - start;
+            if len == 0 {
+                return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
+            }
+
+            self.stream.slice_region_raw(start, start + len)
+        };
+
+        self.stream.skip_spaces();
+
+        self.stream.consume_char(b'=')?;
         self.stream.skip_spaces();
 
         if !(self.stream.is_char_eq(b'"')? || self.stream.is_char_eq(b'\'')?) {
@@ -405,6 +462,6 @@ impl<'a> Tokenizer<'a> {
 
         self.stream.skip_spaces();
 
-        Ok(Token::Attribute(key, substream))
+        Ok(Token::Attribute(name, substream))
     }
 }

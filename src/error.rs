@@ -72,8 +72,6 @@ pub enum Error {
         /// Absolute stream position.
         pos: ErrorPos,
     },
-    /// An SVG element must contain a tag name.
-    ElementWithoutTagName(ErrorPos),
     /// UTF-8 processing error.
     Utf8Error(str::Utf8Error),
 }
@@ -102,8 +100,6 @@ impl fmt::Display for Error {
             Error::InvalidAdvance{ ref expected, ref total, ref pos } =>
                 write!(f, "Attempt to advance to the pos {} from {}, but total len is {}",
                        expected, pos, total),
-            Error::ElementWithoutTagName(ref pos) =>
-                write!(f, "An element without a tag name at {}", pos),
             Error::Utf8Error(e) =>
                 write!(f, "{}", e),
         }
