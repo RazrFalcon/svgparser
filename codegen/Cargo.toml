@@ -5,5 +5,5 @@ authors = ["RazrFalcon <razrfalcon@gmail.com>"]
 license = "MPL-2.0"
 
 [dependencies]
-phf = "0.7.*"
-phf_codegen = "0.7.*"
+phf = "=0.7.21"
+phf_codegen = "=0.7.21"
