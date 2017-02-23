@@ -396,7 +396,6 @@ impl<'a> Tokenizer<'a> {
 
         // check that element has tag name
         if start_pos == self.stream.pos() {
-            // return Err(Error::ElementWithoutTagName(self.stream.gen_error_pos()));
             return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
 

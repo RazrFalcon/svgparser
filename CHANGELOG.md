@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Few panics that can be triggered by an invalid input.
+- `.` was parsed as `0` by `Steam::parse_number`. Now it's an error.
+- Endless loop when a ClosePath segment was followed by a number.
 
 ## [0.2.1] - 2017-02-01
 ### Fixed

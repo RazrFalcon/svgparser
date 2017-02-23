@@ -221,3 +221,18 @@ test!(close_path_3, b"M10 20 L 30 40 Z Z Z",
     Segment { cmd: b'Z', data: SegmentData::ClosePath },
     Segment { cmd: b'Z', data: SegmentData::ClosePath }
 );
+
+// first token should be EndOfStream
+test!(invalid_1, b"M\t.", );
+
+#[test]
+fn invalid_2() {
+    // ClosePath can't be followed by a number
+    let stream = Stream::new(b"M0 0 Z 2");
+    let mut s = Tokenizer::new(stream);
+    assert_eq!(s.parse_next().unwrap(),
+        SegmentToken::Segment(Segment { cmd: b'M', data: SegmentData::MoveTo { x: 0.0, y: 0.0 } }));
+    assert_eq!(s.parse_next().unwrap(),
+        SegmentToken::Segment(Segment { cmd: b'Z', data: SegmentData::ClosePath }));
+    assert_eq!(s.parse_next().unwrap(), SegmentToken::EndOfStream);
+}

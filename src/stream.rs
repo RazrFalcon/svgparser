@@ -816,6 +816,13 @@ impl<'a> Stream<'a> {
 
         let mut fraction: f64;
         if mant_size == 0 {
+            // check that input is not equal to '.', which is not a number(0)
+            if self.is_char_eq(b'.')? {
+                // back to start
+                self.pos = start;
+                return Err(Error::InvalidNumber(self.gen_error_pos()));
+            }
+
             return Ok(0.0);
         } else {
             let mut frac1 = 0.0;

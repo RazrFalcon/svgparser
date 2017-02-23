@@ -177,6 +177,11 @@ impl<'a> Tokenizer<'a> {
             // unwrap is safe, because we checked 'has_prev_cmd'
             let prev_cmd = self.prev_cmd.unwrap();
 
+            // ClosePath can't be followed by a number
+            if prev_cmd == b'Z' || prev_cmd == b'z' {
+                data_error!();
+            }
+
             if prev_cmd == b'M' || prev_cmd == b'm' {
                 // 'If a moveto is followed by multiple pairs of coordinates, the subsequent
                 // pairs are treated as implicit lineto commands.'

@@ -38,7 +38,6 @@ test_number!(number_19, b"1ex", 1.0);
 test_number!(number_20, b"1em", 1.0);
 test_number!(number_21, b"12345678901234567890", 12345678901234567000.0);
 test_number!(number_22, b"0.", 0.0);
-test_number!(number_23, b".", 0.0); // TODO: probably wrong
 
 // ---
 
@@ -52,12 +51,13 @@ macro_rules! test_number_err {
     )
 }
 
-test_number_err!(number_err_1, b"q",    Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_2, b"",     Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_3, b"-",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
-test_number_err!(number_err_4, b"+",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
-test_number_err!(number_err_5, b"-q",   Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_6, b"1e1111", Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_1, b"q",        Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_2, b"",         Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_3, b"-",        Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
+test_number_err!(number_err_4, b"+",        Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
+test_number_err!(number_err_5, b"-q",       Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_6, b"1e1111",   Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_7, b".",        Error::InvalidNumber(ErrorPos::new(1,1)));
 
 // ---
 
