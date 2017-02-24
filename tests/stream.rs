@@ -51,13 +51,14 @@ macro_rules! test_number_err {
     )
 }
 
-test_number_err!(number_err_1, b"q",        Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_2, b"",         Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_3, b"-",        Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
-test_number_err!(number_err_4, b"+",        Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
-test_number_err!(number_err_5, b"-q",       Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_6, b"1e1111",   Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_7, b".",        Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_1, b"q",    Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_2, b"",     Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_3, b"-",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
+test_number_err!(number_err_4, b"+",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
+test_number_err!(number_err_5, b"-q",   Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_6, b".",    Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_7, b"99999999e99999999",  Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_8, b"-99999999e99999999", Error::InvalidNumber(ErrorPos::new(1,1)));
 
 // ---
 

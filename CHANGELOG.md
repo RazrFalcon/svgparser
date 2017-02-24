@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Stream::is_letter_raw`.
 
 ### Changed
-- Maximum numeric exponent is 100 now. It's needed to prevent multiply overflow.
+- Use default `f64` parser instead custom one.
 
 ### Removed
 - The `u8_to_str` macro.

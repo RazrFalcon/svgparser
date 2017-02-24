@@ -5,6 +5,7 @@
 use std::cmp;
 use std::fmt;
 use std::str;
+use std::str::FromStr;
 
 use super::{Length, LengthUnit, Error, ErrorPos};
 
@@ -57,21 +58,6 @@ fn is_letter(c: u8) -> bool {
         _ => false,
     }
 }
-
-// Table giving binary powers of 10.
-// Entry is 10^2^i. Used to convert decimal
-// exponents into floating-point numbers.
-const POWERS_OF_10: [f64; 9] = [
-    10.0,
-    100.0,
-    1.0e4,
-    1.0e8,
-    1.0e16,
-    1.0e32,
-    1.0e64,
-    1.0e128,
-    1.0e256
-];
 
 impl<'a> Stream<'a> {
     /// Constructs a new `Stream` from data.
@@ -387,6 +373,12 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn is_letter_raw(&self) -> bool {
         is_letter(self.curr_char_raw())
+    }
+
+    /// Checks that the current char is a digit.
+    #[inline]
+    pub fn is_digit_raw(&self) -> bool {
+        is_digit(self.curr_char_raw())
     }
 
     /// Checks that the current char is a valid part of an ident token.
@@ -705,10 +697,8 @@ impl<'a> Stream<'a> {
 
     /// Parses number from the stream.
     ///
-    /// We use own parser instead of Rust parser because we didn't know number length,
-    /// to pass it to Rust parser and it will not return a number of consumed chars, which we need.
-    /// And to detect length we need to actually parse the number,
-    /// so getting only a length will be pointless.
+    /// This method will detect a number length and then
+    /// will pass a substring to the `std::from_str` method.
     ///
     /// https://www.w3.org/TR/SVG/types.html#DataTypeNumber
     ///
@@ -736,215 +726,97 @@ impl<'a> Stream<'a> {
 
         let start = self.pos();
 
-        // NOTE: code below is port of 'strtod.c' to Rust.
-        // Source: https://opensource.apple.com/source/tcl/tcl-10/tcl/compat/strtod.c
-        // License: https://opensource.apple.com/source/tcl/tcl-10/tcl/license.terms
+        macro_rules! gen_err {
+            () => ({
+                // back to start
+                self.pos = start;
+                Err(Error::InvalidNumber(self.gen_error_pos()))
+            })
+        }
 
-        // check for a sign
-        let mut sign = false;
+        // consume sign
         match self.curr_char()? {
-            b'-' => {
-                sign = true;
-                self.advance_raw(1);
-            }
-            b'+' => {
-                self.advance_raw(1);
+            b'+' | b'-' => {
+                self.advance_raw(1); // skip sign
             }
             _ => {}
         }
 
+        // consume integer
         {
+            // current char must be a digit or a dot
+
             let c = self.curr_char()?;
-            if !is_digit(c) && c != b'.' {
-                // back to start
-                self.pos = start;
-                return Err(Error::InvalidNumber(self.gen_error_pos()));
+            if is_digit(c) {
+                self.consume_digits();
+            } else if c == b'.' {
+                // nothing
+            } else {
+                return gen_err!();
             }
         }
 
-        // Count the number of digits in the mantissa (including the decimal
-        // point), and also locate the decimal point.
+        let mut check_exponent = false;
 
-        // Number of digits in mantissa.
-        let mut mant_size: i32 = 0;
-        // Number of mantissa digits before decimal point.
-        let mut dec_pt: i32 = -1;
-        while !self.at_end() {
-            if !is_digit(self.curr_char_raw()) {
-                if self.curr_char_raw() != b'.' || dec_pt >= 0 {
-                    break;
-                }
-                dec_pt = mant_size;
+        // consume fraction
+        if !self.at_end() {
+            // current char must be a dot or an exponent sign
+
+            let c = self.curr_char_raw();
+            if c == b'.' {
+                self.advance_raw(1); // skip dot
+                self.consume_digits();
+            } else if c == b'e' || c == b'E' {
+                check_exponent = true;
+            } else {
+                // do nothing
             }
+        }
 
-            mant_size += 1;
+        // consume exponent
+        if check_exponent && !self.at_end() {
+            let c = self.curr_char_raw();
+
+            if c == b'e' || c == b'E' {
+                self.advance_raw(1); // skip 'e'
+
+                let c = self.curr_char()?;
+                if c == b'+' || c == b'-' {
+                    self.advance_raw(1); // skip sign
+                    self.consume_digits();
+                } else if is_digit(c) {
+                    self.consume_digits();
+                } else {
+                    // not an exponent
+                    // probably 'ex' or 'em'
+                    self.back(1)?;
+                }
+            } else {
+                // no exponent
+            }
+        }
+
+        // use default f64 parser now
+        let raw = self.slice_region_raw(start, self.pos());
+        let s = str::from_utf8(raw)?;
+        match f64::from_str(s) {
+            Ok(n) => {
+                if n.is_finite() {
+                    Ok(n)
+                } else {
+                    // inf, nan, etc. are an error
+                    gen_err!()
+                }
+            }
+            Err(_) => gen_err!(),
+        }
+    }
+
+    #[inline]
+    fn consume_digits(&mut self) {
+        while !self.at_end() && self.is_digit_raw() {
             self.advance_raw(1);
         }
-
-        // Now suck up the digits in the mantissa.  Use two integers to
-        // collect 9 digits each (this is faster than using floating-point).
-        // If the mantissa has more than 18 digits, ignore the extras, since
-        // they can't affect the value anyway.
-
-        // Temporarily holds location of exponent in string.
-        let p_exp = self.pos();
-        self.pos -= mant_size as usize;
-
-        if dec_pt < 0 {
-            dec_pt = mant_size;
-        } else {
-            // one of the digits was the point
-            mant_size -= 1;
-        }
-
-        // Exponent that derives from the fractional
-        // part. Under normal circumstances, it is
-        // the negative of the number of digits in F.
-        // However, if I is very long, the last digits
-        // of I get dropped (otherwise a long I with a
-        // large negative exponent could cause an
-        // unnecessary overflow on I alone). In this
-        // case, frac_exp is incremented one for each
-        // dropped digit.
-        let frac_exp: i32;
-        if mant_size > 18 {
-            frac_exp = dec_pt - 18;
-            mant_size = 18;
-        } else {
-            frac_exp = dec_pt - mant_size;
-        }
-
-        let mut fraction: f64;
-        if mant_size == 0 {
-            // check that input is not equal to '.', which is not a number(0)
-            if self.is_char_eq(b'.')? {
-                // back to start
-                self.pos = start;
-                return Err(Error::InvalidNumber(self.gen_error_pos()));
-            }
-
-            return Ok(0.0);
-        } else {
-            let mut frac1 = 0.0;
-            let mut frac2 = 0.0;
-
-            while mant_size > 9 {
-                let mut c = self.curr_char_raw();
-                self.advance_raw(1);
-                if c == b'.' {
-                    c = self.curr_char_raw();
-                    self.advance_raw(1);
-                }
-
-                frac1 = 10.0 * frac1 + (c - b'0') as f64;
-                mant_size -= 1;
-            }
-
-            while mant_size > 0 {
-                let mut c = self.curr_char_raw();
-                self.advance_raw(1);
-                if c == b'.' {
-                    c = self.curr_char_raw();
-                    self.advance_raw(1);
-                }
-
-                frac2 = 10.0 * frac2 + (c - b'0') as f64;
-                mant_size -= 1;
-            }
-
-            fraction = (1.0e9 * frac1) + frac2;
-        }
-
-        // skim off the exponent
-        self.pos = p_exp;
-
-        // exponent read from "EX" field
-        let mut exp: i32 = 0;
-        let mut exp_sign = false;
-
-        // check that 'e' does not belong to em/ex
-        if !self.at_end() && self.left() > 1 {
-            let c1 = self.curr_char_raw();
-            let c2 = self.text[self.pos + 1];
-            if (c1 == b'E' || c1 == b'e') && c2 != b'm' && c2 != b'x' {
-                self.advance_raw(1);
-                if self.is_char_eq(b'-')? {
-                    exp_sign = true;
-                    self.advance(1)?;
-                } else if self.is_char_eq(b'+')? {
-                    self.advance(1)?;
-                }
-
-                while !self.at_end() && is_digit(self.curr_char()?) && exp < 100 {
-                    // TODO: use checked multiply
-                    exp = exp * 10 + (self.curr_char_raw() - b'0') as i32;
-                    self.advance_raw(1);
-                }
-
-                // check that 'exp' is less than 100 to prevent multiply overflow
-                if exp >= 100 {
-                    // back to start
-                    self.pos = start;
-                    return Err(Error::InvalidNumber(self.gen_error_pos()));
-                }
-            }
-        }
-
-        if exp_sign {
-            exp = frac_exp - exp;
-        } else {
-            exp += frac_exp;
-        }
-
-        if exp != 0 {
-
-            // Generate a floating-point number that represents the exponent.
-            // Do this by processing the exponent one bit at a time to combine
-            // many powers of 2 of 10. Then combine the exponent with the
-            // fraction.
-
-            if exp < 0 {
-                exp_sign = true;
-                exp = -exp;
-            } else {
-                exp_sign = false;
-            }
-
-            // Largest possible base 10 exponent. Any
-            // exponent larger than this will already
-            // produce underflow or overflow, so there's
-            // no need to worry about additional digit.
-            let max_exponent = 511;
-
-            if exp > max_exponent {
-                exp = max_exponent;
-            }
-
-            let mut dbl_exp = 1.0;
-
-            let mut i = 0;
-            while exp != 0 {
-                if (exp & 1) > 0 {
-                    dbl_exp *= POWERS_OF_10[i];
-                }
-
-                exp >>= 1;
-                i += 1;
-            }
-
-
-            if exp_sign {
-                fraction /= dbl_exp;
-            } else {
-                fraction *= dbl_exp;
-            }
-        }
-
-        if sign {
-            fraction = -fraction;
-        }
-
-        Ok(fraction)
     }
 
     /// Parses number from the list of numbers.
