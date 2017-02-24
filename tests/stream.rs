@@ -91,3 +91,18 @@ fn length_err_1() {
     let mut s = Stream::new(b"1q");
     assert_eq!(s.parse_length().err().unwrap(), Error::InvalidLength(ErrorPos::new(1,2)));
 }
+
+// ---
+
+#[test]
+fn integer_1() {
+    let mut s = Stream::new(b"10");
+    assert_eq!(s.parse_integer().unwrap(), 10);
+}
+
+#[test]
+fn integer_err_1() {
+    // error because of overflow
+    let mut s = Stream::new(b"10000000000000");
+    assert_eq!(s.parse_integer().err().unwrap(), Error::InvalidNumber(ErrorPos::new(1,1)));
+}

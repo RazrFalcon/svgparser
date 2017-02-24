@@ -736,9 +736,7 @@ impl<'a> Stream<'a> {
 
         // consume sign
         match self.curr_char()? {
-            b'+' | b'-' => {
-                self.advance_raw(1); // skip sign
-            }
+            b'+' | b'-' => self.advance_raw(1), // skip sign
             _ => {}
         }
 
@@ -851,30 +849,36 @@ impl<'a> Stream<'a> {
             return Err(Error::InvalidNumber(self.gen_error_pos()));
         }
 
-        let mut sign = false;
+        let start = self.pos();
+
+        macro_rules! gen_err {
+            () => ({
+                // back to start
+                self.pos = start;
+                Err(Error::InvalidNumber(self.gen_error_pos()))
+            })
+        }
+
+        // consume sign
         match self.curr_char()? {
-            b'-' => {
-                sign = true;
-                self.advance_raw(1);
-            }
-            b'+' => {
-                self.advance_raw(1);
-            }
+            b'+' | b'-' => self.advance_raw(1),
             _ => {}
         }
 
-        let mut v = 0i32;
-        // TODO: detect overflow
-        while is_digit(self.curr_char()?) {
-            v = 10 * v + (self.curr_char_raw() - b'0') as i32;
-            self.advance_raw(1);
+        // current char must be a digit
+        if !is_digit(self.curr_char()?) {
+            return gen_err!();
         }
 
-        if sign {
-            v = -v;
-        }
+        self.consume_digits();
 
-        Ok(v)
+        // use default i32 parser now
+        let raw = self.slice_region_raw(start, self.pos());
+        let s = str::from_utf8(raw)?;
+        match i32::from_str(s) {
+            Ok(n) => Ok(n),
+            Err(_) => gen_err!(),
+        }
     }
 
     /// Parses integer from the list of numbers.
