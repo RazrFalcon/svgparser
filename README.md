@@ -6,6 +6,8 @@ data format without heap allocations.
 It's not an XML parser since it does not only split the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
+[![Build Status](https://travis-ci.org/RazrFalcon/libsvgparser.svg?branch=master)](https://travis-ci.org/RazrFalcon/libsvgparser)
+
 ### [Documentation](https://docs.rs/svgparser/)
 
 ### Supported SVG types
