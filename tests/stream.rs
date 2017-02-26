@@ -34,6 +34,7 @@ test_number!(number_15, b"1e2", 100.0);
 test_number!(number_16, b"1e+2", 100.0);
 test_number!(number_17, b"1E2", 100.0);
 test_number!(number_18, b"1e-2", 0.01);
+test_number!(number_18_exponent, b"1.3e-2", 0.013);
 test_number!(number_19, b"1ex", 1.0);
 test_number!(number_20, b"1em", 1.0);
 test_number!(number_21, b"12345678901234567890", 12345678901234567000.0);
@@ -85,6 +86,9 @@ test_length!(length_10, b"1%",  Length::new(1.0, LengthUnit::Percent));
 test_length!(length_11, b"1,",  Length::new(1.0, LengthUnit::None));
 test_length!(length_12, b"1 ,", Length::new(1.0, LengthUnit::None));
 test_length!(length_13, b"1 1", Length::new(1.0, LengthUnit::None));
+test_length!(length_14, b"1e0", Length::new(1.0, LengthUnit::None));
+test_length!(length_15, b"1.0e0", Length::new(1.0, LengthUnit::None));
+test_length!(length_16, b"1.0e0em", Length::new(1.0, LengthUnit::Em));
 
 #[test]
 fn length_err_1() {

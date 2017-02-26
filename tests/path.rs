@@ -36,6 +36,11 @@ test!(move_to_3, b"M 10 20 30 40 50 60",
     Segment { cmd: b'L', data: SegmentData::LineTo { x: 30.0, y: 40.0 } },
     Segment { cmd: b'L', data: SegmentData::LineTo { x: 50.0, y: 60.0 } }
 );
+test!(move_to_3_exponent, b"M 1e1 2.e1 30 40 50 60",
+    Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } },
+    Segment { cmd: b'L', data: SegmentData::LineTo { x: 30.0, y: 40.0 } },
+    Segment { cmd: b'L', data: SegmentData::LineTo { x: 50.0, y: 60.0 } }
+);
 
 test!(move_to_4, b"M 10 20 30 40 50 60 M 70 80 90 100 110 120",
     Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: 20.0 } },
@@ -72,6 +77,16 @@ test!(arc_to_10, b"M10-20A5.5.3-4 010-.1",
     Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: -20.0 } },
     Segment { cmd: b'A', data: SegmentData::EllipticalArc {
             rx: 5.5, ry: 0.3,
+            x_axis_rotation: -4.0,
+            large_arc: false, sweep: true,
+            x: 0.0, y: -0.1
+        }
+    }
+);
+test!(arc_to_10_exponent, b"M10-2e1A5.5 3.3e-1-4 010-.1",
+    Segment { cmd: b'M', data: SegmentData::MoveTo { x: 10.0, y: -20.0 } },
+    Segment { cmd: b'A', data: SegmentData::EllipticalArc {
+            rx: 5.5, ry: 0.33,
             x_axis_rotation: -4.0,
             large_arc: false, sweep: true,
             x: 0.0, y: -0.1
