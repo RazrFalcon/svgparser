@@ -34,11 +34,11 @@ test_number!(number_15, b"1e2", 100.0);
 test_number!(number_16, b"1e+2", 100.0);
 test_number!(number_17, b"1E2", 100.0);
 test_number!(number_18, b"1e-2", 0.01);
-test_number!(number_18_exponent, b"1.3e-2", 0.013);
 test_number!(number_19, b"1ex", 1.0);
 test_number!(number_20, b"1em", 1.0);
 test_number!(number_21, b"12345678901234567890", 12345678901234567000.0);
 test_number!(number_22, b"0.", 0.0);
+test_number!(number_23, b"1.3e-2", 0.013);
 
 // ---
 

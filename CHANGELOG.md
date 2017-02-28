@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Endless loop when a ClosePath segment was followed by a number.
 - `Stream::parse_integer` error when a number is at the end of the stream.
 - `Stream::parse_integer` will return an error on an integer overflow now.
+- Numbers parsing with a decimal part and an exponent.
 
 ## [0.2.1] - 2017-02-01
 ### Fixed

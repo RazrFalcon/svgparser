@@ -25,9 +25,6 @@ macro_rules! test {
 test!(matrix_1, b"matrix(1 0 0 1 10 20)",
     TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
-test!(matrix_1_exponent, b"matrix(1 0 0 1 1.3e1 2.44e-1)",
-    TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 13.0, f: 0.244 }
-);
 
 test!(matrix_2, b"matrix(1, 0, 0, 1, 10, 20)",
     TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
@@ -39,9 +36,6 @@ test!(matrix_3, b" matrix ( 1, 0, 0, 1, 10, 20 )",
 
 test!(translate_1, b"translate(10 20)",
     TransformToken::Translate { tx: 10.0, ty: 20.0 }
-);
-test!(translate_1_exponent, b"translate(1.2e3 2.5e-2)",
-    TransformToken::Translate { tx: 1200.0, ty: 0.025 }
 );
 
 test!(translate_2, b"translate(10)",
