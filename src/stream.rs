@@ -760,11 +760,16 @@ impl<'a> Stream<'a> {
         if !self.at_end() {
             // current char must be a dot or an exponent sign
 
-            let c = self.curr_char_raw();
+            let mut c = self.curr_char_raw();
             if c == b'.' {
                 self.advance_raw(1); // skip dot
                 self.consume_digits();
-            } else if c == b'e' || c == b'E' {
+                if !self.at_end() {
+                    // Could have an exponent component.
+                    c = self.curr_char_raw();
+                }
+            }
+            if c == b'e' || c == b'E' {
                 check_exponent = true;
             } else {
                 // do nothing
