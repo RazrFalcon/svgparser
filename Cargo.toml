@@ -1,10 +1,10 @@
 [package]
 name = "svgparser"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 keywords = ["svg", "parser", "tokenizer"]
 license = "MPL-2.0"
-description = "Simple streaming, zero-allocation SVG parser."
+description = "Simple, streaming, zero-allocation SVG parser."
 repository = "https://github.com/RazrFalcon/libsvgparser"
 documentation = "https://docs.rs/svgparser/"
 readme = "README.md"
