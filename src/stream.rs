@@ -837,6 +837,10 @@ impl<'a> Stream<'a> {
     /// assert_eq!(s.parse_list_number().unwrap(), -4.0);
     /// ```
     pub fn parse_list_number(&mut self) -> Result<f64, Error> {
+        if self.at_end() {
+            return Err(self.gen_end_of_stream_error());
+        }
+
         let n = self.parse_number()?;
         self.skip_spaces();
         self.parse_list_separator();
@@ -888,6 +892,10 @@ impl<'a> Stream<'a> {
 
     /// Parses integer from the list of numbers.
     pub fn parse_list_integer(&mut self) -> Result<i32, Error> {
+        if self.at_end() {
+            return Err(self.gen_end_of_stream_error());
+        }
+
         let n = self.parse_integer()?;
         self.skip_spaces();
         self.parse_list_separator();
@@ -939,17 +947,7 @@ impl<'a> Stream<'a> {
         } else if self.starts_with(b"pc") {
             u = LengthUnit::Pc;
         } else {
-            self.skip_spaces();
-
-            match self.curr_char_raw() {
-                b'0'...b'9' | b'.' | b',' | b'+' | b'-' => {
-                    u = LengthUnit::None;
-                }
-                _ => {
-                    // unknown suffix is error
-                    return Err(Error::InvalidLength(self.gen_error_pos()));
-                }
-            }
+            u = LengthUnit::None;
         }
 
         match u {
@@ -963,6 +961,10 @@ impl<'a> Stream<'a> {
 
     /// Parses length from the list of lengths.
     pub fn parse_list_length(&mut self) -> Result<Length, Error> {
+        if self.at_end() {
+            return Err(self.gen_end_of_stream_error());
+        }
+
         let l = self.parse_length()?;
         self.skip_spaces();
         self.parse_list_separator();

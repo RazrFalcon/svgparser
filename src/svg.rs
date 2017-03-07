@@ -225,6 +225,8 @@ impl<'a> Tokenizer<'a> {
         }
         self.stream.advance_raw(6); // '<?xml '
 
+        // TODO: parse attributes
+
         // TODO: ? can be inside the string
         let l = self.stream.len_to(b'?')?;
         let s = self.stream.read_raw(l);
@@ -399,6 +401,7 @@ impl<'a> Tokenizer<'a> {
             return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
 
+        // TODO: implement read_back(start_pos)
         let tag_name = self.stream.slice_region_raw(start_pos, self.stream.pos());
         self.stream.skip_spaces();
         self.state = State::Attributes;

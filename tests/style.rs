@@ -4,8 +4,10 @@
 
 extern crate svgparser;
 
-use svgparser::Stream;
 use svgparser::style;
+use svgparser::{Stream, Error, ErrorPos};
+
+use std::str;
 
 macro_rules! test_attr {
     ($name:ident, $text:expr, $(($aname:expr, $avalue:expr)),*) => (
@@ -17,7 +19,8 @@ macro_rules! test_attr {
                 match s.parse_next().unwrap() {
                     style::Token::Attribute(name, stream) => {
                         assert_eq!(name, $aname.as_ref());
-                        assert_eq!(stream.slice(), $avalue.as_ref());
+                        assert_eq!(str::from_utf8(stream.slice()).unwrap(),
+                                   str::from_utf8($avalue.as_ref()).unwrap());
                     },
                     _ => unreachable!(),
                 }
@@ -60,11 +63,46 @@ test_attr!(parse_style_7, b"font-family:&apos;Verdana&apos;",
     (b"font-family", b"Verdana")
 );
 
+test_attr!(parse_style_8, b"  fill  :  none  ",
+    (b"fill", b"none")
+);
+
 #[test]
-fn parse_style_8() {
+fn parse_style_9() {
     let stream = Stream::new(b"&st0; &st1;");
     let mut s = style::Tokenizer::new(stream);
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef(b"st0"));
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef(b"st1"));
     assert_eq!(s.parse_next().unwrap(), style::Token::EndOfStream);
+}
+
+test_attr!(parse_style_10, b"/**/",
+);
+
+#[test]
+fn invalid_1() {
+    let stream = Stream::new(b":");
+    let mut s = style::Tokenizer::new(stream);
+    assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,1)));
+}
+
+#[test]
+fn invalid_2() {
+    let stream = Stream::new(b"name:'");
+    let mut s = style::Tokenizer::new(stream);
+    assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,7)));
+}
+
+#[test]
+fn invalid_3() {
+    let stream = Stream::new(b"&\x0a96M*9");
+    let mut s = style::Tokenizer::new(stream);
+    assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,2)));
+}
+
+#[test]
+fn invalid_4() {
+    let stream = Stream::new(b"/*/**/");
+    let mut s = style::Tokenizer::new(stream);
+    assert_eq!(s.parse_next().is_err(), true);
 }

@@ -40,6 +40,8 @@ pub struct Tokenizer<'a> {
     stream: Stream<'a>,
 }
 
+// TODO: create InvalidStyle instead of InvalidAttributeValue
+
 impl<'a> Tokenizer<'a> {
     /// Constructs a new `Tokenizer`.
     pub fn new(stream: Stream<'a>) -> Tokenizer<'a> {
@@ -66,90 +68,149 @@ impl<'a> Tokenizer<'a> {
             return Ok(Token::EndOfStream);
         }
 
-        // skip comments inside attribute value
-        if self.stream.is_char_eq(b'/')? {
-            self.stream.advance(2)?; // skip /*
-            self.stream.jump_to(b'*')?;
-            self.stream.advance(2)?; // skip */
-            self.stream.skip_spaces();
-        }
-
-        // prefixed attributes are not supported, aka '-webkit-*'
-        if self.stream.is_char_eq(b'-')? {
-            let l = self.stream.len_to_or_end(b';');
-            println!("Warning: Style attribute '{}' is skipped.",
-                     str::from_utf8(self.stream.slice_next_raw(l))?);
-
-            self.stream.advance_raw(l);
-            if !self.stream.at_end() {
-                self.stream.advance_raw(1);
-            }
+        let c = self.stream.curr_char_raw();
+        if c == b'/' {
+            skip_comment(&mut self.stream)?;
             return self.parse_next();
-        }
-
-        if self.stream.is_char_eq(b'&')? {
-            // extract 'text' from '&text;'
-            self.stream.advance(1)?; // &
-            let len = self.stream.len_to_space_or_end() - 1; // ;
-            let name = self.stream.read_raw(len);
-            self.stream.advance(1)?;
-
-            return Ok(Token::EntityRef(name));
-        }
-
-        let name = self.stream.read_to(b':')?;
-
-        self.stream.advance(1)?; // ':'
-        self.stream.skip_spaces();
-
-        let end_char;
-
-        if self.stream.is_char_eq(b'\'')? {
-            // skip start quote
-            self.stream.advance(1)?;
-            end_char = b';';
-        } else if self.stream.is_char_eq(b'&')? {
-            // skip escaped start quote aka '&apos;'
-            if self.stream.starts_with(b"&apos;") {
-                self.stream.advance_raw(6);
-                end_char = b'&';
-            } else {
-                return Err(Error::InvalidAttributeValue(self.stream.gen_error_pos()));
-            }
+        } else if c == b'-' {
+            parse_prefix(&mut self.stream)?;
+            return self.parse_next();
+        } else if c == b'&' {
+            return parse_entity_ref(&mut self.stream);
+        } else if is_valid_ident_char(c) {
+            return parse_attribute(&mut self.stream);
         } else {
-            end_char = b';';
+            return Err(Error::InvalidAttributeValue(self.stream.gen_error_pos()));
         }
+    }
+}
 
-        let mut value_len = self.stream.len_to_or_end(end_char);
+fn skip_comment(stream: &mut Stream) -> Result<(), Error> {
+    stream.advance(2)?; // skip /*
+    stream.jump_to(b'*')?;
+    stream.advance(2)?; // skip */
+    stream.skip_spaces();
 
-        // skip end quote
-        if self.stream.char_at(value_len as isize - 1)? == b'\'' {
-            value_len -= 1;
-        }
+    Ok(())
+}
 
-        let substream = Stream::sub_stream(&self.stream, self.stream.pos(),
-                                            self.stream.pos() + value_len);
-
-        self.stream.advance_raw(value_len);
-
-        if !self.stream.at_end() {
-            if self.stream.is_char_eq_raw(b'\'') {
-                self.stream.advance_raw(1);
-            } else if self.stream.is_char_eq_raw(b'&') {
-                if self.stream.starts_with(b"&apos;") {
-                    self.stream.advance_raw(6);
-                } else {
-                    return Err(Error::InvalidAttributeValue(self.stream.gen_error_pos()));
-                }
+fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
+    // consume an attribute name
+    let name = {
+        let start_pos = stream.pos();
+        while !stream.at_end() {
+            let c = stream.curr_char_raw();
+            if is_valid_ident_char(c) {
+                stream.advance_raw(1);
+            } else {
+                break;
             }
         }
 
-        // ';;;' is valid style data, we need to skip it
-        while !self.stream.at_end() && self.stream.is_char_eq_raw(b';') {
-            self.stream.advance_raw(1);
-            self.stream.skip_spaces();
-        }
+        stream.slice_region_raw(start_pos, stream.pos())
+    };
 
-        Ok(Token::Attribute(name, substream))
+    if name.is_empty() {
+        return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+    }
+
+    stream.skip_spaces();
+    stream.consume_char(b':')?;
+    stream.skip_spaces();
+
+    let end_char;
+    if stream.is_char_eq(b'\'')? {
+        // skip start quote
+        stream.advance(1)?;
+        end_char = b';';
+    } else if stream.is_char_eq(b'&')? {
+        // skip escaped start quote aka '&apos;'
+        if stream.starts_with(b"&apos;") {
+            stream.advance_raw(6);
+            end_char = b'&';
+        } else {
+            return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+        }
+    } else {
+        end_char = b';';
+    }
+
+    let mut value_len = stream.len_to_or_end(end_char);
+
+    if value_len == 0 {
+        return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+    }
+
+    // TODO: stream can be at end
+    // skip end quote
+    if stream.char_at(value_len as isize - 1)? == b'\'' {
+        value_len -= 1;
+    }
+
+    let mut substream = Stream::sub_stream(&stream, stream.pos(),
+                                           stream.pos() + value_len);
+    substream.trim_trailing_spaces();
+
+    stream.advance_raw(value_len);
+
+    if !stream.at_end() {
+        if stream.is_char_eq_raw(b'\'') {
+            stream.advance_raw(1);
+        } else if stream.is_char_eq_raw(b'&') {
+            if stream.starts_with(b"&apos;") {
+                stream.advance_raw(6);
+            } else {
+                return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+            }
+        }
+    }
+
+    // ';;;' is valid style data, we need to skip it
+    while !stream.at_end() && stream.is_char_eq_raw(b';') {
+        stream.advance_raw(1);
+        stream.skip_spaces();
+    }
+
+    Ok(Token::Attribute(name, substream))
+}
+
+fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
+    // extract 'text' from '&text;'
+    stream.advance_raw(1); // &
+
+    let mut len = stream.len_to_space_or_end(); // ;
+    if len == 0 {
+        return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+    }
+    len -= 1;
+
+    let name = stream.read_raw(len);
+    stream.consume_char(b';')?;
+
+    Ok(Token::EntityRef(name))
+}
+
+fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
+    // prefixed attributes are not supported, aka '-webkit-*'
+    let l = stream.len_to_or_end(b';');
+    // println!("Warning: Style attribute '{}' is skipped.",
+             // str::from_utf8(stream.slice_next_raw(l))?);
+
+    stream.advance_raw(l);
+    if !stream.at_end() {
+        stream.advance_raw(1);
+    }
+
+    Ok(())
+}
+
+fn is_valid_ident_char(c: u8) -> bool {
+    match c {
+          b'0'...b'9'
+        | b'A'...b'Z'
+        | b'a'...b'z'
+        | b'-'
+        | b'_' => true,
+        _ => false,
     }
 }

@@ -93,7 +93,8 @@ test_length!(length_16, b"1.0e0em", Length::new(1.0, LengthUnit::Em));
 #[test]
 fn length_err_1() {
     let mut s = Stream::new(b"1q");
-    assert_eq!(s.parse_length().err().unwrap(), Error::InvalidLength(ErrorPos::new(1,2)));
+    assert_eq!(s.parse_length().unwrap(), Length::new(1.0, LengthUnit::None));
+    assert_eq!(s.parse_length().err().unwrap(), Error::InvalidNumber(ErrorPos::new(1,2)));
 }
 
 // ---
