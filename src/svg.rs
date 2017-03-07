@@ -9,7 +9,7 @@ use std::str;
 
 use super::{Stream, Error};
 
-/// ElementEnd token.
+/// `ElementEnd` token.
 #[derive(Debug,PartialEq,Clone)]
 pub enum ElementEnd<'a> {
     /// Indicates `>`
