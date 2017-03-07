@@ -183,7 +183,7 @@ impl<'a> Tokenizer<'a> {
                     }
                 } else if self.stream.is_space()? {
                     // ignore spaces outside the root element
-                    assert!(self.depth == 0);
+                    assert_eq!(self.depth, 0);
                     self.stream.skip_spaces();
                     self.parse_next()
                 } else {
