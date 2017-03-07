@@ -17,7 +17,7 @@ use super::{
     ValueId,
 };
 
-/// The paint type fallback value in case the FuncIRI is not resolved.
+/// The paint type fallback value in case the `FuncIRI` is not resolved.
 #[derive(Debug,Clone,Copy,PartialEq)]
 pub enum PaintFallback {
     /// Can contain only `none` or `currentColor`.
