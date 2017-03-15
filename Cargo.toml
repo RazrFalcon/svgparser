@@ -1,6 +1,6 @@
 [package]
 name = "svgparser"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 keywords = ["svg", "parser", "tokenizer"]
 license = "MPL-2.0"
