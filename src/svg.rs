@@ -202,6 +202,7 @@ impl<'a> Tokenizer<'a> {
                     return Ok(Token::EndOfStream);
                 }
 
+                // TODO: is needed after str::from_utf8()?
                 // skip byte order
                 if self.stream.is_char_eq(0xEF)? {
                     self.stream.advance(3)?; // EF BB BF
@@ -301,7 +302,10 @@ impl<'a> Tokenizer<'a> {
         self.stream.consume_char(b' ')?;
         let start = self.stream.pos();
 
-        let l = self.stream.slice_tail().into_iter().position(|x| *x == b'[' || *x == b'>');
+        let l = self.stream.slice_tail()
+            .into_iter()
+            .position(|x| *x == b'[' || *x == b'>');
+
         match l {
             Some(l) => self.stream.advance(l)?,
             None => return Err(self.stream.gen_end_of_stream_error()),

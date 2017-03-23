@@ -193,8 +193,8 @@ fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
 fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
     // prefixed attributes are not supported, aka '-webkit-*'
     let l = stream.len_to_or_end(b';');
-    // println!("Warning: Style attribute '{}' is skipped.",
-             // str::from_utf8(stream.slice_next_raw(l))?);
+    println!("Warning: Style attribute '{}' is skipped.",
+             str::from_utf8(stream.slice_next_raw(l))?);
 
     stream.advance_raw(l);
     if !stream.at_end() {

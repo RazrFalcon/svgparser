@@ -952,7 +952,7 @@ impl<'a> Stream<'a> {
 
         match u {
             LengthUnit::Percent => self.advance(1)?,
-            LengthUnit::None => {},
+            LengthUnit::None => {}
             _ => self.advance(2)?,
         }
 
@@ -991,7 +991,10 @@ impl<'a> Stream<'a> {
         let text = self.get_parent_text();
         let mut row = 1;
         let end = self.pos + self.parent_pos;
-        row += text.iter().take(end).filter(|c| **c == b'\n').count();
+        row += text.iter()
+            .take(end)
+            .filter(|c| **c == b'\n')
+            .count();
         row
     }
 
@@ -1000,7 +1003,7 @@ impl<'a> Stream<'a> {
         let end = self.pos + self.parent_pos;
         let mut col = 1;
         for n in 0..end {
-            if n > 0 && text[n-1] == b'\n' {
+            if n > 0 && text[n - 1] == b'\n' {
                 col = 2;
             } else {
                 col += 1;

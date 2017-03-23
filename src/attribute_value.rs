@@ -120,7 +120,7 @@ impl<'a> AttributeValue<'a> {
     pub fn from_stream(eid: ElementId, aid: AttributeId, mut stream: &mut Stream<'a>)
         -> Result<AttributeValue<'a>, Error>
     {
-        use attribute::AttributeId as AId;
+        use AttributeId as AId;
 
         let start_pos = stream.pos();
 

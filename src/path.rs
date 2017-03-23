@@ -132,7 +132,8 @@ impl<'a> Tokenizer<'a> {
         macro_rules! data_error {
             () => ({
                 println!("Warning: Invalid path data at {}. \
-                          The remaining data is ignored.", s.gen_error_pos());
+                          The remaining data is ignored.",
+                         s.gen_error_pos());
                 return Ok(SegmentToken::EndOfStream);
             })
         }
@@ -187,11 +188,7 @@ impl<'a> Tokenizer<'a> {
                 // pairs are treated as implicit lineto commands.'
                 // So we parse them as LineTo.
                 is_implicit_move_to = true;
-                cmd = if is_absolute(prev_cmd) {
-                    b'L'
-                } else {
-                    b'l'
-                };
+                cmd = if is_absolute(prev_cmd) { b'L' } else { b'l' };
             } else {
                 is_implicit_move_to = false;
                 cmd = prev_cmd;
@@ -386,7 +383,7 @@ fn parse_flag(s: &mut Stream) -> Result<bool, Error> {
         }
         _ => {
             // error type is not relevant since it will be ignored
-            Err(Error::UnexpectedEndOfStream(ErrorPos::new(0,0)))
+            Err(Error::UnexpectedEndOfStream(ErrorPos::new(0, 0)))
         }
     }
 }

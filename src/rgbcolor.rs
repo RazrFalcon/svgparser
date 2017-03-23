@@ -24,7 +24,11 @@ impl RgbColor {
     /// Constructs a new `RgbColor` from `red`, `green` and `blue` values.
     #[inline]
     pub fn new(red: u8, green: u8, blue: u8) -> RgbColor {
-        RgbColor { red: red, green: green, blue: blue }
+        RgbColor {
+            red: red,
+            green: green,
+            blue: blue,
+        }
     }
 
     /// Parses `RgbColor` from the `Stream`.
@@ -119,7 +123,7 @@ impl RgbColor {
                 Some(c) => {
                     color = c;
                     s.advance_raw(l);
-                },
+                }
                 None => {
                     s.set_pos_raw(start);
                     return Err(Error::InvalidColor(s.gen_error_pos()));

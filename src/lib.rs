@@ -13,10 +13,10 @@
 
 extern crate phf;
 
-pub use attribute::AttributeId;
+pub use attribute_id::AttributeId;
 pub use attribute_value::{AttributeValue, PaintFallback};
 pub use rgbcolor::RgbColor;
-pub use element::ElementId;
+pub use element_id::ElementId;
 pub use error::{Error, ErrorPos};
 pub use length::{Length, LengthUnit};
 pub use stream::Stream;
@@ -28,10 +28,10 @@ pub mod style;
 pub mod svg;
 pub mod transform;
 
-mod attribute;
+mod attribute_id;
 mod attribute_value;
 mod colors;
-mod element;
+mod element_id;
 mod error;
 mod length;
 mod rgbcolor;

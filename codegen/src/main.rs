@@ -15,10 +15,10 @@ use std::io::prelude::*;
 fn main() {
     gen_file("spec/elements.txt", "ElementId", "ELEMENTS",
              "List of all SVG elements.",
-             "../src/element.rs");
+             "../src/element_id.rs");
     gen_file("spec/attributes.txt", "AttributeId", "ATTRIBUTES",
              "List of all SVG attributes.",
-             "../src/attribute.rs");
+             "../src/attribute_id.rs");
     gen_file("spec/values.txt", "ValueId", "VALUES",
              "List of all values for presentation attributes.",
              "../src/value_id.rs");
