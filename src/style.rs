@@ -59,7 +59,7 @@ impl<'a> Tokenizer<'a> {
     /// - By SVG spec `style` attribute can contain any style sheet language,
     ///   but we only support CSS2, which is the default.
     /// - Objects with `-` prefix will be ignored since we can't write them as XML attributes.
-    ///   Library will print a warning to stdout.
+    ///   Library will print a warning to stderr.
     /// - All comments are automatically skipped.
     pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
         self.stream.skip_spaces();
@@ -193,7 +193,7 @@ fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
 fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
     // prefixed attributes are not supported, aka '-webkit-*'
     let l = stream.len_to_or_end(b';');
-    println!("Warning: Style attribute '{}' is skipped.",
+    warnln!("Style attribute '{}' is skipped.",
              str::from_utf8(stream.slice_next_raw(l))?);
 
     stream.advance_raw(l);

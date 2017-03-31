@@ -109,7 +109,7 @@ impl<'a> Tokenizer<'a> {
     ///   but not the whole document.
     ///
     ///   This function will return `EndOfStream` on any kind of error.
-    ///   Library will print a warning to stdout.
+    ///   Library will print a warning to stderr.
     ///
     ///   In other words - you will get as much data as possible.
     ///
@@ -131,8 +131,7 @@ impl<'a> Tokenizer<'a> {
 
         macro_rules! data_error {
             () => ({
-                println!("Warning: Invalid path data at {}. \
-                          The remaining data is ignored.",
+                warnln!("Invalid path data at {}. The remaining data is ignored",
                          s.gen_error_pos());
                 return Ok(SegmentToken::EndOfStream);
             })
@@ -151,8 +150,8 @@ impl<'a> Tokenizer<'a> {
         let first_char = s.curr_char_raw();
 
         if !has_prev_cmd && !is_cmd(first_char) {
-            println!("Warning: '{}' is not a command. \
-                      The remaining data is ignored.", first_char as char);
+            warnln!("'{}' is not a command. \
+                     The remaining data is ignored.", first_char as char);
             return Ok(SegmentToken::EndOfStream);
         }
 
@@ -160,8 +159,8 @@ impl<'a> Tokenizer<'a> {
             match first_char {
                 b'M' | b'm' => {}
                 _ => {
-                    println!("Warning: First segment must be MoveTo. \
-                              The remaining data is ignored.");
+                    warnln!("Warning: First segment must be MoveTo. \
+                             The remaining data is ignored.");
                     return Ok(SegmentToken::EndOfStream);
                 }
             }

@@ -123,7 +123,7 @@ impl<'a> Tokenizer<'a> {
     ///
     /// # Notes
     ///
-    /// - Only ENTITY objects are extracted from DOCTYPE. Library will print a warning to stdout.
+    /// - Only ENTITY objects are extracted from DOCTYPE. Library will print a warning to stderr.
     /// - The parser doesn't check an input encoding, assuming that it's UTF-8.
     ///   You should evaluate it by yourself or you will get `Error::Utf8Error`.
     pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
@@ -364,8 +364,8 @@ impl<'a> Tokenizer<'a> {
             // skip unsupported elements
 
             let l = self.stream.len_to(b'>')? + 1;
-            println!("Warning: Unsupported DOCTYPE object: '{}'.",
-                     str::from_utf8(self.stream.slice_next_raw(l))?);
+            warnln!("Unsupported DOCTYPE object: '{}'.",
+                    str::from_utf8(self.stream.slice_next_raw(l))?);
             self.stream.advance_raw(l);
 
             self.stream.skip_spaces();

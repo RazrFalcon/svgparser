@@ -112,7 +112,7 @@ impl<'a> AttributeValue<'a> {
     ///   This function will try to parse a single predefined value. Other data will be parsed as
     ///   `AttributeValue::String`.
     ///
-    ///   Library will print a warning to stdout.
+    ///   Library will print a warning to stderr.
     /// - `viewBox` will be parsed as `AttributeValue::NumberList`.
     /// - `<opacity>` value will be bounded to 0..1 range.
     /// - This function didn't correct most of the numeric values. If value has an incorrect
@@ -637,7 +637,7 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::Cursor => {
-                println!("Warning: The 'cursor' property is not fully supported.");
+                warnln!("The 'cursor' property is not fully supported");
 
                 parse_or_err!(parse_predef!(
                     ValueId::Auto,

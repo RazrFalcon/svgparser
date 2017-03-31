@@ -23,6 +23,19 @@ pub use stream::Stream;
 pub use value_id::ValueId;
 pub use values_list::{NumberList, LengthList};
 
+#[macro_export]
+macro_rules! warnln {
+    ($msg:expr) => ({
+        use std::io::Write;
+        writeln!(&mut ::std::io::stderr(), "Warning: {}", $msg).unwrap()
+    });
+
+    ($fmt:expr, $($arg:tt)*) => ({
+        use std::io::Write;
+        writeln!(&mut ::std::io::stderr(), concat!("Warning: ", $fmt), $($arg)*).unwrap()
+    });
+}
+
 pub mod path;
 pub mod style;
 pub mod svg;

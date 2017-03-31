@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- All warnings will be printed to stderr now.
 
 ## [0.3.1] - 2017-03-15
 ### Fixed
