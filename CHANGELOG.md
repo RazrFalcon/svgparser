@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - All warnings will be printed to stderr now.
+- All `&[u8]` changed to `&str`.
 
 ## [0.3.1] - 2017-03-15
 ### Fixed

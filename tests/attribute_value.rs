@@ -38,36 +38,36 @@ macro_rules! test_err {
     )
 }
 
-test_err!(empty_1, AId::Fill, b"", Error::UnexpectedEndOfStream(ErrorPos::new(1, 1)));
-test_err!(empty_2, AId::Fill, b" ", Error::UnexpectedEndOfStream(ErrorPos::new(1, 2)));
+test_err!(empty_1, AId::Fill, "", Error::UnexpectedEndOfStream(ErrorPos::new(1, 1)));
+test_err!(empty_2, AId::Fill, " ", Error::UnexpectedEndOfStream(ErrorPos::new(1, 2)));
 // unicode attribute can have spaces
-test!(unicode_1, AId::Unicode, b" ", AV::String(b" "));
+test!(unicode_1, AId::Unicode, " ", AV::String(" "));
 
-test!(paint_1, AId::Fill, b"none", AV::PredefValue(ValueId::None));
+test!(paint_1, AId::Fill, "none", AV::PredefValue(ValueId::None));
 
-test!(paint_2, AId::Fill, b"currentColor", AV::PredefValue(ValueId::CurrentColor));
+test!(paint_2, AId::Fill, "currentColor", AV::PredefValue(ValueId::CurrentColor));
 
-test!(paint_3, AId::Fill, b"inherit", AV::PredefValue(ValueId::Inherit));
+test!(paint_3, AId::Fill, "inherit", AV::PredefValue(ValueId::Inherit));
 
-test!(paint_4, AId::Fill, b"red", AV::Color(RgbColor::new(255, 0, 0)));
+test!(paint_4, AId::Fill, "red", AV::Color(RgbColor::new(255, 0, 0)));
 
-test!(paint_5, AId::Fill, b"url(#link)", AV::FuncIRI(b"link"));
+test!(paint_5, AId::Fill, "url(#link)", AV::FuncIRI("link"));
 
-test!(paint_6, AId::Fill, b"url(#link) red",
-    AV::FuncIRIWithFallback(b"link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
+test!(paint_6, AId::Fill, "url(#link) red",
+    AV::FuncIRIWithFallback("link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
 
 // same as above, but for `stroke`
-test!(paint_7, AId::Stroke, b"url(#link) red",
-    AV::FuncIRIWithFallback(b"link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
+test!(paint_7, AId::Stroke, "url(#link) red",
+    AV::FuncIRIWithFallback("link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
 
-test!(paint_8, AId::Fill, b"url(#link) none",
-    AV::FuncIRIWithFallback(b"link", PaintFallback::PredefValue(ValueId::None)));
+test!(paint_8, AId::Fill, "url(#link) none",
+    AV::FuncIRIWithFallback("link", PaintFallback::PredefValue(ValueId::None)));
 
 // color is last type that we check during parsing <paint>, so any error will be like that
-test_err!(paint_err_1, AId::Fill, b"#link", Error::InvalidColor(ErrorPos::new(1, 1)));
+test_err!(paint_err_1, AId::Fill, "#link", Error::InvalidColor(ErrorPos::new(1, 1)));
 
-test!(ref_1, AId::Class, b"&ref;", AV::EntityRef(b"ref"));
+test!(ref_1, AId::Class, "&ref;", AV::EntityRef("ref"));
 
-test!(eb_1, AId::EnableBackground, b"new    ", AV::String(b"new"));
+test!(eb_1, AId::EnableBackground, "new    ", AV::String("new"));
 
 // TODO: test all supported attributes, probably via codegen.

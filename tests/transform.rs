@@ -22,53 +22,53 @@ macro_rules! test {
     )
 }
 
-test!(matrix_1, b"matrix(1 0 0 1 10 20)",
+test!(matrix_1, "matrix(1 0 0 1 10 20)",
     TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
 
-test!(matrix_2, b"matrix(1, 0, 0, 1, 10, 20)",
+test!(matrix_2, "matrix(1, 0, 0, 1, 10, 20)",
     TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
 
-test!(matrix_3, b" matrix ( 1, 0, 0, 1, 10, 20 )",
+test!(matrix_3, " matrix ( 1, 0, 0, 1, 10, 20 )",
     TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
 
-test!(translate_1, b"translate(10 20)",
+test!(translate_1, "translate(10 20)",
     TransformToken::Translate { tx: 10.0, ty: 20.0 }
 );
 
-test!(translate_2, b"translate(10)",
+test!(translate_2, "translate(10)",
     TransformToken::Translate { tx: 10.0, ty: 0.0 }
 );
 
-test!(scale_1, b"scale(2 3)",
+test!(scale_1, "scale(2 3)",
     TransformToken::Scale { sx: 2.0, sy: 3.0 }
 );
 
-test!(scale_2, b"scale(2)",
+test!(scale_2, "scale(2)",
     TransformToken::Scale { sx: 2.0, sy: 2.0 }
 );
 
-test!(rotate_1, b"rotate(30)",
+test!(rotate_1, "rotate(30)",
     TransformToken::Rotate { angle: 30.0 }
 );
 
-test!(rotate_2, b"rotate(30 10 20)",
+test!(rotate_2, "rotate(30 10 20)",
     TransformToken::Translate { tx: 10.0, ty: 20.0 },
     TransformToken::Rotate { angle: 30.0 },
     TransformToken::Translate { tx: -10.0, ty: -20.0 }
 );
 
-test!(skew_y_1, b"skewX(30)",
+test!(skew_y_1, "skewX(30)",
     TransformToken::SkewX { angle: 30.0 }
 );
 
-test!(skew_x_1, b"skewY(30)",
+test!(skew_x_1, "skewY(30)",
     TransformToken::SkewY { angle: 30.0 }
 );
 
-test!(ts_list_1, b"translate(-10,-20) scale(2) rotate(45) translate(5,10)",
+test!(ts_list_1, "translate(-10,-20) scale(2) rotate(45) translate(5,10)",
     TransformToken::Translate { tx: -10.0, ty: -20.0 },
     TransformToken::Scale { sx: 2.0, sy: 2.0 },
     TransformToken::Rotate { angle: 45.0 },
@@ -77,14 +77,14 @@ test!(ts_list_1, b"translate(-10,-20) scale(2) rotate(45) translate(5,10)",
 
 #[test]
 fn error_1() {
-    let s = Stream::new(b"text");
+    let s = Stream::new("text");
     let mut ts = transform::Tokenizer::new(s);
     assert_eq!(ts.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1,1)));
 }
 
 #[test]
 fn error_2() {
-    let s = Stream::new(b"scale(2) text");
+    let s = Stream::new("scale(2) text");
     let mut ts = transform::Tokenizer::new(s);
     ts.parse_next().unwrap();
     assert_eq!(ts.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1,10)));
@@ -92,7 +92,7 @@ fn error_2() {
 
 #[test]
 fn error_3() {
-    let s = Stream::new(b" ");
+    let s = Stream::new(" ");
     let mut ts = transform::Tokenizer::new(s);
     assert_eq!(ts.parse_next().unwrap(), TransformToken::EndOfStream);
 }

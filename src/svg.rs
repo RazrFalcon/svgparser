@@ -15,7 +15,7 @@ pub enum ElementEnd<'a> {
     /// Indicates `>`
     Open,
     /// Indicates `</name>`
-    Close(&'a [u8]),
+    Close(&'a str),
     /// Indicates `/>`
     Empty,
 }
@@ -24,29 +24,29 @@ pub enum ElementEnd<'a> {
 #[derive(PartialEq)]
 pub enum Token<'a> {
     /// Tuple contains tag name of the element.
-    ElementStart(&'a [u8]),
+    ElementStart(&'a str),
     /// Tuple contains the type of enclosing tag.
     ElementEnd(ElementEnd<'a>),
     /// Tuple contains attribute name and value.
-    Attribute(&'a [u8], Stream<'a>),
+    Attribute(&'a str, Stream<'a>),
     /// Tuple contains a text object.
     Text(Stream<'a>),
     /// Tuple contains CDATA object without `<![CDATA[` and `]]>`.
     Cdata(Stream<'a>),
     /// Tuple contains whitespace object. It will contain only ` \n\t\r`.
-    Whitespace(&'a [u8]),
+    Whitespace(&'a str),
     /// Tuple contains comment object without `<!--` and `-->`.
-    Comment(&'a [u8]),
+    Comment(&'a str),
     /// Tuple contains a title of empty DOCTYPE.
-    DtdEmpty(&'a [u8]),
+    DtdEmpty(&'a str),
     /// Tuple contains a title of DOCTYPE.
-    DtdStart(&'a [u8]),
+    DtdStart(&'a str),
     /// Tuple contains name and value of ENTITY.
-    Entity(&'a [u8], Stream<'a>),
+    Entity(&'a str, Stream<'a>),
     /// Tuple indicates DOCTYPE end.
     DtdEnd,
     /// Tuple contains declaration object without `<?` and `?>`.
-    Declaration(&'a [u8]),
+    Declaration(&'a str),
     /// The end of the stream.
     EndOfStream,
 }
@@ -55,7 +55,7 @@ impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Token::ElementStart(s) =>
-                write!(f, "ElementStart({})", str::from_utf8(s).unwrap()),
+                write!(f, "ElementStart({})", s),
             Token::ElementEnd(ref e) => {
                 let c = match *e {
                     ElementEnd::Open => ">",
@@ -65,25 +65,25 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "ElementEnd({})", c)
             }
             Token::Attribute(k, ref v) =>
-                write!(f, "Attribute({}, {:?})", str::from_utf8(k).unwrap(), v),
+                write!(f, "Attribute({}, {:?})", k, v),
             Token::Text(ref s) =>
                 write!(f, "Text({:?})", s),
             Token::Cdata(ref s) =>
                 write!(f, "CDATA({:?})", s),
             Token::Whitespace(s) =>
-                write!(f, "Whitespace({})", str::from_utf8(s).unwrap()),
+                write!(f, "Whitespace({})", s),
             Token::Comment(s) =>
-                write!(f, "Comment({})", str::from_utf8(s).unwrap()),
+                write!(f, "Comment({})", s),
             Token::DtdEmpty(s) =>
-                write!(f, "DtdEmpty({})", str::from_utf8(s).unwrap()),
+                write!(f, "DtdEmpty({})", s),
             Token::DtdStart(s) =>
-                write!(f, "DtdStart({})", str::from_utf8(s).unwrap()),
+                write!(f, "DtdStart({})", s),
             Token::Entity(k, ref v) =>
-                write!(f, "ENTITY({}, {:?})", str::from_utf8(k).unwrap(), v),
+                write!(f, "ENTITY({}, {:?})", k, v),
             Token::DtdEnd =>
                 write!(f, "DtdEnd"),
             Token::Declaration(s) =>
-                write!(f, "Declaration({})", str::from_utf8(s).unwrap()),
+                write!(f, "Declaration({})", s),
             Token::EndOfStream =>
                 write!(f, "EndOfStream"),
         }
@@ -107,7 +107,7 @@ pub struct Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
     /// Constructs a new `Tokenizer`.
-    pub fn new(text: &[u8]) -> Tokenizer {
+    pub fn new(text: &str) -> Tokenizer {
         Tokenizer {
             stream: Stream::new(text),
             state: State::AtStart,
@@ -303,6 +303,7 @@ impl<'a> Tokenizer<'a> {
         let start = self.stream.pos();
 
         let l = self.stream.slice_tail()
+            .as_bytes()
             .into_iter()
             .position(|x| *x == b'[' || *x == b'>');
 
@@ -365,7 +366,7 @@ impl<'a> Tokenizer<'a> {
 
             let l = self.stream.len_to(b'>')? + 1;
             warnln!("Unsupported DOCTYPE object: '{}'.",
-                    str::from_utf8(self.stream.slice_next_raw(l))?);
+                    self.stream.slice_next_raw(l));
             self.stream.advance_raw(l);
 
             self.stream.skip_spaces();

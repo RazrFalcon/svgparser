@@ -100,7 +100,7 @@ impl<'a> Tokenizer<'a> {
         }
 
         let t = match s.slice_next_raw(5) {
-            b"matri" => {
+            "matri" => {
                 s.advance(6)?;
                 s.skip_spaces();
                 s.consume_char(b'(')?;
@@ -121,7 +121,7 @@ impl<'a> Tokenizer<'a> {
                     f: f,
                 }
             }
-            b"trans" => {
+            "trans" => {
                 s.advance(9)?;
                 s.skip_spaces();
                 s.consume_char(b'(')?;
@@ -141,7 +141,7 @@ impl<'a> Tokenizer<'a> {
                     ty: y,
                 }
             }
-            b"scale" => {
+            "scale" => {
                 s.advance(5)?;
                 s.skip_spaces();
                 s.consume_char(b'(')?;
@@ -161,7 +161,7 @@ impl<'a> Tokenizer<'a> {
                     sy: y,
                 }
             }
-            b"rotat" => {
+            "rotat" => {
                 s.advance(6)?;
                 s.skip_spaces();
                 s.consume_char(b'(')?;
@@ -189,7 +189,7 @@ impl<'a> Tokenizer<'a> {
                     }
                 }
             }
-            b"skewX" => {
+            "skewX" => {
                 s.advance(5)?;
                 s.skip_spaces();
                 s.consume_char(b'(')?;
@@ -200,7 +200,7 @@ impl<'a> Tokenizer<'a> {
                     angle: a,
                 }
             }
-            b"skewY" => {
+            "skewY" => {
                 s.advance(5)?;
                 s.skip_spaces();
                 s.consume_char(b'(')?;

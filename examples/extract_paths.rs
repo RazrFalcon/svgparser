@@ -18,14 +18,11 @@ fn main() {
 
     // Read a file to the buffer.
     let mut file = fs::File::open(&args[1]).unwrap();
-    let mut v = Vec::new();
-    file.read_to_end(&mut v).unwrap();
-
-    // Check that input file is a valid UTF-8 text.
-    str::from_utf8(&v).unwrap();
+    let mut text = String::new();
+    file.read_to_string(&mut text).unwrap();
 
     // Begin parsing.
-    let mut p = svg::Tokenizer::new(&v);
+    let mut p = svg::Tokenizer::new(&text);
     // Get next token.
     loop {
         // Check that it's ok.
@@ -35,7 +32,7 @@ fn main() {
                 match t {
                     svg::Token::Attribute(name, value) => {
                         // Process only 'd' attributes.
-                        if name == b"d" {
+                        if name == "d" {
                             println!("New path:");
 
                             let mut p = path::Tokenizer::new(value);

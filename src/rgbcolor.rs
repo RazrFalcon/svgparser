@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::str;
-
 use super::{Stream, Error, LengthUnit};
 use stream::bound;
 use colors::rgb_color_from_name;
@@ -75,9 +73,9 @@ impl RgbColor {
                 7 => {
                     // #rrggbb
                     s.advance(1)?;
-                    color.red = hex_pair(s.read_raw(2));
-                    color.green = hex_pair(s.read_raw(2));
-                    color.blue = hex_pair(s.read_raw(2));
+                    color.red = hex_pair(s.read_raw(2).as_bytes());
+                    color.green = hex_pair(s.read_raw(2).as_bytes());
+                    color.blue = hex_pair(s.read_raw(2).as_bytes());
                 }
                 4 => {
                     // #rgb
@@ -119,7 +117,7 @@ impl RgbColor {
             s.consume_char(b')')?;
         } else {
             let l = s.len_to_space_or_end();
-            match rgb_color_from_name(str::from_utf8(s.slice_next_raw(l))?) {
+            match rgb_color_from_name(s.slice_next_raw(l)) {
                 Some(c) => {
                     color = c;
                     s.advance_raw(l);

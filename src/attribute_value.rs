@@ -32,17 +32,17 @@ pub enum AttributeValue<'a> {
     /// \<color\> type.
     Color(RgbColor),
     /// Reference to the ENTITY. Contains only `name` from `&name;`.
-    EntityRef(&'a [u8]),
+    EntityRef(&'a str),
     /// \<length\> type.
     Length(Length),
     /// \<list-of-lengths\> type.
     LengthList(LengthList<'a>),
     /// \<IRI\> type.
-    IRI(&'a [u8]),
+    IRI(&'a str),
     /// \<FuncIRI\> type.
-    FuncIRI(&'a [u8]),
+    FuncIRI(&'a str),
     /// \<FuncIRI\> type.
-    FuncIRIWithFallback(&'a [u8], PaintFallback),
+    FuncIRIWithFallback(&'a str, PaintFallback),
     /// \<number\> type.
     Number(f64),
     /// \<list-of-numbers\> type.
@@ -50,7 +50,7 @@ pub enum AttributeValue<'a> {
     /// ID of the predefined value.
     PredefValue(ValueId),
     /// Unknown data.
-    String(&'a [u8]),
+    String(&'a str),
 }
 
 impl<'a> fmt::Debug for AttributeValue<'a> {
@@ -59,25 +59,25 @@ impl<'a> fmt::Debug for AttributeValue<'a> {
             AttributeValue::Color(color) =>
                 write!(f, "Color({:?})", color),
             AttributeValue::EntityRef(name) =>
-                write!(f, "EntityRef({})", str::from_utf8(name).unwrap()),
+                write!(f, "EntityRef({})", name),
             AttributeValue::Length(len) =>
                 write!(f, "Length({:?})", len),
             AttributeValue::LengthList(list) =>
-                write!(f, "LengthList({})", str::from_utf8(list.0.slice()).unwrap()),
+                write!(f, "LengthList({})", list.0.slice()),
             AttributeValue::IRI(name) =>
-                write!(f, "IRI({})", str::from_utf8(name).unwrap()),
+                write!(f, "IRI({})", name),
             AttributeValue::FuncIRI(name) =>
-                write!(f, "FuncIRI({})", str::from_utf8(name).unwrap()),
+                write!(f, "FuncIRI({})", name),
             AttributeValue::FuncIRIWithFallback(name, ref fallback) =>
-                write!(f, "FuncIRI({}) Fallback({:?})", str::from_utf8(name).unwrap(), fallback),
+                write!(f, "FuncIRI({}) Fallback({:?})", name, fallback),
             AttributeValue::Number(num) =>
                 write!(f, "Number({})", num),
             AttributeValue::NumberList(list) =>
-                write!(f, "NumberList({})", str::from_utf8(list.0.slice()).unwrap()),
+                write!(f, "NumberList({})", list.0.slice()),
             AttributeValue::PredefValue(id) =>
                 write!(f, "PredefValue({})", id.name()),
             AttributeValue::String(text) =>
-                write!(f, "String({})", str::from_utf8(text).unwrap()),
+                write!(f, "String({})", text),
         }
     }
 }
@@ -126,7 +126,7 @@ impl<'a> AttributeValue<'a> {
 
         macro_rules! parse_predef {
             ($($cmp:pat),+) => (
-                match ValueId::from_name(str::from_utf8(stream.slice_tail())?) {
+                match ValueId::from_name(stream.slice_tail()) {
                     Some(v) => {
                         match v {
                             $(
@@ -708,7 +708,7 @@ fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a
         if !stream.at_end() {
             let fallback = stream.slice_tail();
 
-            let vid = match ValueId::from_name(try_opt!(str::from_utf8(fallback).ok())) {
+            let vid = match ValueId::from_name(fallback) {
                 Some(v) => {
                     match v {
                           ValueId::None

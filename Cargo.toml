@@ -11,3 +11,10 @@ readme = "README.md"
 
 [dependencies]
 phf = "=0.7.21"
+
+[dev-dependencies]
+bencher = "0.1"
+
+[[bench]]
+name = "parser"
+harness = false

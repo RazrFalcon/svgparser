@@ -15,9 +15,9 @@ use super::{Stream, Error};
 #[derive(PartialEq)]
 pub enum Token<'a> {
     /// Tuple contains attribute name and value.
-    Attribute(&'a [u8], Stream<'a>),
+    Attribute(&'a str, Stream<'a>),
     /// Tuple contains ENTITY reference. Just a name without `&` and `;`.
-    EntityRef(&'a [u8]),
+    EntityRef(&'a str),
     /// The end of the stream.
     EndOfStream,
 }
@@ -26,9 +26,9 @@ impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Token::Attribute(name, ref value) =>
-                write!(f, "Token({}, {:?})", str::from_utf8(name).unwrap(), value),
+                write!(f, "Token({}, {:?})", name, value),
             Token::EntityRef(name) =>
-                write!(f, "EntityRef({})", str::from_utf8(name).unwrap()),
+                write!(f, "EntityRef({})", name),
             Token::EndOfStream =>
                 write!(f, "EndOfStream"),
         }
@@ -194,7 +194,7 @@ fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
     // prefixed attributes are not supported, aka '-webkit-*'
     let l = stream.len_to_or_end(b';');
     warnln!("Style attribute '{}' is skipped.",
-             str::from_utf8(stream.slice_next_raw(l))?);
+             stream.slice_next_raw(l));
 
     stream.advance_raw(l);
     if !stream.at_end() {
