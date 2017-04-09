@@ -10,79 +10,45 @@ use bencher::Bencher;
 
 use svgparser::svg;
 
-fn skull(bencher: &mut Bencher) {
-    let path = env::current_dir().unwrap().join("benches/horns_scary.svg");
+fn load_file(path: &str) -> String {
+    let path = env::current_dir().unwrap().join(path);
     let mut file = fs::File::open(&path).unwrap();
     let mut text = String::new();
     file.read_to_string(&mut text).unwrap();
+    text
+}
 
-    bencher.iter(||{
-        let mut p = svg::Tokenizer::new(&text);
-        loop {
-            match p.parse_next() {
-                Ok(t) => {
-                    match t {
-                        svg::Token::EndOfStream => break,
-                        _ => {}
-                    }
-                }
-                Err(e) => {
-                    println!("Error: {:?}.", e);
-                    return;
+fn parse(text: &str) {
+    let mut p = svg::Tokenizer::new(&text);
+    loop {
+        match p.parse_next() {
+            Ok(t) => {
+                match t {
+                    svg::Token::EndOfStream => break,
+                    _ => {}
                 }
             }
+            Err(e) => {
+                println!("Error: {:?}.", e);
+                return;
+            }
         }
-    })
+    }
+}
+
+fn skull(bencher: &mut Bencher) {
+    let text = load_file("benches/horns_scary.svg");
+    bencher.iter(|| parse(&text))
 }
 
 fn jupiter(bencher: &mut Bencher) {
-    let path = env::current_dir().unwrap().join("benches/Jupiter_diagram.svg");
-    let mut file = fs::File::open(&path).unwrap();
-    let mut text = String::new();
-    file.read_to_string(&mut text).unwrap();
-
-    bencher.iter(||{
-        let mut p = svg::Tokenizer::new(&text);
-        loop {
-            match p.parse_next() {
-                Ok(t) => {
-                    match t {
-                        svg::Token::EndOfStream => break,
-                        _ => {}
-                    }
-                }
-                Err(e) => {
-                    println!("Error: {:?}.", e);
-                    return;
-                }
-            }
-        }
-    })
+    let text = load_file("benches/Jupiter_diagram.svg");
+    bencher.iter(|| parse(&text))
 }
 
 fn logo(bencher: &mut Bencher) {
-    let path = env::current_dir().unwrap().join("benches/SVG_logo.svg");
-    let mut file = fs::File::open(&path).unwrap();
-    let mut text = String::new();
-    file.read_to_string(&mut text).unwrap();
-
-    bencher.iter(||{
-        let mut p = svg::Tokenizer::new(&text);
-        loop {
-            match p.parse_next() {
-                Ok(t) => {
-                    match t {
-                        svg::Token::EndOfStream => break,
-                        _ => {}
-                    }
-                }
-                Err(e) => {
-                    println!("Error: {:?}.", e);
-                    return;
-                }
-            }
-        }
-    })
+    let text = load_file("benches/SVG_logo.svg");
+    bencher.iter(|| parse(&text))
 }
 
 benchmark_group!(benches, skull, jupiter, logo);
