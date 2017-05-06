@@ -12,7 +12,7 @@ use super::{
     Length,
     LengthList,
     NumberList,
-    RgbColor,
+    Color,
     Stream,
     ValueId,
 };
@@ -23,14 +23,14 @@ pub enum PaintFallback {
     /// Can contain only `none` or `currentColor`.
     PredefValue(ValueId),
     /// The \<color\> type.
-    Color(RgbColor),
+    Color(Color),
 }
 
 /// Representation of the SVG attribute value.
 #[derive(Clone,PartialEq)]
 pub enum AttributeValue<'a> {
     /// \<color\> type.
-    Color(RgbColor),
+    Color(Color),
     /// Reference to the ENTITY. Contains only `name` from `&name;`.
     EntityRef(&'a str),
     /// \<length\> type.
@@ -274,14 +274,14 @@ impl<'a> AttributeValue<'a> {
 
             AId::Color => {
                 parse_or!(parse_predef!(ValueId::Inherit),
-                    Ok(AttributeValue::Color(try!(RgbColor::from_stream(stream)))))
+                    Ok(AttributeValue::Color(try!(Color::from_stream(stream)))))
             }
 
               AId::LightingColor
             | AId::FloodColor
             | AId::StopColor => {
                 parse_or!(parse_predef!(ValueId::Inherit, ValueId::CurrentColor),
-                    Ok(AttributeValue::Color(try!(RgbColor::from_stream(stream)))))
+                    Ok(AttributeValue::Color(try!(Color::from_stream(stream)))))
             }
 
               AId::StdDeviation
@@ -722,7 +722,7 @@ fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a
             if let Some(v) = vid {
                 Some(AttributeValue::FuncIRIWithFallback(link, v))
             } else {
-                let color = try_opt!(RgbColor::from_stream(stream).ok());
+                let color = try_opt!(Color::from_stream(stream).ok());
                 Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))
             }
         } else {
@@ -766,7 +766,7 @@ fn parse_number<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error
 }
 
 fn parse_rgb_color<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let c = RgbColor::from_stream(stream)?;
+    let c = Color::from_stream(stream)?;
     Ok(AttributeValue::Color(c))
 }
 

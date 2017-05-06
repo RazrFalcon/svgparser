@@ -31,7 +31,7 @@ fn gen_colors() {
     let mut file = BufWriter::new(File::create(&path).unwrap());
 
     let map_name = "COLORS";
-    let struct_name = "RgbColor";
+    let struct_name = "Color";
 
     write_header(&mut file);
 

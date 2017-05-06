@@ -9,7 +9,7 @@ use svgparser::{
     AttributeValue as AV,
     PaintFallback,
     ElementId,
-    RgbColor,
+    Color,
     Stream,
     Error,
     ErrorPos,
@@ -49,16 +49,16 @@ test!(paint_2, AId::Fill, "currentColor", AV::PredefValue(ValueId::CurrentColor)
 
 test!(paint_3, AId::Fill, "inherit", AV::PredefValue(ValueId::Inherit));
 
-test!(paint_4, AId::Fill, "red", AV::Color(RgbColor::new(255, 0, 0)));
+test!(paint_4, AId::Fill, "red", AV::Color(Color::new(255, 0, 0)));
 
 test!(paint_5, AId::Fill, "url(#link)", AV::FuncIRI("link"));
 
 test!(paint_6, AId::Fill, "url(#link) red",
-    AV::FuncIRIWithFallback("link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
+    AV::FuncIRIWithFallback("link", PaintFallback::Color(Color::new(255, 0, 0))));
 
 // same as above, but for `stroke`
 test!(paint_7, AId::Stroke, "url(#link) red",
-    AV::FuncIRIWithFallback("link", PaintFallback::Color(RgbColor::new(255, 0, 0))));
+    AV::FuncIRIWithFallback("link", PaintFallback::Color(Color::new(255, 0, 0))));
 
 test!(paint_8, AId::Fill, "url(#link) none",
     AV::FuncIRIWithFallback("link", PaintFallback::PredefValue(ValueId::None)));

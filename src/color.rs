@@ -9,7 +9,7 @@ use colors::rgb_color_from_name;
 /// Representation of the [`<color>`] type.
 /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
 #[derive(Copy,Clone,PartialEq,Debug)]
-pub struct RgbColor {
+pub struct Color {
     #[allow(missing_docs)]
     pub red: u8,
     #[allow(missing_docs)]
@@ -18,18 +18,18 @@ pub struct RgbColor {
     pub blue: u8,
 }
 
-impl RgbColor {
-    /// Constructs a new `RgbColor` from `red`, `green` and `blue` values.
+impl Color {
+    /// Constructs a new `Color` from `red`, `green` and `blue` values.
     #[inline]
-    pub fn new(red: u8, green: u8, blue: u8) -> RgbColor {
-        RgbColor {
+    pub fn new(red: u8, green: u8, blue: u8) -> Color {
+        Color {
             red: red,
             green: green,
             blue: blue,
         }
     }
 
-    /// Parses `RgbColor` from the `Stream`.
+    /// Parses `Color` from the `Stream`.
     ///
     /// Parsing is done according to [`spec`]:
     ///
@@ -60,12 +60,12 @@ impl RgbColor {
     ///
     /// [`spec`]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
     /// [`details`]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
-    pub fn from_stream(s: &mut Stream) -> Result<RgbColor, Error> {
+    pub fn from_stream(s: &mut Stream) -> Result<Color, Error> {
         s.skip_spaces();
 
         let start = s.pos();
 
-        let mut color = RgbColor::new(0, 0, 0);
+        let mut color = Color::new(0, 0, 0);
 
         if s.is_char_eq(b'#')? {
             // get color data len until first space or stream end

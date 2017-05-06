@@ -15,7 +15,7 @@ extern crate phf;
 
 pub use attribute_id::AttributeId;
 pub use attribute_value::{AttributeValue, PaintFallback};
-pub use rgbcolor::RgbColor;
+pub use color::Color;
 pub use element_id::ElementId;
 pub use error::{Error, ErrorPos};
 pub use length::{Length, LengthUnit};
@@ -47,7 +47,7 @@ mod colors;
 mod element_id;
 mod error;
 mod length;
-mod rgbcolor;
+mod color;
 mod stream;
 mod value_id;
 mod values_list;

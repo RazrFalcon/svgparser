@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - All warnings will be printed to stderr now.
 - All `&[u8]` changed to `&str`.
+- Rename `RgbColor` to `Color`.
 
 ## [0.3.1] - 2017-03-15
 ### Fixed

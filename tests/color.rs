@@ -4,14 +4,14 @@
 
 extern crate svgparser;
 
-use svgparser::{Stream, RgbColor, Error, ErrorPos};
+use svgparser::{Stream, Color, Error, ErrorPos};
 
 macro_rules! test_parse {
     ($name:ident, $text:expr, $color:expr) => {
         #[test]
         fn $name() {
             let mut s = Stream::new($text);
-            assert_eq!(RgbColor::from_stream(&mut s).unwrap(), $color);
+            assert_eq!(Color::from_stream(&mut s).unwrap(), $color);
         }
     };
 }
@@ -19,73 +19,73 @@ macro_rules! test_parse {
 test_parse!(
     rrggbb,
     "#ff0000",
-    RgbColor::new(255, 0, 0)
+    Color::new(255, 0, 0)
 );
 
 test_parse!(
     rrggbb_upper,
     "#FF0000",
-    RgbColor::new(255, 0, 0)
+    Color::new(255, 0, 0)
 );
 
 test_parse!(
     rgb_hex,
     "#f00",
-    RgbColor::new(255, 0, 0)
+    Color::new(255, 0, 0)
 );
 
 test_parse!(
     rrggbb_spaced,
     "  #ff0000  ",
-    RgbColor::new(255, 0, 0)
+    Color::new(255, 0, 0)
 );
 
 test_parse!(
     rgb_numeric,
     "rgb(254, 203, 231)",
-    RgbColor::new(254, 203, 231)
+    Color::new(254, 203, 231)
 );
 
 test_parse!(
     rgb_numeric_spaced,
     " rgb( 77 , 77 , 77 ) ",
-    RgbColor::new(77, 77, 77)
+    Color::new(77, 77, 77)
 );
 
 test_parse!(
     rgb_percentage,
     "rgb(50%, 50%, 50%)",
-    RgbColor::new(127, 127, 127)
+    Color::new(127, 127, 127)
 );
 
 test_parse!(
     rgb_percentage_overflow,
     "rgb(140%, -10%, 130%)",
-    RgbColor::new(255, 0, 255)
+    Color::new(255, 0, 255)
 );
 
 test_parse!(
     rgb_percentage_float,
     "rgb(33.333%,46.666%,93.333%)",
-    RgbColor::new(85, 119, 238)
+    Color::new(85, 119, 238)
 );
 
 test_parse!(
     name_red,
     "red",
-    RgbColor::new(255, 0, 0)
+    Color::new(255, 0, 0)
 );
 
 test_parse!(
     name_red_spaced,
     " red ",
-    RgbColor::new(255, 0, 0)
+    Color::new(255, 0, 0)
 );
 
 test_parse!(
     name_cornflowerblue,
     "cornflowerblue",
-    RgbColor::new(100, 149, 237)
+    Color::new(100, 149, 237)
 );
 
 macro_rules! test_error {
@@ -93,7 +93,7 @@ macro_rules! test_error {
         #[test]
         fn $name() {
             let mut s = Stream::new($text);
-            assert_eq!(RgbColor::from_stream(&mut s).err().unwrap(), $err);
+            assert_eq!(Color::from_stream(&mut s).err().unwrap(), $err);
         }
     };
 }
