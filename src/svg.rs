@@ -7,7 +7,7 @@
 use std::fmt;
 use std::str;
 
-use super::{Stream, Error};
+use {Stream, TextFrame, Error};
 
 /// `ElementEnd` token.
 #[derive(Debug,PartialEq,Clone)]
@@ -28,11 +28,11 @@ pub enum Token<'a> {
     /// Tuple contains the type of enclosing tag.
     ElementEnd(ElementEnd<'a>),
     /// Tuple contains attribute name and value.
-    Attribute(&'a str, Stream<'a>),
+    Attribute(&'a str, TextFrame<'a>),
     /// Tuple contains a text object.
-    Text(Stream<'a>),
+    Text(TextFrame<'a>),
     /// Tuple contains CDATA object without `<![CDATA[` and `]]>`.
-    Cdata(Stream<'a>),
+    Cdata(TextFrame<'a>),
     /// Tuple contains whitespace object. It will contain only ` \n\t\r`.
     Whitespace(&'a str),
     /// Tuple contains comment object without `<!--` and `-->`.
@@ -42,7 +42,7 @@ pub enum Token<'a> {
     /// Tuple contains a title of DOCTYPE.
     DtdStart(&'a str),
     /// Tuple contains name and value of ENTITY.
-    Entity(&'a str, Stream<'a>),
+    Entity(&'a str, TextFrame<'a>),
     /// Tuple indicates DOCTYPE end.
     DtdEnd,
     /// Tuple contains declaration object without `<?` and `?>`.
@@ -107,9 +107,18 @@ pub struct Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
     /// Constructs a new `Tokenizer`.
-    pub fn new(text: &str) -> Tokenizer {
+    pub fn from_str(text: &str) -> Tokenizer {
         Tokenizer {
-            stream: Stream::new(text),
+            stream: Stream::from_str(text),
+            state: State::AtStart,
+            depth: 0,
+        }
+    }
+
+    /// Constructs a new `Tokenizer`.
+    pub fn from_frame(text: TextFrame<'a>) -> Tokenizer {
+        Tokenizer {
+            stream: Stream::from_frame(text),
             state: State::AtStart,
             depth: 0,
         }
@@ -176,10 +185,10 @@ impl<'a> Tokenizer<'a> {
                         let b = self.stream.pos() - start;
                         self.stream.back(b)?;
                         let end = self.stream.pos() + self.stream.len_to(b'<')?;
-                        let substream = Stream::sub_stream(&self.stream, self.stream.pos(), end);
-                        self.stream.advance_raw(substream.left());
+                        let text_frame = self.stream.to_text_frame(self.stream.pos(), end);
+                        self.stream.advance_raw(text_frame.len());
 
-                        Ok(Token::Text(substream))
+                        Ok(Token::Text(text_frame))
                     }
                 } else if self.stream.is_space()? {
                     // ignore spaces outside the root element
@@ -283,13 +292,13 @@ impl<'a> Tokenizer<'a> {
         let end = self.stream.pos();
         self.stream.set_pos_raw(start_pos);
 
-        let substream = Stream::sub_stream(&self.stream, self.stream.pos(), end);
+        let text_frame = self.stream.to_text_frame(self.stream.pos(), end);
 
         // go to end of CDATA again
         self.stream.set_pos_raw(end);
         self.stream.advance(3)?;
 
-        Ok(Token::Cdata(substream))
+        Ok(Token::Cdata(text_frame))
     }
 
     fn parse_dtd(&mut self) -> Result<Token<'a>, Error> {
@@ -345,8 +354,8 @@ impl<'a> Tokenizer<'a> {
 
             let value_len = self.stream.len_to(b'"')?;
 
-            let substream = Stream::sub_stream(&self.stream, self.stream.pos(),
-                                               self.stream.pos() + value_len);
+            let text_frame = self.stream.to_text_frame(self.stream.pos(),
+                                                       self.stream.pos() + value_len);
 
             self.stream.advance_raw(value_len);
 
@@ -355,7 +364,7 @@ impl<'a> Tokenizer<'a> {
             self.stream.consume_char(b'>')?;
             self.stream.skip_spaces();
 
-            Ok(Token::Entity(key, substream))
+            Ok(Token::Entity(key, text_frame))
         } else if self.stream.starts_with(b"]>") {
             self.stream.advance(2)?; // ]>
             self.state = State::Unknown;
@@ -462,13 +471,13 @@ impl<'a> Tokenizer<'a> {
         self.stream.advance(1)?; // quote
 
         let end = self.stream.pos() + self.stream.len_to(quote)?;
-        let substream = Stream::sub_stream(&self.stream, self.stream.pos(), end);
+        let text_frame = self.stream.to_text_frame(self.stream.pos(), end);
 
-        self.stream.advance_raw(substream.left());
+        self.stream.advance_raw(text_frame.len());
         self.stream.advance(1)?; // quote
 
         self.stream.skip_spaces();
 
-        Ok(Token::Attribute(name, substream))
+        Ok(Token::Attribute(name, text_frame))
     }
 }

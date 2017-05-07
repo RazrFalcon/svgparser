@@ -4,17 +4,16 @@
 
 extern crate svgparser;
 
-use svgparser::style;
-use svgparser::{Stream, Error, ErrorPos};
-
 use std::str;
+
+use svgparser::style;
+use svgparser::{Error, ErrorPos};
 
 macro_rules! test_attr {
     ($name:ident, $text:expr, $(($aname:expr, $avalue:expr)),*) => (
         #[test]
         fn $name() {
-            let stream = Stream::new($text);
-            let mut s = style::Tokenizer::new(stream);
+            let mut s = style::Tokenizer::from_str($text);
             $(
                 match s.parse_next().unwrap() {
                     style::Token::Attribute(name, stream) => {
@@ -68,8 +67,7 @@ test_attr!(parse_style_8, "  fill  :  none  ",
 
 #[test]
 fn parse_style_9() {
-    let stream = Stream::new("&st0; &st1;");
-    let mut s = style::Tokenizer::new(stream);
+    let mut s = style::Tokenizer::from_str("&st0; &st1;");
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("st0"));
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("st1"));
     assert_eq!(s.parse_next().unwrap(), style::Token::EndOfStream);
@@ -80,28 +78,24 @@ test_attr!(parse_style_10, "/**/",
 
 #[test]
 fn invalid_1() {
-    let stream = Stream::new(":");
-    let mut s = style::Tokenizer::new(stream);
+    let mut s = style::Tokenizer::from_str(":");
     assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,1)));
 }
 
 #[test]
 fn invalid_2() {
-    let stream = Stream::new("name:'");
-    let mut s = style::Tokenizer::new(stream);
+    let mut s = style::Tokenizer::from_str("name:'");
     assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,7)));
 }
 
 #[test]
 fn invalid_3() {
-    let stream = Stream::new("&\x0a96M*9");
-    let mut s = style::Tokenizer::new(stream);
+    let mut s = style::Tokenizer::from_str("&\x0a96M*9");
     assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,2)));
 }
 
 #[test]
 fn invalid_4() {
-    let stream = Stream::new("/*/**/");
-    let mut s = style::Tokenizer::new(stream);
+    let mut s = style::Tokenizer::from_str("/*/**/");
     assert_eq!(s.parse_next().is_err(), true);
 }

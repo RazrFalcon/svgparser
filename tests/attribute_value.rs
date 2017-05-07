@@ -20,7 +20,7 @@ macro_rules! test {
     ($name:ident, $aid:expr, $text:expr, $result:expr) => (
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
+            let mut s = Stream::from_str($text);
             let v = AV::from_stream(ElementId::Rect, $aid, &mut s).unwrap();
             assert_eq!(v, $result);
         }
@@ -31,7 +31,7 @@ macro_rules! test_err {
     ($name:ident, $aid:expr, $text:expr, $err:expr) => (
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
+            let mut s = Stream::from_str($text);
             let v = AV::from_stream(ElementId::Rect, $aid, &mut s);
             assert_eq!(v.unwrap_err(), $err);
         }

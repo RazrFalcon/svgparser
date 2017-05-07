@@ -22,7 +22,7 @@ fn main() {
     file.read_to_string(&mut text).unwrap();
 
     // Begin parsing.
-    let mut p = svg::Tokenizer::new(&text);
+    let mut p = svg::Tokenizer::from_str(&text);
     // Get next token.
     loop {
         // Check that it's ok.
@@ -35,7 +35,7 @@ fn main() {
                         if name == "d" {
                             println!("New path:");
 
-                            let mut p = path::Tokenizer::new(value);
+                            let mut p = path::Tokenizer::from_frame(value);
                             loop {
                                 match p.parse_next() {
                                     Ok(segment_token) => {

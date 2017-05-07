@@ -4,14 +4,13 @@
 
 extern crate svgparser;
 
-use svgparser::{Stream, Color, Error, ErrorPos};
+use svgparser::{Color, Error, ErrorPos};
 
 macro_rules! test_parse {
     ($name:ident, $text:expr, $color:expr) => {
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
-            assert_eq!(Color::from_stream(&mut s).unwrap(), $color);
+            assert_eq!(Color::from_str($text).unwrap(), $color);
         }
     };
 }
@@ -92,8 +91,7 @@ macro_rules! test_error {
     ($name:ident, $text:expr, $err:expr) => {
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
-            assert_eq!(Color::from_stream(&mut s).err().unwrap(), $err);
+            assert_eq!(Color::from_str($text).err().unwrap(), $err);
         }
     };
 }

@@ -6,7 +6,7 @@
 //!
 //! [`<transform-list>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 
-use super::{Stream, Error};
+use {Stream, TextFrame, Error};
 
 #[derive(PartialEq,Debug)]
 #[allow(missing_docs)]
@@ -49,9 +49,18 @@ pub struct Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
     /// Constructs a new `Tokenizer`.
-    pub fn new(stream: Stream<'a>) -> Tokenizer<'a> {
+    pub fn from_str(text: &'a str) -> Tokenizer<'a> {
         Tokenizer {
-            stream: stream,
+            stream: Stream::from_str(text),
+            rotate_ts: None,
+            last_angle: None,
+        }
+    }
+
+    /// Constructs a new `Tokenizer`.
+    pub fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+        Tokenizer {
+            stream: Stream::from_frame(frame),
             rotate_ts: None,
             last_angle: None,
         }

@@ -4,16 +4,14 @@
 
 extern crate svgparser;
 
-use svgparser::{Stream, Error, ErrorPos};
-use svgparser::transform;
-use svgparser::transform::TransformToken;
+use svgparser::{Error, ErrorPos};
+use svgparser::transform::{self, TransformToken};
 
 macro_rules! test {
     ($name:ident, $text:expr, $($value:expr),*) => (
         #[test]
         fn $name() {
-            let s = Stream::new($text);
-            let mut ts = transform::Tokenizer::new(s);
+            let mut ts = transform::Tokenizer::from_str($text);
             $(
                 assert_eq!(ts.parse_next().unwrap(), $value);
             )*
@@ -77,22 +75,19 @@ test!(ts_list_1, "translate(-10,-20) scale(2) rotate(45) translate(5,10)",
 
 #[test]
 fn error_1() {
-    let s = Stream::new("text");
-    let mut ts = transform::Tokenizer::new(s);
+    let mut ts = transform::Tokenizer::from_str("text");
     assert_eq!(ts.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1,1)));
 }
 
 #[test]
 fn error_2() {
-    let s = Stream::new("scale(2) text");
-    let mut ts = transform::Tokenizer::new(s);
+    let mut ts = transform::Tokenizer::from_str("scale(2) text");
     ts.parse_next().unwrap();
     assert_eq!(ts.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1,10)));
 }
 
 #[test]
 fn error_3() {
-    let s = Stream::new(" ");
-    let mut ts = transform::Tokenizer::new(s);
+    let mut ts = transform::Tokenizer::from_str(" ");
     assert_eq!(ts.parse_next().unwrap(), TransformToken::EndOfStream);
 }

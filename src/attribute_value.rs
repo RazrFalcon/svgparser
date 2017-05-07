@@ -5,7 +5,7 @@
 use std::fmt;
 use std::str;
 
-use super::{
+use {
     AttributeId,
     ElementId,
     Error,
@@ -274,14 +274,14 @@ impl<'a> AttributeValue<'a> {
 
             AId::Color => {
                 parse_or!(parse_predef!(ValueId::Inherit),
-                    Ok(AttributeValue::Color(try!(Color::from_stream(stream)))))
+                    parse_rgb_color(stream))
             }
 
               AId::LightingColor
             | AId::FloodColor
             | AId::StopColor => {
                 parse_or!(parse_predef!(ValueId::Inherit, ValueId::CurrentColor),
-                    Ok(AttributeValue::Color(try!(Color::from_stream(stream)))))
+                    parse_rgb_color(stream))
             }
 
               AId::StdDeviation
@@ -722,7 +722,8 @@ fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a
             if let Some(v) = vid {
                 Some(AttributeValue::FuncIRIWithFallback(link, v))
             } else {
-                let color = try_opt!(Color::from_stream(stream).ok());
+                let frame = stream.to_text_frame(stream.pos(), stream.pos() + stream.left());
+                let color = try_opt!(Color::from_frame(frame).ok());
                 Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))
             }
         } else {
@@ -766,7 +767,8 @@ fn parse_number<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error
 }
 
 fn parse_rgb_color<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let c = Color::from_stream(stream)?;
+    let frame = stream.to_text_frame(stream.pos(), stream.pos() + stream.left());
+    let c = Color::from_frame(frame)?;
     Ok(AttributeValue::Color(c))
 }
 

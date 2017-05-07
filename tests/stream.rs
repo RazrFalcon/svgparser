@@ -10,7 +10,7 @@ macro_rules! test_number {
     ($name:ident, $text:expr, $result:expr) => (
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
+            let mut s = Stream::from_str($text);
             assert_eq!(s.parse_number().unwrap(), $result);
         }
     )
@@ -46,7 +46,7 @@ macro_rules! test_number_err {
     ($name:ident, $text:expr, $result:expr) => (
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
+            let mut s = Stream::from_str($text);
             assert_eq!(s.parse_number().err().unwrap(), $result);
         }
     )
@@ -67,7 +67,7 @@ macro_rules! test_length {
     ($name:ident, $text:expr, $result:expr) => (
         #[test]
         fn $name() {
-            let mut s = Stream::new($text);
+            let mut s = Stream::from_str($text);
             assert_eq!(s.parse_length().unwrap(), $result);
         }
     )
@@ -92,7 +92,7 @@ test_length!(length_16, "1.0e0em", Length::new(1.0, LengthUnit::Em));
 
 #[test]
 fn length_err_1() {
-    let mut s = Stream::new("1q");
+    let mut s = Stream::from_str("1q");
     assert_eq!(s.parse_length().unwrap(), Length::new(1.0, LengthUnit::None));
     assert_eq!(s.parse_length().err().unwrap(), Error::InvalidNumber(ErrorPos::new(1,2)));
 }
@@ -101,13 +101,13 @@ fn length_err_1() {
 
 #[test]
 fn integer_1() {
-    let mut s = Stream::new("10");
+    let mut s = Stream::from_str("10");
     assert_eq!(s.parse_integer().unwrap(), 10);
 }
 
 #[test]
 fn integer_err_1() {
     // error because of overflow
-    let mut s = Stream::new("10000000000000");
+    let mut s = Stream::from_str("10000000000000");
     assert_eq!(s.parse_integer().err().unwrap(), Error::InvalidNumber(ErrorPos::new(1,1)));
 }

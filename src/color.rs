@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use super::{Stream, Error, LengthUnit};
+use {Stream, TextFrame, Error, LengthUnit};
 use stream::bound;
 use colors::rgb_color_from_name;
 
@@ -29,7 +29,7 @@ impl Color {
         }
     }
 
-    /// Parses `Color` from the `Stream`.
+    /// Parses `Color` from `TextFrame`.
     ///
     /// Parsing is done according to [`spec`]:
     ///
@@ -60,7 +60,9 @@ impl Color {
     ///
     /// [`spec`]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
     /// [`details`]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
-    pub fn from_stream(s: &mut Stream) -> Result<Color, Error> {
+    pub fn from_frame(frame: TextFrame) -> Result<Color, Error> {
+        let mut s = Stream::from_frame(frame);
+
         s.skip_spaces();
 
         let start = s.pos();
@@ -137,6 +139,13 @@ impl Color {
         }
 
         Ok(color)
+    }
+
+    /// Parses `Color` from string.
+    ///
+    /// The same as `Color::from_frame`.
+    pub fn from_str(text: &str) -> Result<Color, Error> {
+        Color::from_frame(TextFrame::from_str(text))
     }
 }
 

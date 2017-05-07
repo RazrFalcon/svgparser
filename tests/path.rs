@@ -4,15 +4,13 @@
 
 extern crate svgparser;
 
-use svgparser::Stream;
 use svgparser::path::{Tokenizer, SegmentToken, Segment, SegmentData};
 
 macro_rules! test {
     ($name:ident, $text:expr, $( $seg:expr ),*) => (
         #[test]
         fn $name() {
-            let stream = Stream::new($text);
-            let mut s = Tokenizer::new(stream);
+            let mut s = Tokenizer::from_str($text);
             $(
                 assert_eq!(s.parse_next().unwrap(), SegmentToken::Segment($seg));
             )*
@@ -227,8 +225,7 @@ test!(invalid_1, "M\t.", );
 #[test]
 fn invalid_2() {
     // ClosePath can't be followed by a number
-    let stream = Stream::new("M0 0 Z 2");
-    let mut s = Tokenizer::new(stream);
+    let mut s = Tokenizer::from_str("M0 0 Z 2");
     assert_eq!(s.parse_next().unwrap(),
         SegmentToken::Segment(Segment { cmd: b'M', data: SegmentData::MoveTo { x: 0.0, y: 0.0 } }));
     assert_eq!(s.parse_next().unwrap(),

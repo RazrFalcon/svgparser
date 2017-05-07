@@ -19,7 +19,7 @@ pub use color::Color;
 pub use element_id::ElementId;
 pub use error::{Error, ErrorPos};
 pub use length::{Length, LengthUnit};
-pub use stream::Stream;
+pub use stream::{TextFrame, Stream};
 pub use value_id::ValueId;
 pub use values_list::{NumberList, LengthList};
 

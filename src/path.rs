@@ -6,7 +6,7 @@
 //!
 //! [`<path>`]: https://www.w3.org/TR/SVG/paths.html#PathData
 
-use super::{Stream, Error, ErrorPos};
+use {Stream, TextFrame, Error, ErrorPos};
 
 #[derive(Copy,Clone,Debug,PartialEq)]
 #[allow(missing_docs)]
@@ -90,9 +90,17 @@ pub struct Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
     /// Constructs a new `Tokenizer`.
-    pub fn new(stream: Stream<'a>) -> Tokenizer<'a> {
+    pub fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
         Tokenizer {
-            stream: stream,
+            stream: Stream::from_frame(frame),
+            prev_cmd: None,
+        }
+    }
+
+    /// Constructs a new `Tokenizer`.
+    pub fn from_str(text: &'a str) -> Tokenizer<'a> {
+        Tokenizer {
+            stream: Stream::from_str(text),
             prev_cmd: None,
         }
     }

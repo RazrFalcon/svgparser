@@ -3,10 +3,79 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::cmp;
-use std::str;
-use std::str::FromStr;
+use std::fmt;
+use std::str::{self, FromStr};
 
-use super::{Length, LengthUnit, Error, ErrorPos};
+use {Length, LengthUnit, Error, ErrorPos};
+
+/// An immutable string slice.
+///
+/// Unlike `&str` contains a full original string.
+#[derive(PartialEq,Clone,Copy)]
+pub struct TextFrame<'a> {
+    text: &'a str,
+    start: usize,
+    end: usize,
+}
+
+impl<'a> TextFrame<'a> {
+    /// Constructs a new `TextFrame` from string.
+    pub fn from_str(text: &str) -> TextFrame {
+        TextFrame {
+            text: text,
+            start: 0,
+            end: text.len(),
+        }
+    }
+
+    /// Constructs a new `TextFrame` from substring.
+    pub fn from_substr(text: &str, start: usize, end: usize) -> TextFrame {
+        debug_assert!(start <= end);
+
+        TextFrame {
+            text: text,
+            start: start,
+            end: end,
+        }
+    }
+
+    /// Returns a start position of the frame.
+    pub fn start(&self) -> usize {
+        self.start
+    }
+
+    /// Returns a end position of the frame.
+    pub fn end(&self) -> usize {
+        self.end
+    }
+
+    /// Returns a length of the frame.
+    pub fn len(&self) -> usize {
+        self.end - self.start
+    }
+
+    /// Returns a length of the frame underling string.
+    pub fn full_len(&self) -> usize {
+        self.text.len()
+    }
+
+    /// Returns a frame slice.
+    pub fn slice(&self) -> &'a str {
+        &self.text[self.start..self.end]
+    }
+
+    /// Returns an underling string.
+    pub fn full_slice(&self) -> &'a str {
+        &self.text
+    }
+}
+
+impl<'a> fmt::Debug for TextFrame<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.slice())
+    }
+}
+
 
 /// Streaming interface for `str` data.
 #[derive(PartialEq,Clone,Copy,Debug)]
@@ -14,8 +83,7 @@ pub struct Stream<'a> {
     text: &'a str,
     pos: usize,
     end: usize,
-    parent_text: Option<&'a str>,
-    parent_pos: usize,
+    frame: TextFrame<'a>,
 }
 
 #[inline]
@@ -51,45 +119,31 @@ fn is_letter(c: u8) -> bool {
 }
 
 impl<'a> Stream<'a> {
-    /// Constructs a new `Stream` from data.
-    #[inline]
-    pub fn new(text: &str) -> Stream {
+    /// Constructs a new `Stream` from string.
+    pub fn from_frame(text_frame: TextFrame<'a>) -> Stream {
+        Stream {
+            text: text_frame.slice(),
+            pos: 0,
+            end: text_frame.len(),
+            frame: text_frame,
+        }
+    }
+
+    /// Constructs a new `Stream` from string.
+    pub fn from_str(text: &str) -> Stream {
         Stream {
             text: text,
             pos: 0,
             end: text.len(),
-            parent_text: None,
-            parent_pos: 0,
+            frame: TextFrame::from_str(text),
         }
     }
 
-    /// Constructs a new `Stream` from exists.
-    ///
-    /// Used to properly detect a current position on the error.
-    #[inline]
-    pub fn sub_stream(other: &Stream<'a>, start: usize, end: usize) -> Stream<'a> {
+    /// Returns a `TextFrame` from the `Stream`.
+    pub fn to_text_frame(&self, start: usize, end: usize) -> TextFrame<'a> {
         debug_assert!(start <= end);
 
-        match other.parent_text {
-            Some(text) => {
-                Stream {
-                    parent_text: Some(text),
-                    text: &other.text[start..end],
-                    pos: 0,
-                    end: end - start,
-                    parent_pos: other.parent_pos + other.pos,
-                }
-            }
-            None => {
-                Stream {
-                    parent_text: Some(other.text),
-                    text: &other.text[start..end],
-                    pos: 0,
-                    end: end - start,
-                    parent_pos: other.pos,
-                }
-            }
-        }
+        TextFrame::from_substr(self.frame.slice(), start, end)
     }
 
     /// Returns current position.
@@ -105,18 +159,6 @@ impl<'a> Stream<'a> {
         self.pos = pos;
     }
 
-    /// Returns current position including parent stream.
-    #[inline]
-    pub fn global_pos(&self) -> usize {
-        self.parent_pos + self.pos
-    }
-
-    /// Returns parent text.
-    #[inline]
-    pub fn parent_text(&self) -> Option<&'a str> {
-        self.parent_text
-    }
-
     /// Returns number of bytes left.
     ///
     /// # Examples
@@ -124,7 +166,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("text");
+    /// let mut s = Stream::from_str("text");
     /// s.advance_raw(4);
     /// assert_eq!(s.at_end(), true);
     /// assert_eq!(s.left(), 0);
@@ -150,7 +192,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("text");
+    /// let mut s = Stream::from_str("text");
     /// s.advance_raw(2);
     /// assert_eq!(s.curr_char_raw(), b'x');
     /// assert_eq!(s.at_end(), false);
@@ -217,7 +259,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("text");
+    /// let mut s = Stream::from_str("text");
     /// s.advance_raw(2);
     /// assert_eq!(s.char_at(-2).unwrap(), b't');
     /// assert_eq!(s.char_at(-1).unwrap(), b'e');
@@ -256,7 +298,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::{Stream, Error, ErrorPos};
     ///
-    /// let mut s = Stream::new("text");
+    /// let mut s = Stream::from_str("text");
     /// s.advance(2).unwrap(); // ok
     /// assert_eq!(s.pos(), 2);
     /// s.advance(2).unwrap(); // also ok, we at end now
@@ -284,7 +326,7 @@ impl<'a> Stream<'a> {
     /// ```rust,should_panic
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("text");
+    /// let mut s = Stream::from_str("text");
     /// s.advance_raw(2); // ok
     /// s.advance_raw(20); // will cause panic via debug_assert!().
     /// ```
@@ -303,7 +345,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("t e x t");
+    /// let mut s = Stream::from_str("t e x t");
     /// assert_eq!(s.is_space().unwrap(), false);
     /// s.advance_raw(1);
     /// assert_eq!(s.is_space().unwrap(), true);
@@ -329,7 +371,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some \t\n\rtext");
+    /// let mut s = Stream::from_str("Some \t\n\rtext");
     /// s.advance_raw(4);
     /// s.skip_spaces();
     /// assert_eq!(s.slice_tail(), "text");
@@ -348,7 +390,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text  ");
+    /// let mut s = Stream::from_str("Some text  ");
     /// assert_eq!(s.left(), 11);
     /// s.trim_trailing_spaces();
     /// assert_eq!(s.left(), 9);
@@ -404,7 +446,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let s = Stream::new("Some long text.");
+    /// let s = Stream::from_str("Some long text.");
     /// assert_eq!(s.len_to(b'l').unwrap(), 5);
     /// ```
     #[inline]
@@ -430,7 +472,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let s = Stream::new("Some long text.");
+    /// let s = Stream::from_str("Some long text.");
     /// assert_eq!(s.len_to_or_end(b'l'), 5);
     /// assert_eq!(s.len_to_or_end(b'q'), 15);
     /// ```
@@ -459,7 +501,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let s = Stream::new("Some\ntext.");
+    /// let s = Stream::from_str("Some\ntext.");
     /// assert_eq!(s.len_to_space_or_end(), 4);
     /// ```
     #[inline]
@@ -487,7 +529,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// s.jump_to(b't').unwrap();
     /// assert_eq!(s.pos(), 5);
     /// ```
@@ -505,7 +547,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// s.jump_to_or_end(b'q');
     /// assert_eq!(s.at_end(), true);
     /// ```
@@ -522,7 +564,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// s.jump_to_end();
     /// assert_eq!(s.at_end(), true);
     /// ```
@@ -539,7 +581,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// assert_eq!(s.read_raw(4), "Some");
     /// assert_eq!(s.pos(), 4);
     /// ```
@@ -566,7 +608,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// assert_eq!(s.read_to(b'm').unwrap(), "So");
     /// assert_eq!(s.pos(), 2);
     /// ```
@@ -584,7 +626,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let s = Stream::new("Text");
+    /// let s = Stream::from_str("Text");
     /// assert_eq!(s.slice_next_raw(3), "Tex");
     /// ```
     #[inline]
@@ -599,7 +641,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let s = Stream::new("Text");
+    /// let s = Stream::from_str("Text");
     /// assert_eq!(s.slice_region_raw(1, 3), "ex");
     /// ```
     #[inline]
@@ -614,7 +656,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Text");
+    /// let mut s = Stream::from_str("Text");
     /// s.advance(2).unwrap();
     /// assert_eq!(s.slice(), "Text");
     /// ```
@@ -630,7 +672,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// s.advance(5).unwrap();
     /// assert_eq!(s.slice_tail(), "text.");
     /// ```
@@ -646,7 +688,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// s.advance(5).unwrap();
     /// assert_eq!(s.starts_with(b"text"), true);
     /// assert_eq!(s.starts_with(b"long"), false);
@@ -668,7 +710,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("Some text.");
+    /// let mut s = Stream::from_str("Some text.");
     /// s.consume_char(b'S').unwrap();
     /// s.consume_char(b'o').unwrap();
     /// s.consume_char(b'm').unwrap();
@@ -703,7 +745,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("3.14");
+    /// let mut s = Stream::from_str("3.14");
     /// assert_eq!(s.parse_number().unwrap(), 3.14);
     /// assert_eq!(s.at_end(), true);
     /// ```
@@ -820,7 +862,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::Stream;
     ///
-    /// let mut s = Stream::new("3.14, 12,5 , 20-4");
+    /// let mut s = Stream::from_str("3.14, 12,5 , 20-4");
     /// assert_eq!(s.parse_list_number().unwrap(), 3.14);
     /// assert_eq!(s.parse_list_number().unwrap(), 12.0);
     /// assert_eq!(s.parse_list_number().unwrap(), 5.0);
@@ -901,7 +943,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use svgparser::{Stream, Length, LengthUnit};
     ///
-    /// let mut s = Stream::new("30%");
+    /// let mut s = Stream::from_str("30%");
     /// assert_eq!(s.parse_length().unwrap(), Length::new(30.0, LengthUnit::Percent));
     /// ```
     ///
@@ -969,18 +1011,10 @@ impl<'a> Stream<'a> {
         }
     }
 
-    #[inline]
-    fn get_parent_data(&self) -> &str {
-        match self.parent_text {
-            Some(text) => text,
-            None => self.text,
-        }
-    }
-
     fn calc_current_row(&self) -> usize {
-        let text = self.get_parent_data();
+        let text = self.frame.full_slice();
         let mut row = 1;
-        let end = self.pos + self.parent_pos;
+        let end = self.pos + self.frame.start();
         row += text.as_bytes().iter()
             .take(end)
             .filter(|c| **c == b'\n')
@@ -989,9 +1023,9 @@ impl<'a> Stream<'a> {
     }
 
     fn calc_current_col(&self) -> usize {
-        let text = self.get_parent_data();
+        let text = self.frame.full_slice();
         let bytes = text.as_bytes();
-        let end = self.pos + self.parent_pos;
+        let end = self.pos + self.frame.start();
         let mut col = 1;
         for n in 0..end {
             if n > 0 && bytes[n - 1] == b'\n' {

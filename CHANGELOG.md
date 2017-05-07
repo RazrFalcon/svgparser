@@ -5,10 +5,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `Color::from_str`.
+- `path::Tokenizer::from_str`.
+- `style::Tokenizer::from_str`.
+- `transform::Tokenizer::from_str`.
+- `svg::Tokenizer::from_frame`.
+- `Stream::from_str`, `Stream::to_text_frame`.
+
 ### Changed
 - All warnings will be printed to stderr now.
 - All `&[u8]` changed to `&str`.
 - Rename `RgbColor` to `Color`.
+
+### Removed
+- `Color::from_stream`. Use `Color::from_frame` instead.
+- `path::Tokenizer::new`. Use `path::Tokenizer::from_frame` instead.
+- `style::Tokenizer::new`. Use `style::Tokenizer::from_frame` instead.
+- `transform::Tokenizer::new`. Use `transform::Tokenizer::from_frame` instead.
+- `svg::Tokenizer::new`. Use `svg::Tokenizer::from_str` instead.
+- `Stream::new`. Use `Stream::from_str` instead.
+- `Stream::global_pos`, `Stream::parent_text`.
 
 ## [0.3.1] - 2017-03-15
 ### Fixed

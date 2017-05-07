@@ -9,13 +9,13 @@
 use std::fmt;
 use std::str;
 
-use super::{Stream, Error};
+use {Stream, TextFrame, Error};
 
 /// Style token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
     /// Tuple contains attribute name and value.
-    Attribute(&'a str, Stream<'a>),
+    Attribute(&'a str, TextFrame<'a>),
     /// Tuple contains ENTITY reference. Just a name without `&` and `;`.
     EntityRef(&'a str),
     /// The end of the stream.
@@ -43,9 +43,14 @@ pub struct Tokenizer<'a> {
 // TODO: create InvalidStyle instead of InvalidAttributeValue
 
 impl<'a> Tokenizer<'a> {
-    /// Constructs a new `Tokenizer`.
-    pub fn new(stream: Stream<'a>) -> Tokenizer<'a> {
-        Tokenizer { stream: stream }
+    /// Constructs a new `Tokenizer` from string.
+    pub fn from_str(text: &'a str) -> Tokenizer<'a> {
+        Tokenizer { stream: Stream::from_str(text) }
+    }
+
+    /// Constructs a new `Tokenizer` from `TextFrame`.
+    pub fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+        Tokenizer { stream: Stream::from_frame(frame) }
     }
 
     /// Extracts next style object from the stream.
@@ -147,11 +152,15 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         value_len -= 1;
     }
 
-    let mut substream = Stream::sub_stream(&stream, stream.pos(),
-                                           stream.pos() + value_len);
-    substream.trim_trailing_spaces();
+    // TODO: use is_space
+    while stream.char_at(value_len as isize - 1)? == b' ' {
+        value_len -= 1;
+    }
+
+    let text_frame = stream.to_text_frame(stream.pos(), stream.pos() + value_len);
 
     stream.advance_raw(value_len);
+    stream.skip_spaces();
 
     if !stream.at_end() {
         if stream.is_char_eq_raw(b'\'') {
@@ -171,7 +180,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         stream.skip_spaces();
     }
 
-    Ok(Token::Attribute(name, substream))
+    Ok(Token::Attribute(name, text_frame))
 }
 
 fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
