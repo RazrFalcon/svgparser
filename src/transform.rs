@@ -6,7 +6,7 @@
 //!
 //! [`<transform-list>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 
-use {Stream, TextFrame, Error};
+use {Tokenize, Stream, TextFrame, Error};
 
 #[derive(PartialEq,Debug)]
 #[allow(missing_docs)]
@@ -47,9 +47,10 @@ pub struct Tokenizer<'a> {
     last_angle: Option<f64>,
 }
 
-impl<'a> Tokenizer<'a> {
-    /// Constructs a new `Tokenizer`.
-    pub fn from_str(text: &'a str) -> Tokenizer<'a> {
+impl<'a> Tokenize<'a> for Tokenizer<'a> {
+    type Token = TransformToken;
+
+    fn from_str(text: &'a str) -> Tokenizer<'a> {
         Tokenizer {
             stream: Stream::from_str(text),
             rotate_ts: None,
@@ -57,8 +58,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    /// Constructs a new `Tokenizer`.
-    pub fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+    fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
         Tokenizer {
             stream: Stream::from_frame(frame),
             rotate_ts: None,
@@ -78,7 +78,7 @@ impl<'a> Tokenizer<'a> {
     ///   It will be automatically split into three `Transform` tokens:
     ///   `translate(<cx> <cy>) rotate(<rotate-angle>) translate(-<cx> -<cy>)`.
     ///   Just like the spec is stated.
-    pub fn parse_next(&mut self) -> Result<TransformToken, Error> {
+    fn parse_next(&mut self) -> Result<TransformToken, Error> {
 
         if let Some(a) = self.last_angle {
             self.last_angle = None;

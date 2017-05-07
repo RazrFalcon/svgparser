@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `transform::Tokenizer::from_str`.
 - `svg::Tokenizer::from_frame`.
 - `Stream::from_str`, `Stream::to_text_frame`.
+- `Tokenize` trait which defines general parsing methods.
+- `path::Tokenizer`, `svg::Tokenizer`, `style:Tokenizer`, `transform::Tokenizer` are
+  implement `Tokenize` now.
 
 ### Changed
 - All warnings will be printed to stderr now.

@@ -4,6 +4,7 @@
 
 extern crate svgparser;
 
+use svgparser::Tokenize;
 use svgparser::path::{Tokenizer, SegmentToken, Segment, SegmentData};
 
 macro_rules! test {

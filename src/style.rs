@@ -9,7 +9,7 @@
 use std::fmt;
 use std::str;
 
-use {Stream, TextFrame, Error};
+use {Tokenize, Stream, TextFrame, Error};
 
 /// Style token.
 #[derive(PartialEq)]
@@ -42,14 +42,14 @@ pub struct Tokenizer<'a> {
 
 // TODO: create InvalidStyle instead of InvalidAttributeValue
 
-impl<'a> Tokenizer<'a> {
-    /// Constructs a new `Tokenizer` from string.
-    pub fn from_str(text: &'a str) -> Tokenizer<'a> {
+impl<'a> Tokenize<'a> for Tokenizer<'a> {
+    type Token = Token<'a>;
+
+    fn from_str(text: &'a str) -> Tokenizer<'a> {
         Tokenizer { stream: Stream::from_str(text) }
     }
 
-    /// Constructs a new `Tokenizer` from `TextFrame`.
-    pub fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+    fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
         Tokenizer { stream: Stream::from_frame(frame) }
     }
 
@@ -66,7 +66,7 @@ impl<'a> Tokenizer<'a> {
     /// - Objects with `-` prefix will be ignored since we can't write them as XML attributes.
     ///   Library will print a warning to stderr.
     /// - All comments are automatically skipped.
-    pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
+    fn parse_next(&mut self) -> Result<Token<'a>, Error> {
         self.stream.skip_spaces();
 
         if self.stream.at_end() {

@@ -4,7 +4,7 @@
 
 extern crate svgparser;
 
-use svgparser::{Error, ErrorPos};
+use svgparser::{Tokenize, Error, ErrorPos};
 use svgparser::transform::{self, TransformToken};
 
 macro_rules! test {

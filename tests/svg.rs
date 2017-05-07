@@ -6,7 +6,7 @@ extern crate svgparser;
 
 use std::str;
 
-use svgparser::{Error, ErrorPos};
+use svgparser::{Tokenize, Error, ErrorPos};
 use svgparser::svg;
 
 // TODO: test randomly ended files

@@ -1,12 +1,9 @@
 extern crate svgparser;
 
-use std::env;
-use std::fs;
-use std::str;
+use std::{env, fs, str};
 use std::io::Read;
 
-use svgparser::svg;
-use svgparser::path;
+use svgparser::{svg, path, Tokenize};
 
 fn main() {
     // Get a file path from the args.

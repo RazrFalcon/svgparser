@@ -7,7 +7,7 @@ extern crate svgparser;
 use std::str;
 
 use svgparser::style;
-use svgparser::{Error, ErrorPos};
+use svgparser::{Tokenize, Error, ErrorPos};
 
 macro_rules! test_attr {
     ($name:ident, $text:expr, $(($aname:expr, $avalue:expr)),*) => (

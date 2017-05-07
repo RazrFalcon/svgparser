@@ -7,7 +7,7 @@
 use std::fmt;
 use std::str;
 
-use {Stream, TextFrame, Error};
+use {Tokenize, Stream, TextFrame, Error};
 
 /// `ElementEnd` token.
 #[derive(Debug,PartialEq,Clone)]
@@ -105,9 +105,10 @@ pub struct Tokenizer<'a> {
     depth: u32,
 }
 
-impl<'a> Tokenizer<'a> {
-    /// Constructs a new `Tokenizer`.
-    pub fn from_str(text: &str) -> Tokenizer {
+impl<'a> Tokenize<'a> for Tokenizer<'a> {
+    type Token = Token<'a>;
+
+    fn from_str(text: &str) -> Tokenizer {
         Tokenizer {
             stream: Stream::from_str(text),
             state: State::AtStart,
@@ -115,8 +116,7 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    /// Constructs a new `Tokenizer`.
-    pub fn from_frame(text: TextFrame<'a>) -> Tokenizer {
+    fn from_frame(text: TextFrame<'a>) -> Tokenizer {
         Tokenizer {
             stream: Stream::from_frame(text),
             state: State::AtStart,
@@ -135,7 +135,7 @@ impl<'a> Tokenizer<'a> {
     /// - Only ENTITY objects are extracted from DOCTYPE. Library will print a warning to stderr.
     /// - The parser doesn't check an input encoding, assuming that it's UTF-8.
     ///   You should evaluate it by yourself or you will get `Error::Utf8Error`.
-    pub fn parse_next(&mut self) -> Result<Token<'a>, Error> {
+    fn parse_next(&mut self) -> Result<Token<'a>, Error> {
         match self.state {
             State::Unknown => {
                 if self.stream.at_end() {
@@ -225,7 +225,9 @@ impl<'a> Tokenizer<'a> {
             }
         }
     }
+}
 
+impl<'a> Tokenizer<'a> {
     fn parse_declaration(&mut self) -> Result<Token<'a>, Error> {
         debug_assert!(self.stream.starts_with(b"<?"));
 
