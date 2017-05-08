@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `Color::from_str`.
+- `AttributeValue::from_str`.
 - `path::Tokenizer::from_str`.
 - `style::Tokenizer::from_str`.
 - `transform::Tokenizer::from_str`.
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - `Color::from_stream`. Use `Color::from_frame` instead.
+- `AttributeValue::from_stream`. Use `AttributeValue::from_frame` instead.
 - `path::Tokenizer::new`. Use `path::Tokenizer::from_frame` instead.
 - `style::Tokenizer::new`. Use `style::Tokenizer::from_frame` instead.
 - `transform::Tokenizer::new`. Use `transform::Tokenizer::from_frame` instead.

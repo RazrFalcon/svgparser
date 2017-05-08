@@ -182,8 +182,8 @@ impl<'a> Stream<'a> {
     ///
     /// Accessing stream after reaching end via safe methods will produce `svgparser::Error`.
     ///
-    /// Accessing stream after reaching end via unsafe/_raw methods will produce
-    /// rust bound checking error.
+    /// Accessing stream after reaching end via *_raw methods will produce
+    /// a Rust's bound checking error.
     ///
     /// [`pos()`]: #method.pos
     ///

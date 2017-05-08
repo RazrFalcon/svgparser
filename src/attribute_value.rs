@@ -14,6 +14,7 @@ use {
     NumberList,
     Color,
     Stream,
+    TextFrame,
     ValueId,
 };
 
@@ -117,10 +118,12 @@ impl<'a> AttributeValue<'a> {
     /// - `<opacity>` value will be bounded to 0..1 range.
     /// - This function didn't correct most of the numeric values. If value has an incorrect
     ///   data, like `viewBox='0 0 -1 -5'` (negative w/h is error), it will be parsed as is.
-    pub fn from_stream(eid: ElementId, aid: AttributeId, mut stream: &mut Stream<'a>)
+    pub fn from_frame(eid: ElementId, aid: AttributeId, frame: TextFrame<'a>)
         -> Result<AttributeValue<'a>, Error>
     {
         use AttributeId as AId;
+
+        let mut stream = Stream::from_frame(frame);
 
         let start_pos = stream.pos();
 
@@ -179,7 +182,7 @@ impl<'a> AttributeValue<'a> {
                     | ElementId::Text
                     | ElementId::Tref
                     | ElementId::Tspan => {
-                        Ok(AttributeValue::LengthList(LengthList(*stream)))
+                        Ok(AttributeValue::LengthList(LengthList(stream)))
                     },
                     _ => {
                         let l = stream.parse_length()?;
@@ -211,7 +214,7 @@ impl<'a> AttributeValue<'a> {
             | AId::FloodOpacity
             | AId::StrokeOpacity
             | AId::StopOpacity => {
-                fn get_opacity<'a>(s: &mut Stream) -> Result<AttributeValue<'a>, Error> {
+                fn get_opacity<'a>(mut s: Stream) -> Result<AttributeValue<'a>, Error> {
                     let mut n = s.parse_number()?;
                     n = f64_bound(0.0, n, 1.0);
                     Ok(AttributeValue::Number(n))
@@ -226,7 +229,7 @@ impl<'a> AttributeValue<'a> {
                 parse_or!(parse_predef!(
                     ValueId::None,
                     ValueId::Inherit
-                ), Ok(AttributeValue::LengthList(LengthList(*stream))))
+                ), Ok(AttributeValue::LengthList(LengthList(stream))))
             }
 
             AId::Fill => {
@@ -287,11 +290,11 @@ impl<'a> AttributeValue<'a> {
               AId::StdDeviation
             | AId::BaseFrequency => {
                 // TODO: this attributes can contain only one or two numbers
-                Ok(AttributeValue::NumberList(NumberList(*stream)))
+                Ok(AttributeValue::NumberList(NumberList(stream)))
             }
 
             AId::Points => {
-                Ok(AttributeValue::NumberList(NumberList(*stream)))
+                Ok(AttributeValue::NumberList(NumberList(stream)))
             }
 
             AId::AlignmentBaseline => {
@@ -678,11 +681,20 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::ViewBox => {
-                Ok(AttributeValue::NumberList(NumberList(*stream)))
+                Ok(AttributeValue::NumberList(NumberList(stream)))
             }
 
             _ => Ok(AttributeValue::String(stream.slice())),
         }
+    }
+
+    /// Parses `AttributeValue` from string.
+    ///
+    /// The same as `AttributeValue::from_frame`.
+    pub fn from_str(eid: ElementId, aid: AttributeId, text: &'a str)
+        -> Result<AttributeValue<'a>, Error>
+    {
+        AttributeValue::from_frame(eid, aid, TextFrame::from_str(text))
     }
 }
 
@@ -695,7 +707,7 @@ macro_rules! try_opt {
     }
 }
 
-fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a>> {
+fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
     if !stream.at_end() && stream.is_char_eq_raw(b'u') {
         try_opt!(stream.advance(5).ok());
         let link_len = try_opt!(stream.len_to(b')').ok());
@@ -734,7 +746,7 @@ fn parse_paint_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a
     }
 }
 
-fn parse_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a>> {
+fn parse_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
     if !stream.at_end() && stream.is_char_eq_raw(b'u') {
         try_opt!(stream.advance(5).ok());
         let link = stream.slice_next_raw(try_opt!(stream.len_to(b')').ok()));
@@ -744,7 +756,7 @@ fn parse_func_iri<'a>(stream: &mut Stream<'a>) -> Option<AttributeValue<'a>> {
     }
 }
 
-fn parse_iri<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_iri<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     // empty xlink:href is a valid attribute
     if !stream.at_end() && stream.is_char_eq_raw(b'#') {
         // extract internal link
@@ -756,17 +768,17 @@ fn parse_iri<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     }
 }
 
-fn parse_length<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_length<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     let l = stream.parse_length()?;
     Ok(AttributeValue::Length(l))
 }
 
-fn parse_number<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     let l = stream.parse_number()?;
     Ok(AttributeValue::Number(l))
 }
 
-fn parse_rgb_color<'a>(stream: &mut Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     let frame = stream.to_text_frame(stream.pos(), stream.pos() + stream.left());
     let c = Color::from_frame(frame)?;
     Ok(AttributeValue::Color(c))
