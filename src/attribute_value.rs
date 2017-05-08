@@ -64,7 +64,7 @@ impl<'a> fmt::Debug for AttributeValue<'a> {
             AttributeValue::Length(len) =>
                 write!(f, "Length({:?})", len),
             AttributeValue::LengthList(list) =>
-                write!(f, "LengthList({})", list.0.slice()),
+                write!(f, "LengthList({})", list.data()),
             AttributeValue::IRI(name) =>
                 write!(f, "IRI({})", name),
             AttributeValue::FuncIRI(name) =>
@@ -74,7 +74,7 @@ impl<'a> fmt::Debug for AttributeValue<'a> {
             AttributeValue::Number(num) =>
                 write!(f, "Number({})", num),
             AttributeValue::NumberList(list) =>
-                write!(f, "NumberList({})", list.0.slice()),
+                write!(f, "NumberList({})", list.data()),
             AttributeValue::PredefValue(id) =>
                 write!(f, "PredefValue({})", id.name()),
             AttributeValue::String(text) =>
@@ -182,7 +182,7 @@ impl<'a> AttributeValue<'a> {
                     | ElementId::Text
                     | ElementId::Tref
                     | ElementId::Tspan => {
-                        Ok(AttributeValue::LengthList(LengthList(stream)))
+                        Ok(AttributeValue::LengthList(LengthList::from_frame(frame)))
                     },
                     _ => {
                         let l = stream.parse_length()?;
@@ -229,7 +229,7 @@ impl<'a> AttributeValue<'a> {
                 parse_or!(parse_predef!(
                     ValueId::None,
                     ValueId::Inherit
-                ), Ok(AttributeValue::LengthList(LengthList(stream))))
+                ), Ok(AttributeValue::LengthList(LengthList::from_frame(frame))))
             }
 
             AId::Fill => {
@@ -290,11 +290,11 @@ impl<'a> AttributeValue<'a> {
               AId::StdDeviation
             | AId::BaseFrequency => {
                 // TODO: this attributes can contain only one or two numbers
-                Ok(AttributeValue::NumberList(NumberList(stream)))
+                Ok(AttributeValue::NumberList(NumberList::from_frame(frame)))
             }
 
             AId::Points => {
-                Ok(AttributeValue::NumberList(NumberList(stream)))
+                Ok(AttributeValue::NumberList(NumberList::from_frame(frame)))
             }
 
             AId::AlignmentBaseline => {
@@ -681,7 +681,7 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::ViewBox => {
-                Ok(AttributeValue::NumberList(NumberList(stream)))
+                Ok(AttributeValue::NumberList(NumberList::from_frame(frame)))
             }
 
             _ => Ok(AttributeValue::String(stream.slice())),
@@ -734,7 +734,7 @@ fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>
             if let Some(v) = vid {
                 Some(AttributeValue::FuncIRIWithFallback(link, v))
             } else {
-                let frame = stream.to_text_frame(stream.pos(), stream.pos() + stream.left());
+                let frame = stream.slice_frame_raw(stream.pos(), stream.pos() + stream.left());
                 let color = try_opt!(Color::from_frame(frame).ok());
                 Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))
             }
@@ -779,7 +779,7 @@ fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error>
 }
 
 fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let frame = stream.to_text_frame(stream.pos(), stream.pos() + stream.left());
+    let frame = stream.slice_frame_raw(stream.pos(), stream.pos() + stream.left());
     let c = Color::from_frame(frame)?;
     Ok(AttributeValue::Color(c))
 }

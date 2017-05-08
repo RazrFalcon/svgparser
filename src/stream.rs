@@ -72,10 +72,15 @@ impl<'a> TextFrame<'a> {
 
 impl<'a> fmt::Debug for TextFrame<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.slice())
+        write!(f, "'{}' {}..{}", self.slice(), self.start, self.end)
     }
 }
 
+impl<'a> fmt::Display for TextFrame<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.slice())
+    }
+}
 
 /// Streaming interface for `str` data.
 #[derive(PartialEq,Clone,Copy,Debug)]
@@ -137,13 +142,6 @@ impl<'a> Stream<'a> {
             end: text.len(),
             frame: TextFrame::from_str(text),
         }
-    }
-
-    /// Returns a `TextFrame` from the `Stream`.
-    pub fn to_text_frame(&self, start: usize, end: usize) -> TextFrame<'a> {
-        debug_assert!(start <= end);
-
-        TextFrame::from_substr(self.frame.slice(), start, end)
     }
 
     /// Returns current position.
@@ -634,7 +632,7 @@ impl<'a> Stream<'a> {
         &self.text[self.pos..(self.pos + len)]
     }
 
-    /// Returns data of stream within selected region.
+    /// Returns data of the stream within selected region.
     ///
     /// # Examples
     ///
@@ -649,7 +647,14 @@ impl<'a> Stream<'a> {
         &self.text[start..end]
     }
 
-    /// Returns complete data of stream.
+    /// Returns data of the stream within selected region as `TextFrame`.
+    pub fn slice_frame_raw(&self, start: usize, end: usize) -> TextFrame<'a> {
+        debug_assert!(start <= end);
+
+        TextFrame::from_substr(self.frame.slice(), start, end)
+    }
+
+    /// Returns complete data of the stream.
     ///
     /// # Examples
     ///
@@ -665,7 +670,7 @@ impl<'a> Stream<'a> {
         &self.text[..self.end]
     }
 
-    /// Returns tail data of stream.
+    /// Returns tail data of the stream.
     ///
     /// # Examples
     ///
@@ -679,6 +684,12 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn slice_tail(&self) -> &'a str {
         &self.text[self.pos..self.end]
+    }
+
+    /// Returns tail data of the stream as `TextFrame`.
+    #[inline]
+    pub fn slice_tail_frame(&self) -> TextFrame<'a> {
+        TextFrame::from_substr(self.frame.slice(), self.pos, self.end)
     }
 
     /// Returns `true` if stream data at current position starts with selected text.

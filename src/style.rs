@@ -157,7 +157,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         value_len -= 1;
     }
 
-    let text_frame = stream.to_text_frame(stream.pos(), stream.pos() + value_len);
+    let text_frame = stream.slice_frame_raw(stream.pos(), stream.pos() + value_len);
 
     stream.advance_raw(value_len);
     stream.skip_spaces();

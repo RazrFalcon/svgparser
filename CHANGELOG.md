@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - All warnings will be printed to stderr now.
 - All `&[u8]` changed to `&str`.
 - Rename `RgbColor` to `Color`.
+- `NumberList` and `LengthList` should be created using `from_frame` method now.
 
 ### Removed
 - `Color::from_stream`. Use `Color::from_frame` instead.

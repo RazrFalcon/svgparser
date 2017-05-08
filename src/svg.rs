@@ -185,7 +185,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                         let b = self.stream.pos() - start;
                         self.stream.back(b)?;
                         let end = self.stream.pos() + self.stream.len_to(b'<')?;
-                        let text_frame = self.stream.to_text_frame(self.stream.pos(), end);
+                        let text_frame = self.stream.slice_frame_raw(self.stream.pos(), end);
                         self.stream.advance_raw(text_frame.len());
 
                         Ok(Token::Text(text_frame))
@@ -294,7 +294,7 @@ impl<'a> Tokenizer<'a> {
         let end = self.stream.pos();
         self.stream.set_pos_raw(start_pos);
 
-        let text_frame = self.stream.to_text_frame(self.stream.pos(), end);
+        let text_frame = self.stream.slice_frame_raw(self.stream.pos(), end);
 
         // go to end of CDATA again
         self.stream.set_pos_raw(end);
@@ -356,7 +356,7 @@ impl<'a> Tokenizer<'a> {
 
             let value_len = self.stream.len_to(b'"')?;
 
-            let text_frame = self.stream.to_text_frame(self.stream.pos(),
+            let text_frame = self.stream.slice_frame_raw(self.stream.pos(),
                                                        self.stream.pos() + value_len);
 
             self.stream.advance_raw(value_len);
@@ -473,7 +473,7 @@ impl<'a> Tokenizer<'a> {
         self.stream.advance(1)?; // quote
 
         let end = self.stream.pos() + self.stream.len_to(quote)?;
-        let text_frame = self.stream.to_text_frame(self.stream.pos(), end);
+        let text_frame = self.stream.slice_frame_raw(self.stream.pos(), end);
 
         self.stream.advance_raw(text_frame.len());
         self.stream.advance(1)?; // quote
