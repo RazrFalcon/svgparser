@@ -1,5 +1,7 @@
 extern crate svgparser;
 
+use std::str::FromStr;
+
 use svgparser::{
     svg,
     path,

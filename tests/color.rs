@@ -4,6 +4,8 @@
 
 extern crate svgparser;
 
+use std::str::FromStr;
+
 use svgparser::{Color, Error, ErrorPos};
 
 macro_rules! test_parse {

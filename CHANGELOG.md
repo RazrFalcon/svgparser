@@ -6,7 +6,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- `Color::from_str`.
 - `AttributeValue::from_str`.
 - `path::Tokenizer::from_str`.
 - `style::Tokenizer::from_str`.
@@ -14,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `svg::Tokenizer::from_frame`.
 - `Stream::from_str`, `Stream::to_text_frame`.
 - `Tokenize` trait which defines general parsing methods.
+- Implement `FromStr` trait for `Color`.
 - `path::Tokenizer`, `svg::Tokenizer`, `style:Tokenizer`, `transform::Tokenizer` are
   implement `Tokenize` now.
 

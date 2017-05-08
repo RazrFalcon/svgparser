@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::str::FromStr;
+
 use {Stream, TextFrame, Error, LengthUnit};
 use stream::bound;
 use colors::rgb_color_from_name;
@@ -140,11 +142,12 @@ impl Color {
 
         Ok(color)
     }
+}
 
-    /// Parses `Color` from string.
-    ///
-    /// The same as `Color::from_frame`.
-    pub fn from_str(text: &str) -> Result<Color, Error> {
+impl FromStr for Color {
+    type Err = Error;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
         Color::from_frame(TextFrame::from_str(text))
     }
 }
