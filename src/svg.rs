@@ -7,15 +7,17 @@
 use std::fmt;
 use std::str;
 
-use {Tokenize, Stream, TextFrame, Error};
+use {Tokenize, Stream, TextFrame, ElementId, AttributeId, Error};
 
 /// `ElementEnd` token.
 #[derive(Debug,PartialEq,Clone)]
 pub enum ElementEnd<'a> {
     /// Indicates `>`
     Open,
-    /// Indicates `</name>`
-    Close(&'a str),
+    /// Indicates `</name>` of an XML element
+    CloseXml(&'a str),
+    /// Indicates `</name>` of an SVG element
+    CloseSvg(ElementId),
     /// Indicates `/>`
     Empty,
 }
@@ -23,12 +25,16 @@ pub enum ElementEnd<'a> {
 /// SVG token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
-    /// Tuple contains tag name of the element.
-    ElementStart(&'a str),
-    /// Tuple contains the type of enclosing tag.
+    /// Tuple contains tag name of an XML element.
+    XmlElementStart(&'a str),
+    /// Tuple contains tag name of an SVG element.
+    SvgElementStart(ElementId),
+    /// Tuple contains a type of enclosing tag.
     ElementEnd(ElementEnd<'a>),
-    /// Tuple contains attribute name and value.
-    Attribute(&'a str, TextFrame<'a>),
+    /// Tuple contains attribute's name and value of an XML element.
+    XmlAttribute(&'a str, &'a str),
+    /// Tuple contains attribute's ID and value of an SVG element.
+    SvgAttribute(AttributeId, TextFrame<'a>),
     /// Tuple contains a text object.
     Text(TextFrame<'a>),
     /// Tuple contains CDATA object without `<![CDATA[` and `]]>`.
@@ -54,18 +60,23 @@ pub enum Token<'a> {
 impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Token::ElementStart(s) =>
-                write!(f, "ElementStart({})", s),
+            Token::XmlElementStart(s) =>
+                write!(f, "XmlElementStart({})", s),
+            Token::SvgElementStart(s) =>
+                write!(f, "SvgElementStart({:?})", s),
             Token::ElementEnd(ref e) => {
                 let c = match *e {
                     ElementEnd::Open => ">",
-                    ElementEnd::Close(_) => "</",
+                    ElementEnd::CloseXml(_) => "</",
+                    ElementEnd::CloseSvg(_) => "</",
                     ElementEnd::Empty => "/>",
                 };
                 write!(f, "ElementEnd({})", c)
             }
-            Token::Attribute(k, ref v) =>
-                write!(f, "Attribute({}, {:?})", k, v),
+            Token::XmlAttribute(k, ref v) =>
+                write!(f, "XmlAttribute({}, {:?})", k, v),
+            Token::SvgAttribute(k, ref v) =>
+                write!(f, "SvgAttribute({:?}, {:?})", k, v),
             Token::Text(ref s) =>
                 write!(f, "Text({:?})", s),
             Token::Cdata(ref s) =>
@@ -103,6 +114,7 @@ pub struct Tokenizer<'a> {
     stream: Stream<'a>,
     state: State,
     depth: u32,
+    curr_elem: Option<ElementId>,
 }
 
 impl<'a> Tokenize<'a> for Tokenizer<'a> {
@@ -113,6 +125,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             stream: Stream::from_str(text),
             state: State::AtStart,
             depth: 0,
+            curr_elem: None,
         }
     }
 
@@ -121,6 +134,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             stream: Stream::from_frame(text),
             state: State::AtStart,
             depth: 0,
+            curr_elem: None,
         }
     }
 
@@ -153,7 +167,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     self.parse_dtd()
                 } else if self.stream.starts_with(b"</") {
                     self.stream.advance(2)?; // </
-                    let text = self.stream.read_to(b'>')?;
+                    let tag_name = self.stream.read_to(b'>')?;
                     self.stream.advance(1)?; // >
 
                     if self.depth == 0 {
@@ -163,8 +177,14 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     }
 
                     self.depth -= 1;
+                    self.curr_elem = None;
 
-                    Ok(Token::ElementEnd(ElementEnd::Close(text)))
+                    let end = match ElementId::from_name(tag_name) {
+                        Some(eid) => ElementEnd::CloseSvg(eid),
+                        None => ElementEnd::CloseXml(tag_name),
+                    };
+
+                    Ok(Token::ElementEnd(end))
                 } else if self.stream.is_char_eq_raw(b'<') {
                     self.depth += 1;
                     self.parse_element()
@@ -422,7 +442,18 @@ impl<'a> Tokenizer<'a> {
         self.stream.skip_spaces();
         self.state = State::Attributes;
 
-        Ok(Token::ElementStart(tag_name))
+        let token = match ElementId::from_name(tag_name) {
+            Some(eid) => {
+                self.curr_elem = Some(eid);
+                Token::SvgElementStart(eid)
+            }
+            None => {
+                self.curr_elem = None;
+                Token::XmlElementStart(tag_name)
+            }
+        };
+
+        Ok(token)
     }
 
     fn parse_attribute(&mut self) -> Result<Token<'a>, Error> {
@@ -430,12 +461,14 @@ impl<'a> Tokenizer<'a> {
             self.depth -= 1;
             self.stream.advance(2)?;
             self.state = State::Unknown;
+            self.curr_elem = None;
             return Ok(Token::ElementEnd(ElementEnd::Empty));
         }
 
         if self.stream.is_char_eq(b'>')? {
             self.stream.advance_raw(1);
             self.state = State::Unknown;
+            self.curr_elem = None;
             return Ok(Token::ElementEnd(ElementEnd::Open));
         }
 
@@ -480,6 +513,12 @@ impl<'a> Tokenizer<'a> {
 
         self.stream.skip_spaces();
 
-        Ok(Token::Attribute(name, text_frame))
+        if let Some(_) = self.curr_elem {
+            if let Some(aid) = AttributeId::from_name(name) {
+                return Ok(Token::SvgAttribute(aid, text_frame));
+            }
+        }
+
+        Ok(Token::XmlAttribute(name, text_frame.slice()))
     }
 }

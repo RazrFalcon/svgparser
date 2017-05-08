@@ -7,18 +7,23 @@ extern crate svgparser;
 use std::str;
 
 use svgparser::style;
-use svgparser::{Tokenize, Error, ErrorPos};
+use svgparser::{
+    Tokenize,
+    AttributeId as AId,
+    Error,
+    ErrorPos
+};
 
 macro_rules! test_attr {
-    ($name:ident, $text:expr, $(($aname:expr, $avalue:expr)),*) => (
+    ($name:ident, $text:expr, $(($aid:expr, $avalue:expr)),*) => (
         #[test]
         fn $name() {
             let mut s = style::Tokenizer::from_str($text);
             $(
                 match s.parse_next().unwrap() {
-                    style::Token::Attribute(name, stream) => {
-                        assert_eq!(name, $aname);
-                        assert_eq!(stream.slice(), $avalue);
+                    style::Token::SvgAttribute(aid, value) => {
+                        assert_eq!(aid, $aid);
+                        assert_eq!(value.slice(), $avalue);
                     },
                     _ => unreachable!(),
                 }
@@ -29,40 +34,40 @@ macro_rules! test_attr {
 }
 
 test_attr!(parse_style_1, "fill:none; color:cyan; stroke-width:4.00",
-    ("fill", "none"),
-    ("color", "cyan"),
-    ("stroke-width", "4.00")
+    (AId::Fill, "none"),
+    (AId::Color, "cyan"),
+    (AId::StrokeWidth, "4.00")
 );
 
 test_attr!(parse_style_2, "fill:none;",
-    ("fill", "none")
+    (AId::Fill, "none")
 );
 
 test_attr!(parse_style_3, "font-size:24px;font-family:'Arial Bold'",
-    ("font-size", "24px"),
-    ("font-family", "Arial Bold")
+    (AId::FontSize, "24px"),
+    (AId::FontFamily, "Arial Bold")
 );
 
 test_attr!(parse_style_4, "font-size:24px; /* comment */ font-style:normal;",
-    ("font-size", "24px"),
-    ("font-style", "normal")
+    (AId::FontSize, "24px"),
+    (AId::FontStyle, "normal")
 );
 
 test_attr!(parse_style_5, "font-size:24px;-font-style:normal;font-stretch:normal;",
-    ("font-size", "24px"),
-    ("font-stretch", "normal")
+    (AId::FontSize, "24px"),
+    (AId::FontStretch, "normal")
 );
 
 test_attr!(parse_style_6, "fill:none;-webkit:hi",
-    ("fill", "none")
+    (AId::Fill, "none")
 );
 
 test_attr!(parse_style_7, "font-family:&apos;Verdana&apos;",
-    ("font-family", "Verdana")
+    (AId::FontFamily, "Verdana")
 );
 
 test_attr!(parse_style_8, "  fill  :  none  ",
-    ("fill", "none")
+    (AId::Fill, "none")
 );
 
 #[test]

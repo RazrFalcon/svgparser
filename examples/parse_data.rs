@@ -9,7 +9,9 @@ use svgparser::{
     transform,
     Tokenize,
     Color,
-    Stream,
+    AttributeId,
+    ElementId,
+    AttributeValue,
 };
 
 // This example shows how to parse different data types from string.
@@ -25,8 +27,9 @@ fn main() {
     let mut t = style::Tokenizer::from_str("fill:red;stroke:blue");
     println!("{:?}", t.parse_next());
 
+    // simple types
     println!("{:?}", Color::from_str("red"));
-    println!("{:?}", Stream::from_str("1em").parse_length());
+    println!("{:?}", AttributeValue::from_str(ElementId::Rect, AttributeId::Fill, "red"));
 }
 
 fn parse<'a, T: Tokenize<'a>>(text: &'a str) {

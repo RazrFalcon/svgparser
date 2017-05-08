@@ -40,7 +40,6 @@ pub enum TransformToken {
 }
 
 /// Transform tokenizer.
-#[derive(Clone,PartialEq)]
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
     rotate_ts: Option<(f64, f64)>,

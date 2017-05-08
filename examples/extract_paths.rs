@@ -3,7 +3,7 @@ extern crate svgparser;
 use std::{env, fs, str};
 use std::io::Read;
 
-use svgparser::{svg, path, Tokenize};
+use svgparser::{svg, path, Tokenize, AttributeId};
 
 fn main() {
     // Get a file path from the args.
@@ -27,9 +27,9 @@ fn main() {
             Ok(t) => {
                 // Filter 'Attribute' token.
                 match t {
-                    svg::Token::Attribute(name, value) => {
+                    svg::Token::SvgAttribute(aid, value) => {
                         // Process only 'd' attributes.
-                        if name == "d" {
+                        if aid == AttributeId::D {
                             println!("New path:");
 
                             let mut p = path::Tokenizer::from_frame(value);

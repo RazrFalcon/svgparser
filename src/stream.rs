@@ -670,6 +670,12 @@ impl<'a> Stream<'a> {
         &self.text[..self.end]
     }
 
+    /// Returns complete data of the stream as `TextFrame`.
+    #[inline]
+    pub fn slice_frame(&self) -> TextFrame<'a> {
+        TextFrame::from_substr(self.frame.slice(), self.frame.start(), self.frame.end())
+    }
+
     /// Returns tail data of the stream.
     ///
     /// # Examples

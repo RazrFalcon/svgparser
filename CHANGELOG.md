@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - All `&[u8]` changed to `&str`.
 - Rename `RgbColor` to `Color`.
 - `NumberList` and `LengthList` should be created using `from_frame` method now.
+- Split `svg::Token::ElementStart` into `XmlElementStart` and `SvgElementStart`.
+- Split `svg::Token::Attribute` into `XmlAttribute` and `SvgAttribute`.
+- Split `svg::ElementEnd::Close` into `CloseXml` and `CloseSvg`.
 
 ### Removed
 - `Color::from_stream`. Use `Color::from_frame` instead.

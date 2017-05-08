@@ -9,13 +9,15 @@
 use std::fmt;
 use std::str;
 
-use {Tokenize, Stream, TextFrame, Error};
+use {Tokenize, Stream, TextFrame, AttributeId, Error};
 
 /// Style token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
-    /// Tuple contains attribute name and value.
-    Attribute(&'a str, TextFrame<'a>),
+    /// Tuple contains attribute's name and value of an XML element.
+    XmlAttribute(&'a str, &'a str),
+    /// Tuple contains attribute's ID and value of an SVG element.
+    SvgAttribute(AttributeId, TextFrame<'a>),
     /// Tuple contains ENTITY reference. Just a name without `&` and `;`.
     EntityRef(&'a str),
     /// The end of the stream.
@@ -25,8 +27,10 @@ pub enum Token<'a> {
 impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Token::Attribute(name, ref value) =>
-                write!(f, "Token({}, {:?})", name, value),
+            Token::XmlAttribute(name, ref value) =>
+                write!(f, "XmlAttribute({}, {})", name, value),
+            Token::SvgAttribute(id, ref value) =>
+                write!(f, "SvgAttribute({:?}, {:?})", id, value),
             Token::EntityRef(name) =>
                 write!(f, "EntityRef({})", name),
             Token::EndOfStream =>
@@ -62,7 +66,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     /// # Notes
     ///
     /// - By SVG spec `style` attribute can contain any style sheet language,
-    ///   but we only support CSS2, which is the default.
+    ///   but we only support CSS2, which is default.
     /// - Objects with `-` prefix will be ignored since we can't write them as XML attributes.
     ///   Library will print a warning to stderr.
     /// - All comments are automatically skipped.
@@ -180,7 +184,11 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         stream.skip_spaces();
     }
 
-    Ok(Token::Attribute(name, text_frame))
+    if let Some(aid) = AttributeId::from_name(name) {
+        return Ok(Token::SvgAttribute(aid, text_frame));
+    }
+
+    Ok(Token::XmlAttribute(name, text_frame.slice()))
 }
 
 fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
