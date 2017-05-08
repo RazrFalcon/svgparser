@@ -8,7 +8,7 @@ use std::io::Read;
 
 use bencher::Bencher;
 
-use svgparser::svg;
+use svgparser::{svg, Tokenize};
 
 fn load_file(path: &str) -> String {
     let path = env::current_dir().unwrap().join(path);
@@ -19,7 +19,7 @@ fn load_file(path: &str) -> String {
 }
 
 fn parse(text: &str) {
-    let mut p = svg::Tokenizer::new(&text);
+    let mut p = svg::Tokenizer::from_str(text);
     loop {
         match p.parse_next() {
             Ok(t) => {
