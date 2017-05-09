@@ -233,7 +233,7 @@ fn parse_svg_attribute(eid: ElementId, aid: AttributeId, value: TextFrame, depth
             let mut p = transform::Tokenizer::from_frame(value);
             loop {
                 let token = p.parse_next()?;
-                if token != transform::TransformToken::EndOfStream {
+                if token != transform::Token::EndOfStream {
                     print_indent!("{:?}", depth + 1, token)
                 } else {
                     break;

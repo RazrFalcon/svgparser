@@ -11,7 +11,7 @@ use {Tokenize, Stream, TextFrame, Error};
 // TODO: rename to Token
 #[derive(Clone,Copy,PartialEq,Debug)]
 #[allow(missing_docs)]
-pub enum TransformToken {
+pub enum Token {
     Matrix {
         a: f64,
         b: f64,
@@ -48,7 +48,7 @@ pub struct Tokenizer<'a> {
 }
 
 impl<'a> Tokenize<'a> for Tokenizer<'a> {
-    type Token = TransformToken;
+    type Token = Token;
 
     fn from_str(text: &'a str) -> Tokenizer<'a> {
         Tokenizer {
@@ -78,18 +78,18 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     ///   It will be automatically split into three `Transform` tokens:
     ///   `translate(<cx> <cy>) rotate(<rotate-angle>) translate(-<cx> -<cy>)`.
     ///   Just like the spec is stated.
-    fn parse_next(&mut self) -> Result<TransformToken, Error> {
+    fn parse_next(&mut self) -> Result<Token, Error> {
 
         if let Some(a) = self.last_angle {
             self.last_angle = None;
-            return Ok(TransformToken::Rotate {
+            return Ok(Token::Rotate {
                 angle: a,
             });
         }
 
         if let Some((x, y)) = self.rotate_ts {
                 self.rotate_ts = None;
-                return Ok(TransformToken::Translate {
+                return Ok(Token::Translate {
                     tx: -x,
                     ty: -y,
                 });
@@ -101,7 +101,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
         if s.at_end() {
             // empty attribute is still a valid value
-            return Ok(TransformToken::EndOfStream);
+            return Ok(Token::EndOfStream);
         }
 
         if s.left() < 5 {
@@ -121,7 +121,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 let e = s.parse_list_number()?;
                 let f = s.parse_list_number()?;
 
-                TransformToken::Matrix {
+                Token::Matrix {
                     a: a,
                     b: b,
                     c: c,
@@ -145,7 +145,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     s.parse_list_number()?
                 };
 
-                TransformToken::Translate {
+                Token::Translate {
                     tx: x,
                     ty: y,
                 }
@@ -165,7 +165,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     s.parse_list_number()?
                 };
 
-                TransformToken::Scale {
+                Token::Scale {
                     sx: x,
                     sy: y,
                 }
@@ -188,12 +188,12 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     self.rotate_ts = Some((cx, cy));
                     self.last_angle = Some(a);
 
-                    TransformToken::Translate {
+                    Token::Translate {
                         tx: cx,
                         ty: cy,
                     }
                 } else {
-                    TransformToken::Rotate {
+                    Token::Rotate {
                         angle: a,
                     }
                 }
@@ -205,7 +205,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
                 let a = s.parse_list_number()?;
 
-                TransformToken::SkewX {
+                Token::SkewX {
                     angle: a,
                 }
             }
@@ -216,7 +216,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
                 let a = s.parse_list_number()?;
 
-                TransformToken::SkewY {
+                Token::SkewY {
                     angle: a,
                 }
             }

@@ -5,7 +5,7 @@
 extern crate svgparser;
 
 use svgparser::{Tokenize, Error, ErrorPos};
-use svgparser::transform::{self, TransformToken};
+use svgparser::transform::{self, Token};
 
 macro_rules! test {
     ($name:ident, $text:expr, $($value:expr),*) => (
@@ -15,62 +15,62 @@ macro_rules! test {
             $(
                 assert_eq!(ts.parse_next().unwrap(), $value);
             )*
-            assert_eq!(ts.parse_next().unwrap(), TransformToken::EndOfStream);
+            assert_eq!(ts.parse_next().unwrap(), Token::EndOfStream);
         }
     )
 }
 
 test!(matrix_1, "matrix(1 0 0 1 10 20)",
-    TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
+    Token::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
 
 test!(matrix_2, "matrix(1, 0, 0, 1, 10, 20)",
-    TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
+    Token::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
 
 test!(matrix_3, " matrix ( 1, 0, 0, 1, 10, 20 )",
-    TransformToken::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
+    Token::Matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 10.0, f: 20.0 }
 );
 
 test!(translate_1, "translate(10 20)",
-    TransformToken::Translate { tx: 10.0, ty: 20.0 }
+    Token::Translate { tx: 10.0, ty: 20.0 }
 );
 
 test!(translate_2, "translate(10)",
-    TransformToken::Translate { tx: 10.0, ty: 0.0 }
+    Token::Translate { tx: 10.0, ty: 0.0 }
 );
 
 test!(scale_1, "scale(2 3)",
-    TransformToken::Scale { sx: 2.0, sy: 3.0 }
+    Token::Scale { sx: 2.0, sy: 3.0 }
 );
 
 test!(scale_2, "scale(2)",
-    TransformToken::Scale { sx: 2.0, sy: 2.0 }
+    Token::Scale { sx: 2.0, sy: 2.0 }
 );
 
 test!(rotate_1, "rotate(30)",
-    TransformToken::Rotate { angle: 30.0 }
+    Token::Rotate { angle: 30.0 }
 );
 
 test!(rotate_2, "rotate(30 10 20)",
-    TransformToken::Translate { tx: 10.0, ty: 20.0 },
-    TransformToken::Rotate { angle: 30.0 },
-    TransformToken::Translate { tx: -10.0, ty: -20.0 }
+    Token::Translate { tx: 10.0, ty: 20.0 },
+    Token::Rotate { angle: 30.0 },
+    Token::Translate { tx: -10.0, ty: -20.0 }
 );
 
 test!(skew_y_1, "skewX(30)",
-    TransformToken::SkewX { angle: 30.0 }
+    Token::SkewX { angle: 30.0 }
 );
 
 test!(skew_x_1, "skewY(30)",
-    TransformToken::SkewY { angle: 30.0 }
+    Token::SkewY { angle: 30.0 }
 );
 
 test!(ts_list_1, "translate(-10,-20) scale(2) rotate(45) translate(5,10)",
-    TransformToken::Translate { tx: -10.0, ty: -20.0 },
-    TransformToken::Scale { sx: 2.0, sy: 2.0 },
-    TransformToken::Rotate { angle: 45.0 },
-    TransformToken::Translate { tx: 5.0, ty: 10.0 }
+    Token::Translate { tx: -10.0, ty: -20.0 },
+    Token::Scale { sx: 2.0, sy: 2.0 },
+    Token::Rotate { angle: 45.0 },
+    Token::Translate { tx: 5.0, ty: 10.0 }
 );
 
 #[test]
@@ -89,5 +89,5 @@ fn error_2() {
 #[test]
 fn error_3() {
     let mut ts = transform::Tokenizer::from_str(" ");
-    assert_eq!(ts.parse_next().unwrap(), TransformToken::EndOfStream);
+    assert_eq!(ts.parse_next().unwrap(), Token::EndOfStream);
 }
