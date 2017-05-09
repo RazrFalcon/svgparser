@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Implement `FromStr` trait for `Color`.
 - `path::Tokenizer`, `svg::Tokenizer`, `style:Tokenizer`, `transform::Tokenizer` are
   implement `Tokenize` now.
+- Implement `Display` trait for `AttributeId`, `ElementId` and `ValueId`.
 
 ### Changed
 - All warnings will be printed to stderr now.

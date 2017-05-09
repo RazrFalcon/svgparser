@@ -7,7 +7,7 @@
 use std::fmt;
 
 /// List of all SVG elements.
-#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord,Hash)]
+#[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash)]
 #[allow(missing_docs)]
 pub enum ElementId {
     A,
@@ -290,6 +290,12 @@ impl ElementId {
 }
 
 impl fmt::Debug for ElementId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+impl fmt::Display for ElementId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name())
     }

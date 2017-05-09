@@ -7,7 +7,7 @@
 use std::fmt;
 
 /// List of all values for presentation attributes.
-#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord,Hash)]
+#[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash)]
 #[allow(missing_docs)]
 pub enum ValueId {
     Accumulate,
@@ -431,6 +431,12 @@ impl ValueId {
 }
 
 impl fmt::Debug for ValueId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+impl fmt::Display for ValueId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name())
     }

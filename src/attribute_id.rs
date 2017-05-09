@@ -7,7 +7,7 @@
 use std::fmt;
 
 /// List of all SVG attributes.
-#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord,Hash)]
+#[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash)]
 #[allow(missing_docs)]
 pub enum AttributeId {
     AccentHeight,
@@ -902,6 +902,12 @@ impl AttributeId {
 }
 
 impl fmt::Debug for AttributeId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
+impl fmt::Display for AttributeId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.name())
     }

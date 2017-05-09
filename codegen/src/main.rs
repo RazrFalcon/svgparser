@@ -73,7 +73,7 @@ fn gen_file(spec_path: &str, enum_name: &str, map_name: &str, doc: &str, out_pat
 
     // enum
     writeln!(&mut file, "/// {}", doc).unwrap();
-    writeln!(&mut file, "#[derive(Copy,Clone,Eq,PartialEq,PartialOrd,Ord,Hash)]").unwrap();
+    writeln!(&mut file, "#[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash)]").unwrap();
     writeln!(&mut file, "#[allow(missing_docs)]").unwrap();
     writeln!(&mut file, "pub enum {} {{", enum_name).unwrap();
     for name in &names {
@@ -109,6 +109,13 @@ fn gen_file(spec_path: &str, enum_name: &str, map_name: &str, doc: &str, out_pat
     writeln!(&mut file, "").unwrap();
     writeln!(&mut file,
 "impl fmt::Debug for {} {{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {{
+        write!(f, \"{{}}\", self.name())
+    }}
+}}", enum_name).unwrap();
+    writeln!(&mut file, "").unwrap();
+    writeln!(&mut file,
+    "impl fmt::Display for {} {{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {{
         write!(f, \"{{}}\", self.name())
     }}
