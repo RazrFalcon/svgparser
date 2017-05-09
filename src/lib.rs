@@ -7,6 +7,8 @@
 //!
 //! Checkout README.md for general highlights.
 
+#![doc(html_root_url = "https://docs.rs/svgparser/0.3.1")]
+
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![deny(unused_import_braces)]

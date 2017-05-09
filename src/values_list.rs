@@ -4,7 +4,8 @@
 
 use {Stream, TextFrame, Length, Error};
 
-/// Iterator over a list of \<number\> types.
+/// Iterator over a list of [`<number>`] values.
+/// [`<number>`]: https://www.w3.org/TR/SVG/types.html#DataTypeNumber
 #[derive(Copy,Clone,PartialEq)]
 pub struct NumberList<'a>(Stream<'a>);
 
@@ -32,7 +33,8 @@ impl<'a> Iterator for NumberList<'a> {
     }
 }
 
-/// Iterator over a list of \<length\> types.
+/// Iterator over a list of [`<length>`] values.
+/// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 #[derive(Copy,Clone,PartialEq)]
 pub struct LengthList<'a>(Stream<'a>);
 

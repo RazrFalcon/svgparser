@@ -82,7 +82,7 @@ impl<'a> fmt::Display for TextFrame<'a> {
     }
 }
 
-/// Streaming interface for `str` data.
+/// Streaming text parsing interface.
 #[derive(PartialEq,Clone,Copy,Debug)]
 pub struct Stream<'a> {
     text: &'a str,

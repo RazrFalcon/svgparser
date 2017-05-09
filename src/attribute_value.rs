@@ -5,6 +5,8 @@
 use std::fmt;
 use std::str;
 
+// TODO: parse viewBox
+
 use {
     AttributeId,
     ElementId,
@@ -18,36 +20,50 @@ use {
     ValueId,
 };
 
-/// The paint type fallback value in case the `FuncIRI` is not resolved.
+/// The paint type fallback value in case when `FuncIRI` is not resolved.
 #[derive(Debug,Clone,Copy,PartialEq)]
 pub enum PaintFallback {
     /// Can contain only `none` or `currentColor`.
     PredefValue(ValueId),
-    /// The \<color\> type.
+    /// [`<color>`] type.
+    ///
+    /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
     Color(Color),
 }
 
 /// Representation of the SVG attribute value.
 #[derive(Clone,PartialEq)]
 pub enum AttributeValue<'a> {
-    /// \<color\> type.
-    Color(Color),
-    /// Reference to the ENTITY. Contains only `name` from `&name;`.
-    EntityRef(&'a str),
-    /// \<length\> type.
-    Length(Length),
-    /// \<list-of-lengths\> type.
-    LengthList(LengthList<'a>),
-    /// \<IRI\> type.
-    IRI(&'a str),
-    /// \<FuncIRI\> type.
-    FuncIRI(&'a str),
-    /// \<FuncIRI\> type.
-    FuncIRIWithFallback(&'a str, PaintFallback),
-    /// \<number\> type.
+    /// [`<number>`] type.
+    ///
+    /// [`<number>`]: https://www.w3.org/TR/SVG/types.html#DataTypeNumber
     Number(f64),
     /// \<list-of-numbers\> type.
     NumberList(NumberList<'a>),
+    /// [`<length>`] type.
+    ///
+    /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
+    Length(Length),
+    /// \<list-of-lengths\> type.
+    LengthList(LengthList<'a>),
+    /// [`<color>`] type.
+    ///
+    /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
+    Color(Color),
+    /// Reference to the ENTITY. Contains only `name` from `&name;`.
+    EntityRef(&'a str),
+    /// [`<IRI>`] type.
+    ///
+    /// [`<IRI>`]: https://www.w3.org/TR/SVG/types.html#DataTypeIRI
+    IRI(&'a str),
+    /// [`<FuncIRI>`] type.
+    ///
+    /// [`<FuncIRI>`]: https://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI
+    FuncIRI(&'a str),
+    /// [`<FuncIRI>`] type with a fallback value.
+    ///
+    /// [`<FuncIRI>`]: https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
+    FuncIRIWithFallback(&'a str, PaintFallback),
     /// ID of the predefined value.
     PredefValue(ValueId),
     /// Unknown data.
@@ -95,14 +111,13 @@ macro_rules! parse_or {
 // TODO: more attributes
 // TODO: test, somehow
 impl<'a> AttributeValue<'a> {
-    /// Converts stream data into `AttributeValue`.
+    /// Parses `AttributeValue` from [`TextFrame`].
     ///
-    /// This function supports all
-    /// [presentation attributes](https://www.w3.org/TR/SVG/propidx.html).
+    /// This function supports all [presentation attributes].
     ///
     /// # Errors
     ///
-    /// - Most of the `Error` types can occur.
+    /// - Most of the `Error`'s can occur.
     /// - Data of an unknown attribute will be parsed as `AttributeValue::String` without errors.
     ///
     /// # Notes
@@ -118,6 +133,9 @@ impl<'a> AttributeValue<'a> {
     /// - `<opacity>` value will be bounded to 0..1 range.
     /// - This function didn't correct most of the numeric values. If value has an incorrect
     ///   data, like `viewBox='0 0 -1 -5'` (negative w/h is error), it will be parsed as is.
+    ///
+    /// [`TextFrame`]: struct.TextFrame.html
+    /// [presentation attributes]: https://www.w3.org/TR/SVG/propidx.html
     pub fn from_frame(eid: ElementId, aid: AttributeId, frame: TextFrame<'a>)
         -> Result<AttributeValue<'a>, Error>
     {
@@ -690,7 +708,9 @@ impl<'a> AttributeValue<'a> {
 
     /// Parses `AttributeValue` from string.
     ///
-    /// The same as `AttributeValue::from_frame`.
+    /// The same as [`from_frame`].
+    ///
+    /// [`from_frame`]: #method.from_frame
     pub fn from_str(eid: ElementId, aid: AttributeId, text: &'a str)
         -> Result<AttributeValue<'a>, Error>
     {
