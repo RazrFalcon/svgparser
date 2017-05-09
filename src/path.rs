@@ -8,6 +8,7 @@
 
 use {Tokenize, Stream, TextFrame, Error, ErrorPos};
 
+// TODO: move to Token
 #[derive(Copy,Clone,Debug,PartialEq)]
 #[allow(missing_docs)]
 pub enum SegmentData {
@@ -70,6 +71,7 @@ pub struct Segment {
     pub data: SegmentData,
 }
 
+// TODO: rename to Token
 /// Path's segment token.
 #[derive(Copy,Clone,Debug,PartialEq)]
 pub enum SegmentToken {
@@ -139,7 +141,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
         macro_rules! data_error {
             () => ({
-                warnln!("Invalid path data at {}. The remaining data is ignored",
+                warnln!("Invalid path data at {}. The remaining data is ignored.",
                          s.gen_error_pos());
                 return Ok(SegmentToken::EndOfStream);
             })

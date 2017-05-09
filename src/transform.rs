@@ -8,7 +8,8 @@
 
 use {Tokenize, Stream, TextFrame, Error};
 
-#[derive(PartialEq,Debug)]
+// TODO: rename to Token
+#[derive(Clone,Copy,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub enum TransformToken {
     Matrix {

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!-- Example -->
+<!DOCTYPE svg [
+    <!ENTITY st1 "font-size:12;">
+    <!ELEMENT sgml ANY>
+]>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="100%"
+  height="100%"
+  viewBox="0 0 100 100">
+    <style>
+        <![CDATA[
+            .fil1 { fill:#00913f }
+            .str1 { stroke:#00913f }
+        ]]>
+    </style>
+    <path
+      d="M 10 10 L 20 20 invalid data"
+      transform="translate(10 20) scale(3 2)"
+      stroke="red"
+      my-stroke="blue"
+      style="fill:red;my-fill:green;-webkit:value"/>
+    <rect
+      style="&st1;"/>
+    <rect
+      class="fil1 str1"/>
+    <text>simple text</text>
+    <text>
+        multi
+        line
+        text
+    </text>
+</svg>

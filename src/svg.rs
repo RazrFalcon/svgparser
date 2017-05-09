@@ -9,19 +9,6 @@ use std::str;
 
 use {Tokenize, Stream, TextFrame, ElementId, AttributeId, Error};
 
-/// `ElementEnd` token.
-#[derive(Debug,PartialEq,Clone)]
-pub enum ElementEnd<'a> {
-    /// Indicates `>`
-    Open,
-    /// Indicates `</name>` of an XML element
-    CloseXml(&'a str),
-    /// Indicates `</name>` of an SVG element
-    CloseSvg(ElementId),
-    /// Indicates `/>`
-    Empty,
-}
-
 /// SVG token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
@@ -99,6 +86,19 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "EndOfStream"),
         }
     }
+}
+
+/// `ElementEnd` token.
+#[derive(Debug,PartialEq,Clone)]
+pub enum ElementEnd<'a> {
+    /// Indicates `>`
+    Open,
+    /// Indicates `</name>` of an XML element
+    CloseXml(&'a str),
+    /// Indicates `</name>` of an SVG element
+    CloseSvg(ElementId),
+    /// Indicates `/>`
+    Empty,
 }
 
 enum State {
