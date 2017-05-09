@@ -5,7 +5,7 @@
 extern crate svgparser;
 
 use svgparser::Tokenize;
-use svgparser::path::{Tokenizer, SegmentToken, Segment, SegmentData};
+use svgparser::path::{Tokenizer, Token, Segment, SegmentData};
 
 macro_rules! test {
     ($name:ident, $text:expr, $( $seg:expr ),*) => (
@@ -13,9 +13,9 @@ macro_rules! test {
         fn $name() {
             let mut s = Tokenizer::from_str($text);
             $(
-                assert_eq!(s.parse_next().unwrap(), SegmentToken::Segment($seg));
+                assert_eq!(s.parse_next().unwrap(), Token::Segment($seg));
             )*
-            assert_eq!(s.parse_next().unwrap(), SegmentToken::EndOfStream);
+            assert_eq!(s.parse_next().unwrap(), Token::EndOfStream);
         }
     )
 }
@@ -228,8 +228,8 @@ fn invalid_2() {
     // ClosePath can't be followed by a number
     let mut s = Tokenizer::from_str("M0 0 Z 2");
     assert_eq!(s.parse_next().unwrap(),
-        SegmentToken::Segment(Segment { cmd: b'M', data: SegmentData::MoveTo { x: 0.0, y: 0.0 } }));
+        Token::Segment(Segment { cmd: b'M', data: SegmentData::MoveTo { x: 0.0, y: 0.0 } }));
     assert_eq!(s.parse_next().unwrap(),
-        SegmentToken::Segment(Segment { cmd: b'Z', data: SegmentData::ClosePath }));
-    assert_eq!(s.parse_next().unwrap(), SegmentToken::EndOfStream);
+        Token::Segment(Segment { cmd: b'Z', data: SegmentData::ClosePath }));
+    assert_eq!(s.parse_next().unwrap(), Token::EndOfStream);
 }

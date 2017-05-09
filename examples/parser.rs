@@ -185,10 +185,10 @@ fn parse_svg_attribute(eid: ElementId, aid: AttributeId, value: TextFrame, depth
                 match p.parse_next() {
                     Ok(segment_token) => {
                         match segment_token {
-                            path::SegmentToken::Segment(segment) => {
+                            path::Token::Segment(segment) => {
                                 print_indent!("{:?}", depth + 1, segment)
                             }
-                            path::SegmentToken::EndOfStream => {
+                            path::Token::EndOfStream => {
                                 break;
                             }
                         }

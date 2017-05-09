@@ -71,10 +71,9 @@ pub struct Segment {
     pub data: SegmentData,
 }
 
-// TODO: rename to Token
 /// Path's segment token.
 #[derive(Copy,Clone,Debug,PartialEq)]
-pub enum SegmentToken {
+pub enum Token {
     /// Path's segment.
     ///
     /// We use a separate enum for a segment to be able to
@@ -91,7 +90,7 @@ pub struct Tokenizer<'a> {
 }
 
 impl<'a> Tokenize<'a> for Tokenizer<'a> {
-    type Token = SegmentToken;
+    type Token = Token;
 
     fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
         Tokenizer {
@@ -130,20 +129,20 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     ///   into explicit LineTo.
     ///
     ///   Example: `M 10 20 30 40 50 60` -> `M 10 20 L 30 40 L 50 60`
-    fn parse_next(&mut self) -> Result<SegmentToken, Error> {
+    fn parse_next(&mut self) -> Result<Token, Error> {
         let s = &mut self.stream;
 
         s.skip_spaces();
 
         if s.at_end() {
-            return Ok(SegmentToken::EndOfStream);
+            return Ok(Token::EndOfStream);
         }
 
         macro_rules! data_error {
             () => ({
                 warnln!("Invalid path data at {}. The remaining data is ignored.",
                          s.gen_error_pos());
-                return Ok(SegmentToken::EndOfStream);
+                return Ok(Token::EndOfStream);
             })
         }
 
@@ -162,7 +161,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         if !has_prev_cmd && !is_cmd(first_char) {
             warnln!("'{}' is not a command. \
                      The remaining data is ignored.", first_char as char);
-            return Ok(SegmentToken::EndOfStream);
+            return Ok(Token::EndOfStream);
         }
 
         if !has_prev_cmd {
@@ -171,7 +170,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 _ => {
                     warnln!("Warning: First segment must be MoveTo. \
                              The remaining data is ignored.");
-                    return Ok(SegmentToken::EndOfStream);
+                    return Ok(Token::EndOfStream);
                 }
             }
         }
@@ -310,7 +309,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             self.prev_cmd = Some(cmd);
         }
 
-        Ok(SegmentToken::Segment(Segment {
+        Ok(Token::Segment(Segment {
             cmd: cmd,
             data: data,
         }))

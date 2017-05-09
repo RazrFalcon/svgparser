@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - All `&[u8]` changed to `&str`.
 - Rename `RgbColor` to `Color`.
 - Rename `TransformToken` to `Token`.
+- Rename `SegmentToken` to `Token`.
 - `NumberList` and `LengthList` should be created using `from_frame` method now.
 - Split `svg::Token::ElementStart` into `XmlElementStart` and `SvgElementStart`.
 - Split `svg::Token::Attribute` into `XmlAttribute` and `SvgAttribute`.
