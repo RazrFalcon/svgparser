@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `svg::Tokenizer::new`. Use `svg::Tokenizer::from_str` instead.
 - `Stream::new`. Use `Stream::from_str` instead.
 - `Stream::global_pos`, `Stream::parent_text`.
+- `path::SegmentData` and `path::Segment`. They are part of `path::Token` now.
 
 ## [0.3.1] - 2017-03-15
 ### Fixed

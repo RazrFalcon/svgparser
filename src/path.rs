@@ -8,25 +8,30 @@
 
 use {Tokenize, Stream, TextFrame, Error, ErrorPos};
 
-// TODO: move to Token
-#[derive(Copy,Clone,Debug,PartialEq)]
+/// Path's segment token.
 #[allow(missing_docs)]
-pub enum SegmentData {
+#[derive(Copy,Clone,Debug,PartialEq)]
+pub enum Token {
     MoveTo {
+        abs: bool,
         x: f64,
         y: f64,
     },
     LineTo {
+        abs: bool,
         x: f64,
         y: f64,
     },
     HorizontalLineTo {
+        abs: bool,
         x: f64,
     },
     VerticalLineTo {
+        abs: bool,
         y: f64,
     },
     CurveTo {
+        abs: bool,
         x1: f64,
         y1: f64,
         x2: f64,
@@ -35,22 +40,26 @@ pub enum SegmentData {
         y: f64,
     },
     SmoothCurveTo {
+        abs: bool,
         x2: f64,
         y2: f64,
         x: f64,
         y: f64,
     },
     Quadratic {
+        abs: bool,
         x1: f64,
         y1: f64,
         x: f64,
         y: f64,
     },
     SmoothQuadratic {
+        abs: bool,
         x: f64,
         y: f64,
     },
     EllipticalArc {
+        abs: bool,
         rx: f64,
         ry: f64,
         x_axis_rotation: f64,
@@ -59,26 +68,9 @@ pub enum SegmentData {
         x: f64,
         y: f64,
     },
-    ClosePath,
-}
-
-/// Representation of the path segment.
-#[derive(Copy,Clone,Debug,PartialEq)]
-pub struct Segment {
-    /// Command type.
-    pub cmd: u8,
-    /// Points.
-    pub data: SegmentData,
-}
-
-/// Path's segment token.
-#[derive(Copy,Clone,Debug,PartialEq)]
-pub enum Token {
-    /// Path's segment.
-    ///
-    /// We use a separate enum for a segment to be able to
-    /// reuse it depending applications.
-    Segment(Segment),
+    ClosePath {
+        abs: bool,
+    },
     /// The end of the stream.
     EndOfStream,
 }
@@ -206,26 +198,26 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         }
 
         let cmdl = to_relative(cmd);
-
-        let data = match cmdl {
+        let absolute = is_absolute(cmd);
+        let token = match cmdl {
             b'm' => {
                 let x = try_num!(s.parse_list_number());
                 let y = try_num!(s.parse_list_number());
 
-                SegmentData::MoveTo { x: x, y: y }
+                Token::MoveTo { abs: absolute, x: x, y: y }
             }
             b'l' => {
                 let x = try_num!(s.parse_list_number());
                 let y = try_num!(s.parse_list_number());
-                SegmentData::LineTo { x: x, y: y }
+                Token::LineTo { abs: absolute, x: x, y: y }
             }
             b'h' => {
                 let x = try_num!(s.parse_list_number());
-                SegmentData::HorizontalLineTo { x: x }
+                Token::HorizontalLineTo { abs: absolute, x: x }
             }
             b'v' => {
                 let y = try_num!(s.parse_list_number());
-                SegmentData::VerticalLineTo { y: y }
+                Token::VerticalLineTo { abs: absolute, y: y }
             }
             b'c' => {
                 let x1 = try_num!(s.parse_list_number());
@@ -234,7 +226,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 let y2 = try_num!(s.parse_list_number());
                 let x  = try_num!(s.parse_list_number());
                 let y  = try_num!(s.parse_list_number());
-                SegmentData::CurveTo {
+                Token::CurveTo {
+                    abs: absolute,
                     x1: x1,
                     y1: y1,
                     x2: x2,
@@ -248,7 +241,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 let y2 = try_num!(s.parse_list_number());
                 let x  = try_num!(s.parse_list_number());
                 let y  = try_num!(s.parse_list_number());
-                SegmentData::SmoothCurveTo {
+                Token::SmoothCurveTo {
+                    abs: absolute,
                     x2: x2,
                     y2: y2,
                     x: x,
@@ -260,7 +254,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 let y1 = try_num!(s.parse_list_number());
                 let x  = try_num!(s.parse_list_number());
                 let y  = try_num!(s.parse_list_number());
-                SegmentData::Quadratic {
+                Token::Quadratic {
+                    abs: absolute,
                     x1: x1,
                     y1: y1,
                     x: x,
@@ -270,7 +265,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             b't' => {
                 let x = try_num!(s.parse_list_number());
                 let y = try_num!(s.parse_list_number());
-                SegmentData::SmoothQuadratic { x: x, y: y }
+                Token::SmoothQuadratic { abs: absolute, x: x, y: y }
             }
             b'a' => {
                 let rx = try_num!(s.parse_list_number());
@@ -285,7 +280,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 let x = try_num!(s.parse_list_number());
                 let y = try_num!(s.parse_list_number());
 
-                SegmentData::EllipticalArc {
+                Token::EllipticalArc {
+                    abs: absolute,
                     rx: rx,
                     ry: ry,
                     x_axis_rotation: angle,
@@ -295,7 +291,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     y: y,
                 }
             }
-            b'z' => SegmentData::ClosePath,
+            b'z' => Token::ClosePath { abs: absolute },
             _ => unreachable!(),
         };
 
@@ -309,10 +305,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             self.prev_cmd = Some(cmd);
         }
 
-        Ok(Token::Segment(Segment {
-            cmd: cmd,
-            data: data,
-        }))
+        Ok(token)
     }
 }
 

@@ -183,14 +183,11 @@ fn parse_svg_attribute(eid: ElementId, aid: AttributeId, value: TextFrame, depth
             let mut p = path::Tokenizer::from_frame(value);
             loop {
                 match p.parse_next() {
-                    Ok(segment_token) => {
-                        match segment_token {
-                            path::Token::Segment(segment) => {
-                                print_indent!("{:?}", depth + 1, segment)
-                            }
-                            path::Token::EndOfStream => {
-                                break;
-                            }
+                    Ok(token) => {
+                        if token != path::Token::EndOfStream {
+                            print_indent!("{:?}", depth + 1, token)
+                        } else {
+                            break;
                         }
                     }
                     Err(e) => {
