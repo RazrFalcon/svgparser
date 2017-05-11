@@ -54,7 +54,7 @@ See the documentation for details.
 
 ### Usage
 
-Dependency: Rust >= 1.13
+Dependency: [Rust](https://www.rust-lang.org/) >= 1.13
 
 Add this to your `Cargo.toml`:
 
