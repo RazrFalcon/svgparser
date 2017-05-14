@@ -7,7 +7,7 @@
 //!
 //! Checkout README.md for general highlights.
 
-#![doc(html_root_url = "https://docs.rs/svgparser/0.3.1")]
+#![doc(html_root_url = "https://docs.rs/svgparser/0.4.0")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -56,4 +56,4 @@ mod tokenize;
 mod value_id;
 mod values_list;
 
-// TODO: add prelude module
+// TODO: add a prelude module

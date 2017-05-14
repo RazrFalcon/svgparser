@@ -8,7 +8,6 @@
 
 use {Tokenize, Stream, TextFrame, Error};
 
-// TODO: rename to Token
 #[derive(Clone,Copy,PartialEq,Debug)]
 #[allow(missing_docs)]
 pub enum Token {

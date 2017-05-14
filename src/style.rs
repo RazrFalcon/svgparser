@@ -150,7 +150,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
     }
 
-    // TODO: stream can be at end
+    // TODO: stream can be at the end
     // skip end quote
     if stream.char_at(value_len as isize - 1)? == b'\'' {
         value_len -= 1;

@@ -429,7 +429,6 @@ impl<'a> Stream<'a> {
 
     #[inline]
     fn get_char_raw(&self, pos: usize) -> u8 {
-        // TODO: maybe via unsafe to avoid bound checking
         self.text.as_bytes()[pos]
     }
 

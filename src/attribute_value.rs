@@ -186,7 +186,7 @@ impl<'a> AttributeValue<'a> {
         if !stream.at_end() && stream.curr_char()? == b'&' {
             stream.advance_raw(1);
             let len = stream.len_to(b';')?;
-            // TODO: attribute can contain many refs, not only one.
+            // TODO: attribute can contain many refs, not only one
             // TODO: advance to the end of the stream
             return Ok(AttributeValue::EntityRef(stream.slice_next_raw(len)));
         }
