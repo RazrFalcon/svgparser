@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.4.0] - 2017-05-14
 ### Added
 - `AttributeValue::from_str`.
 - `path::Tokenizer::from_str`.
@@ -122,7 +124,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/RazrFalcon/libsvgparser/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/RazrFalcon/libsvgparser/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/RazrFalcon/libsvgparser/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/RazrFalcon/libsvgparser/compare/v0.2.0...v0.2.1

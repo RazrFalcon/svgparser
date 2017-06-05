@@ -32,7 +32,7 @@ impl fmt::Display for ErrorPos {
     }
 }
 
-/// List of all supported errors.
+/// List of all errors.
 #[derive(Clone,Copy,PartialEq)]
 pub enum Error {
     /// The steam ended earlier than we expected.
@@ -66,7 +66,7 @@ pub enum Error {
     /// Can appear during moving along the data stream.
     InvalidAdvance {
         /// The advance step.
-        expected: isize,
+        expected: isize, // TODO: to usize when "look back" Stream features will be removed
         /// Full length of the steam.
         total: usize,
         /// Absolute stream position.

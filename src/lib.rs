@@ -7,6 +7,8 @@
 //!
 //! Checkout README.md for general highlights.
 
+// TODO: copy readme here.
+
 #![doc(html_root_url = "https://docs.rs/svgparser/0.4.0")]
 
 #![forbid(unsafe_code)]
@@ -26,6 +28,7 @@ pub use tokenize::Tokenize;
 pub use value_id::ValueId;
 pub use values_list::{NumberList, LengthList};
 
+/// Prints warnings into stderr.
 #[macro_export]
 macro_rules! warnln {
     ($msg:expr) => ({
