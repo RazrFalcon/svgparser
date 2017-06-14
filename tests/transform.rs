@@ -73,6 +73,12 @@ test!(ts_list_1, "translate(-10,-20) scale(2) rotate(45) translate(5,10)",
     Token::Translate { tx: 5.0, ty: 10.0 }
 );
 
+test!(ts_list_2, "translate(10,20), scale(2) ,  rotate(45),",
+    Token::Translate { tx: 10.0, ty: 20.0 },
+    Token::Scale { sx: 2.0, sy: 2.0 },
+    Token::Rotate { angle: 45.0 }
+);
+
 #[test]
 fn error_1() {
     let mut ts = transform::Tokenizer::from_str("text");

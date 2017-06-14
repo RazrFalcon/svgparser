@@ -226,6 +226,11 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
         s.skip_spaces();
         s.consume_char(b')')?;
+        s.skip_spaces();
+
+        if !s.at_end() && s.is_char_eq(b',')? {
+            s.advance_raw(1);
+        }
 
         Ok(t)
     }
