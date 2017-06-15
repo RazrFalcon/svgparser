@@ -12,38 +12,49 @@ use {Tokenize, Stream, TextFrame, ElementId, AttributeId, Error};
 /// SVG token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
-    /// Tuple contains tag name of an XML element.
+    /// The token contains tag name of an XML element.
     XmlElementStart(&'a str),
-    /// Tuple contains tag name of an SVG element.
+    /// The token contains tag name of an SVG element.
     SvgElementStart(ElementId),
-    /// Tuple contains a type of enclosing tag.
+    /// The token contains a type of enclosing tag.
     ElementEnd(ElementEnd<'a>),
-    /// Tuple contains attribute's name and value of an XML element.
+    /// The token contains an XML attribute name and value.
+    ///
+    /// Can appear in XML and SVG elements.
     XmlAttribute(&'a str, &'a str),
-    /// Tuple contains attribute's ID and value of an SVG element.
+    /// The token contains an SVG attribute name and value.
+    ///
+    /// Can appear only in SVG elements.
     SvgAttribute(AttributeId, TextFrame<'a>),
-    /// Tuple contains a text object.
+    /// The token contains text between elements including whitespaces.
+    ///
+    /// Basically everything between `>` and `<`.
     Text(TextFrame<'a>),
-    /// Tuple contains CDATA object without `<![CDATA[` and `]]>`.
+    /// The token contains CDATA data without `<![CDATA[` and `]]>`.
     Cdata(TextFrame<'a>),
-    /// Tuple contains whitespace object. It will contain only ` \n\t\r`.
+    /// The token represents whitespaces between elements.
+    ///
+    /// It will contain only ` \n\t\r` characters.
+    ///
+    /// If there is a text between elements - `Whitespace` will not be emitted at all.
     Whitespace(&'a str),
-    /// Tuple contains comment object without `<!--` and `-->`.
+    /// The token contains comment data without `<!--` and `-->`.
     Comment(&'a str),
-    /// Tuple contains a title of empty DOCTYPE.
+    /// The token contains a title of empty DOCTYPE.
     DtdEmpty(&'a str),
-    /// Tuple contains a title of DOCTYPE.
+    /// The token contains a title of DOCTYPE.
     DtdStart(&'a str),
-    /// Tuple contains name and value of ENTITY.
+    /// The token contains name and value of ENTITY.
     Entity(&'a str, TextFrame<'a>),
-    /// Tuple indicates DOCTYPE end.
+    /// The token indicates DOCTYPE end.
     DtdEnd,
-    /// Tuple contains declaration object without `<?` and `?>`.
+    /// The token contains declaration data without `<?` and `?>`.
     Declaration(&'a str),
     /// The end of the stream.
     EndOfStream,
 }
 
+// TODO: remove
 impl<'a> fmt::Debug for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -190,13 +201,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     self.parse_element()
                 } else if self.depth > 0 {
                     let start = self.stream.pos();
-
-                    while !self.stream.at_end() {
-                        if !self.stream.is_space_raw() {
-                            break;
-                        }
-                        self.stream.advance(1)?;
-                    }
+                    self.stream.skip_spaces();
 
                     if self.stream.is_char_eq(b'<')? {
                         let text = self.stream.slice_region_raw(start, self.stream.pos());
