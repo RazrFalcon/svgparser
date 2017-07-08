@@ -507,6 +507,7 @@ impl<'a> AttributeValue<'a> {
                 parse_or!(parse_predef!(
                     ValueId::XxSmall,
                     ValueId::XSmall,
+                    ValueId::Small,
                     ValueId::Medium,
                     ValueId::Large,
                     ValueId::XLarge,

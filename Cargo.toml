@@ -23,3 +23,6 @@ bencher = "0.1"
 [[bench]]
 name = "parser"
 harness = false
+
+# [lib]
+# doctest = false
