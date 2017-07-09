@@ -111,3 +111,24 @@ fn integer_err_1() {
     let mut s = Stream::from_str("10000000000000");
     assert_eq!(s.parse_integer().err().unwrap(), Error::InvalidNumber(ErrorPos::new(1,1)));
 }
+
+#[test]
+fn skip_spaces_1() {
+    let mut s = Stream::from_str(" \n\t\r");
+    s.skip_spaces();
+    assert_eq!(s.at_end(), true);
+}
+
+#[test]
+fn skip_spaces_2() {
+    let mut s = Stream::from_str("&#x9;&#xA;&#xD;&#x20;");
+    s.skip_spaces();
+    assert_eq!(s.at_end(), true);
+}
+
+#[test]
+fn skip_spaces_3() {
+    let mut s = Stream::from_str("&#x9;&#x0a;&#x00d;&#x0020;");
+    s.skip_spaces();
+    assert_eq!(s.at_end(), true);
+}

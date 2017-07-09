@@ -7,7 +7,7 @@ Test files:
 Last bench:
 
 ```text
-test jupiter ... bench:   1,821,642 ns/iter (+/- 2,855)
-test logo    ... bench:      14,711 ns/iter (+/- 86)
-test skull   ... bench:     345,430 ns/iter (+/- 723)
+test jupiter ... bench:   1,911,303 ns/iter (+/- 2,269)
+test logo    ... bench:      16,555 ns/iter (+/- 74)
+test skull   ... bench:     400,788 ns/iter (+/- 1,450)
 ```

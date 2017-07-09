@@ -364,6 +364,8 @@ impl<'a> Stream<'a> {
 
     /// Skips (white)space's.
     ///
+    /// Accepted values: ' ', '\n', '\r', '\t', "&#x20;", "&#x9;", "&#xD;", "&#xA;".
+    ///
     /// # Examples
     ///
     /// ```
@@ -374,11 +376,64 @@ impl<'a> Stream<'a> {
     /// s.skip_spaces();
     /// assert_eq!(s.slice_tail(), "text");
     /// ```
-    #[inline]
     pub fn skip_spaces(&mut self) {
-        while !self.at_end() && self.is_space_raw() {
+        let mut advance;
+
+        while !self.at_end() {
+            advance = false;
+
+            if self.is_space_raw() {
+                advance = true;
+            } else if self.is_char_eq_raw(b'&') && self.starts_with(b"&#x") {
+                // Check for (#x20 | #x9 | #xD | #xA).
+
+                // Remember original position.
+                let pos = self.pos;
+
+                self.advance_raw(3); // &#x
+
+                if let Some(v) = self.parse_hex_reference() {
+                    if v < 255 && is_space(v as u8) {
+                        advance = true;
+                    }
+                }
+
+                if !advance {
+                    // Back to original position.
+                    self.pos = pos;
+                }
+            }
+
+            if advance {
+                self.advance_raw(1);
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn parse_hex_reference(&mut self) -> Option<u32> {
+        let mut value: u32 = 0;
+        while !self.at_end() {
+            let byte = self.curr_char_raw();
+            if let b';' = byte {
+                return Some(value);
+            } else if let b@b'0'...b'9' = byte {
+                if value <= 0x10FFFF {
+                    value = (value * 0x10) + ((b - b'0') as u32);
+                }
+            } else if let b@b'a'...b'f' = byte | 0b0010_0000 {
+                if value <= 0x10FFFF {
+                    value = (value * 16) + ((b - b'a' + 10) as u32);
+                }
+            } else {
+                return None; // Not a valid escape sequence.
+            }
+
             self.advance_raw(1);
         }
+
+        None
     }
 
     /// Decreases the stream size by removing trailing spaces.

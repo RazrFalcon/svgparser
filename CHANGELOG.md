@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Character entity references for whitespaces parsing.
+  So #x20, #x9, #xD, #xA will be parsed correctly now.
 
 ## [0.4.2] - 2017-07-08
 ### Fixed
