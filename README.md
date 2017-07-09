@@ -48,6 +48,7 @@ See the documentation for details.
    but will be bound to 0..1 range.
  - Implicit path commands are not supported. All commands are parsed as explicit.
  - Implicit MoveTo commands will be automatically converted into explicit LineTo.
+ - No escape support for text. It will be emitted as is.
 
 ### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of the `<length>` type.
