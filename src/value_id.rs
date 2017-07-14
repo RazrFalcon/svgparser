@@ -6,7 +6,7 @@
 
 use std::fmt;
 
-/// List of all values for presentation attributes.
+/// List of values for presentation attributes.
 #[derive(Copy,Clone,Eq,PartialEq,Ord,PartialOrd,Hash)]
 #[allow(missing_docs)]
 pub enum ValueId {
@@ -133,7 +133,7 @@ pub enum ValueId {
     XLarge,
     XSmall,
     XxLarge,
-    XxSmall,
+    XxSmall
 }
 
 static VALUES: ::phf::Map<&'static str, ValueId> = ::phf::Map {
@@ -425,7 +425,7 @@ impl ValueId {
             ValueId::XLarge => "x-large",
             ValueId::XSmall => "x-small",
             ValueId::XxLarge => "xx-large",
-            ValueId::XxSmall => "xx-small",
+            ValueId::XxSmall => "xx-small"
         }
     }
 }

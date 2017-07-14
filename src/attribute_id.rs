@@ -280,7 +280,7 @@ pub enum AttributeId {
     Y2,
     YChannelSelector,
     Z,
-    ZoomAndPan,
+    ZoomAndPan
 }
 
 static ATTRIBUTES: ::phf::Map<&'static str, AttributeId> = ::phf::Map {
@@ -896,7 +896,7 @@ impl AttributeId {
             AttributeId::Y2 => "y2",
             AttributeId::YChannelSelector => "yChannelSelector",
             AttributeId::Z => "z",
-            AttributeId::ZoomAndPan => "zoomAndPan",
+            AttributeId::ZoomAndPan => "zoomAndPan"
         }
     }
 }

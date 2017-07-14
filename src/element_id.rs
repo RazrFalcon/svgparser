@@ -89,7 +89,7 @@ pub enum ElementId {
     Tspan,
     Use,
     View,
-    Vkern,
+    Vkern
 }
 
 static ELEMENTS: ::phf::Map<&'static str, ElementId> = ::phf::Map {
@@ -284,7 +284,7 @@ impl ElementId {
             ElementId::Tspan => "tspan",
             ElementId::Use => "use",
             ElementId::View => "view",
-            ElementId::Vkern => "vkern",
+            ElementId::Vkern => "vkern"
         }
     }
 }

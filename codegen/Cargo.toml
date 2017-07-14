@@ -7,3 +7,5 @@ license = "MPL-2.0"
 [dependencies]
 phf = "=0.7.21"
 phf_codegen = "=0.7.21"
+itertools = "0.6.0"
+derive-error = "0.0.3"
