@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Character entity references for whitespaces parsing.
   So #x20, #x9, #xD, #xA will be parsed correctly now.
 
+### Changed
+- 100..900 values of the `font-weight` will be parsed as `ValueId` and not as `Number` now.
+
 ## [0.4.2] - 2017-07-08
 ### Fixed
 - `font-size='small'` parsing.

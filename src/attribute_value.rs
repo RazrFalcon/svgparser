@@ -485,13 +485,22 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::FontWeight => {
-                parse_or!(parse_predef!(
+                parse_or_err!(parse_predef!(
                     ValueId::Normal,
                     ValueId::Bold,
                     ValueId::Bolder,
                     ValueId::Lighter,
+                    ValueId::N100,
+                    ValueId::N200,
+                    ValueId::N300,
+                    ValueId::N400,
+                    ValueId::N500,
+                    ValueId::N600,
+                    ValueId::N700,
+                    ValueId::N800,
+                    ValueId::N900,
                     ValueId::Inherit
-                ), parse_number(stream))
+                ))
             }
 
             AId::BaselineShift => {
