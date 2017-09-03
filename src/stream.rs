@@ -911,7 +911,7 @@ impl<'a> Stream<'a> {
                 if n.is_finite() {
                     Ok(n)
                 } else {
-                    // inf, nan, etc. are an error
+                    // inf, nan, etc. is an error
                     gen_err!()
                 }
             }
