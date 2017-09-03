@@ -51,7 +51,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - `<percentage>` type is part of the `<length>` type.
 */
 
-#![doc(html_root_url = "https://docs.rs/svgparser/0.4.2")]
+#![doc(html_root_url = "https://docs.rs/svgparser/0.4.3")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
