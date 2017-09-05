@@ -51,7 +51,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - `<percentage>` type is part of the `<length>` type.
 */
 
-#![doc(html_root_url = "https://docs.rs/svgparser/0.4.2")]
+#![doc(html_root_url = "https://docs.rs/svgparser/0.5.0")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -66,6 +66,7 @@ pub use element_id::ElementId;
 pub use error::{Error, ErrorPos};
 pub use length::{Length, LengthUnit};
 pub use stream::{TextFrame, Stream};
+pub use text::TextUnescape;
 pub use tokenize::Tokenize;
 pub use value_id::ValueId;
 pub use values_list::{NumberList, LengthList};
@@ -97,6 +98,7 @@ mod element_id;
 mod error;
 mod length;
 mod stream;
+mod text;
 mod tokenize;
 mod value_id;
 mod values_list;

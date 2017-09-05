@@ -91,13 +91,6 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         }
     }
 
-    fn from_str(text: &'a str) -> Tokenizer<'a> {
-        Tokenizer {
-            stream: Stream::from_str(text),
-            prev_cmd: None,
-        }
-    }
-
     /// Extracts next path data segment from the stream.
     ///
     /// # Errors

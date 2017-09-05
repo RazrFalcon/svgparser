@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- Text unescaping support via `TextUnescape`.
 - Character entity references for whitespaces parsing.
   So #x20, #x9, #xD, #xA will be parsed correctly now.
 

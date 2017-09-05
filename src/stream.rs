@@ -386,21 +386,15 @@ impl<'a> Stream<'a> {
                 advance = true;
             } else if self.is_char_eq_raw(b'&') && self.starts_with(b"&#x") {
                 // Check for (#x20 | #x9 | #xD | #xA).
+                if let Some(l) = self.len_to(b';').ok() {
+                    let value = self.slice_next_raw(l + 1);
 
-                // Remember original position.
-                let pos = self.pos;
-
-                self.advance_raw(3); // &#x
-
-                if let Some(v) = self.parse_hex_reference() {
-                    if v < 255 && is_space(v as u8) {
-                        advance = true;
+                    if let Some(v) = Stream::parse_entity_reference(value) {
+                        if v < 255 && is_space(v as u8) {
+                            advance = true;
+                            self.advance_raw(l);
+                        }
                     }
-                }
-
-                if !advance {
-                    // Back to original position.
-                    self.pos = pos;
                 }
             }
 
@@ -412,10 +406,47 @@ impl<'a> Stream<'a> {
         }
     }
 
-    fn parse_hex_reference(&mut self) -> Option<u32> {
+    /// Parses XML character entity reference.
+    ///
+    /// - &#nnnn;
+    /// - &#xhhhh;
+    /// - &name;
+    pub fn parse_entity_reference(text: &str) -> Option<u32> {
+        // This code is based on https://github.com/nagisa/marksman_escape.
+
+        if text.len() < 4 || text.len() > 8 {
+            return None;
+        }
+
+        if text.as_bytes()[1] != b'#' {
+            let c = match text {
+                "&quot;" => b'"',
+                "&amp;"  => b'&',
+                "&apos;" => b'\'',
+                "&lt;"   => b'<',
+                "&gt;"   => b'>',
+                _ => b' ',
+            };
+
+            if c != b' ' {
+                return Some(c as u32);
+            } else {
+                return None;
+            }
+        }
+
+        let c2 = text.as_bytes()[2];
+        if c2 == b'x' || c2 == b'X' {
+            Stream::parse_hex_reference(text)
+        } else {
+            Stream::parse_dec_reference(text)
+        }
+    }
+
+    fn parse_hex_reference(text: &str) -> Option<u32> {
+        let mut bytes = text.bytes().skip(3); // Skip &#x.
         let mut value: u32 = 0;
-        while !self.at_end() {
-            let byte = self.curr_char_raw();
+        while let Some(byte) = bytes.next() {
             if let b';' = byte {
                 return Some(value);
             } else if let b@b'0'...b'9' = byte {
@@ -429,8 +460,24 @@ impl<'a> Stream<'a> {
             } else {
                 return None; // Not a valid escape sequence.
             }
+        }
 
-            self.advance_raw(1);
+        None
+    }
+
+    fn parse_dec_reference(text: &str) -> Option<u32> {
+        let mut bytes = text.bytes().skip(2); // Skip &#.
+        let mut value: u32 = 0;
+        while let Some(byte) = bytes.next() {
+            if let b';' = byte {
+                return Some(value);
+            } else if let b@b'0'...b'9' = byte {
+                if value <= 0x10FFFF {
+                    value = (value * 10) + ((b - b'0') as u32);
+                }
+            } else {
+                return None; // Not a valid escape sequence.
+            }
         }
 
         None

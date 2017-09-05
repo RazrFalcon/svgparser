@@ -131,15 +131,6 @@ pub struct Tokenizer<'a> {
 impl<'a> Tokenize<'a> for Tokenizer<'a> {
     type Token = Token<'a>;
 
-    fn from_str(text: &str) -> Tokenizer {
-        Tokenizer {
-            stream: Stream::from_str(text),
-            state: State::AtStart,
-            depth: 0,
-            curr_elem: None,
-        }
-    }
-
     fn from_frame(text: TextFrame<'a>) -> Tokenizer {
         Tokenizer {
             stream: Stream::from_frame(text),
