@@ -9,19 +9,19 @@ use std::str;
 
 use {
     AttributeId,
+    Color,
     ElementId,
     Error,
     Length,
     LengthList,
     NumberList,
-    Color,
     Stream,
     TextFrame,
     ValueId,
 };
 
 /// The paint type fallback value in case when `FuncIRI` is not resolved.
-#[derive(Debug,Clone,Copy,PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PaintFallback {
     /// Can contain only `none` or `currentColor`.
     PredefValue(ValueId),
@@ -32,7 +32,7 @@ pub enum PaintFallback {
 }
 
 /// Representation of the SVG attribute value.
-#[derive(Clone,PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum AttributeValue<'a> {
     /// [`<number>`] type.
     ///
@@ -136,9 +136,11 @@ impl<'a> AttributeValue<'a> {
     ///
     /// [`TextFrame`]: struct.TextFrame.html
     /// [presentation attributes]: https://www.w3.org/TR/SVG/propidx.html
-    pub fn from_frame(eid: ElementId, aid: AttributeId, frame: TextFrame<'a>)
-        -> Result<AttributeValue<'a>, Error>
-    {
+    pub fn from_frame(
+        eid: ElementId,
+        aid: AttributeId,
+        frame: TextFrame<'a>,
+    ) -> Result<AttributeValue<'a>, Error> {
         use AttributeId as AId;
 
         let mut stream = Stream::from_frame(frame);
@@ -201,11 +203,11 @@ impl<'a> AttributeValue<'a> {
                     | ElementId::Tref
                     | ElementId::Tspan => {
                         Ok(AttributeValue::LengthList(LengthList::from_frame(frame)))
-                    },
+                    }
                     _ => {
                         let l = stream.parse_length()?;
                         Ok(AttributeValue::Length(l))
-                    },
+                    }
                 }
             }
 
@@ -276,7 +278,7 @@ impl<'a> AttributeValue<'a> {
                     ValueId::CurrentColor,
                     ValueId::Inherit),
                     parse_or!(parse_paint_func_iri(stream), parse_rgb_color(stream)))
-            },
+            }
 
               AId::ClipPath
             | AId::Filter

@@ -4,13 +4,18 @@
 
 use std::str::FromStr;
 
-use {Stream, TextFrame, Error, LengthUnit};
+use {
+    Error,
+    LengthUnit,
+    Stream,
+    TextFrame,
+};
 use stream::bound;
 use colors::rgb_color_from_name;
 
 /// Representation of the [`<color>`] type.
 /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
-#[derive(Copy,Clone,PartialEq,Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Color {
     #[allow(missing_docs)]
     pub red: u8,

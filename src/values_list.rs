@@ -2,11 +2,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use {Stream, TextFrame, Length, Error};
+use {
+    Error,
+    Length,
+    Stream,
+    TextFrame,
+};
 
 /// Iterator over a list of [`<number>`] values.
 /// [`<number>`]: https://www.w3.org/TR/SVG/types.html#DataTypeNumber
-#[derive(Copy,Clone,PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct NumberList<'a>(Stream<'a>);
 
 impl<'a> NumberList<'a> {
@@ -35,7 +40,7 @@ impl<'a> Iterator for NumberList<'a> {
 
 /// Iterator over a list of [`<length>`] values.
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
-#[derive(Copy,Clone,PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct LengthList<'a>(Stream<'a>);
 
 impl<'a> LengthList<'a> {

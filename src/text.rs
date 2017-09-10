@@ -6,7 +6,12 @@ use std::str;
 use std::char;
 use std::io::Write;
 
-use {Tokenize, Stream, TextFrame, Error};
+use {
+    Error,
+    Stream,
+    TextFrame,
+    Tokenize,
+};
 
 const BUF_END: usize = 4;
 

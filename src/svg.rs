@@ -7,7 +7,14 @@
 use std::fmt;
 use std::str;
 
-use {Tokenize, Stream, TextFrame, ElementId, AttributeId, Error};
+use {
+    AttributeId,
+    ElementId,
+    Error,
+    Stream,
+    TextFrame,
+    Tokenize,
+};
 
 /// SVG token.
 #[derive(PartialEq)]
@@ -100,7 +107,7 @@ impl<'a> fmt::Debug for Token<'a> {
 }
 
 /// `ElementEnd` token.
-#[derive(Debug,PartialEq,Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ElementEnd<'a> {
     /// Indicates `>`
     Open,
@@ -372,8 +379,10 @@ impl<'a> Tokenizer<'a> {
 
             let value_len = self.stream.len_to(b'"')?;
 
-            let text_frame = self.stream.slice_frame_raw(self.stream.pos(),
-                                                       self.stream.pos() + value_len);
+            let text_frame = self.stream.slice_frame_raw(
+                self.stream.pos(),
+                self.stream.pos() + value_len
+            );
 
             self.stream.advance_raw(value_len);
 
@@ -392,8 +401,10 @@ impl<'a> Tokenizer<'a> {
             // skip unsupported elements
 
             let l = self.stream.len_to(b'>')? + 1;
-            warnln!("Unsupported DOCTYPE object: '{}'.",
-                    self.stream.slice_next_raw(l));
+            warnln!(
+                "Unsupported DOCTYPE object: '{}'.",
+                self.stream.slice_next_raw(l)
+            );
             self.stream.advance_raw(l);
 
             self.stream.skip_spaces();

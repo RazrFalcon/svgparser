@@ -9,7 +9,13 @@
 use std::fmt;
 use std::str;
 
-use {Tokenize, Stream, TextFrame, AttributeId, Error};
+use {
+    AttributeId,
+    Error,
+    Stream,
+    TextFrame,
+    Tokenize,
+};
 
 /// Style token.
 #[derive(PartialEq)]
@@ -50,7 +56,9 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     type Token = Token<'a>;
 
     fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
-        Tokenizer { stream: Stream::from_frame(frame) }
+        Tokenizer {
+            stream: Stream::from_frame(frame)
+        }
     }
 
     /// Extracts next style object from the stream.

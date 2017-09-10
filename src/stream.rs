@@ -4,14 +4,22 @@
 
 use std::cmp;
 use std::fmt;
-use std::str::{self, FromStr};
+use std::str::{
+    self,
+    FromStr,
+};
 
-use {Length, LengthUnit, Error, ErrorPos};
+use {
+    Error,
+    ErrorPos,
+    Length,
+    LengthUnit,
+};
 
 /// An immutable string slice.
 ///
 /// Unlike `&str` contains a full original string.
-#[derive(PartialEq,Clone,Copy)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct TextFrame<'a> {
     text: &'a str,
     start: usize,
@@ -83,7 +91,7 @@ impl<'a> fmt::Display for TextFrame<'a> {
 }
 
 /// Streaming text parsing interface.
-#[derive(PartialEq,Clone,Copy,Debug)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub struct Stream<'a> {
     text: &'a str,
     pos: usize,
@@ -302,7 +310,7 @@ impl<'a> Stream<'a> {
     /// s.advance(2).unwrap(); // also ok, we at end now
     /// assert_eq!(s.pos(), 4);
     /// // fail
-    /// assert_eq!(s.advance(2).err().unwrap(), Error::InvalidAdvance{
+    /// assert_eq!(s.advance(2).err().unwrap(), Error::InvalidAdvance {
     ///     expected: 6,
     ///     total: 4,
     ///     pos: ErrorPos::new(1, 5),
@@ -449,11 +457,11 @@ impl<'a> Stream<'a> {
         while let Some(byte) = bytes.next() {
             if let b';' = byte {
                 return Some(value);
-            } else if let b@b'0'...b'9' = byte {
+            } else if let b @ b'0'...b'9' = byte {
                 if value <= 0x10FFFF {
                     value = (value * 0x10) + ((b - b'0') as u32);
                 }
-            } else if let b@b'a'...b'f' = byte | 0b0010_0000 {
+            } else if let b @ b'a'...b'f' = byte | 0b0010_0000 {
                 if value <= 0x10FFFF {
                     value = (value * 16) + ((b - b'a' + 10) as u32);
                 }
@@ -471,7 +479,7 @@ impl<'a> Stream<'a> {
         while let Some(byte) = bytes.next() {
             if let b';' = byte {
                 return Some(value);
-            } else if let b@b'0'...b'9' = byte {
+            } else if let b @ b'0'...b'9' = byte {
                 if value <= 0x10FFFF {
                     value = (value * 10) + ((b - b'0') as u32);
                 }
@@ -1133,7 +1141,8 @@ impl<'a> Stream<'a> {
         let text = self.frame.full_slice();
         let mut row = 1;
         let end = self.pos + self.frame.start();
-        row += text.as_bytes().iter()
+        row += text.as_bytes()
+            .iter()
             .take(end)
             .filter(|c| **c == b'\n')
             .count();
@@ -1172,7 +1181,7 @@ impl<'a> Stream<'a> {
     fn adv_bound_check(&self, n: usize) -> Result<(), Error> {
         let new_pos = self.pos + n;
         if new_pos > self.end {
-            return Err(Error::InvalidAdvance{
+            return Err(Error::InvalidAdvance {
                 expected: new_pos as isize,
                 total: self.end,
                 pos: self.gen_error_pos(),
@@ -1185,7 +1194,7 @@ impl<'a> Stream<'a> {
     fn back_bound_check(&self, n: isize) -> Result<(), Error> {
         let new_pos: isize = self.pos as isize + n;
         if new_pos < 0 {
-            return Err(Error::InvalidAdvance{
+            return Err(Error::InvalidAdvance {
                 expected: new_pos,
                 total: self.end,
                 pos: self.gen_error_pos(),

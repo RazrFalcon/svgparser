@@ -6,11 +6,17 @@
 //!
 //! [`<path>`]: https://www.w3.org/TR/SVG/paths.html#PathData
 
-use {Tokenize, Stream, TextFrame, Error, ErrorPos};
+use {
+    Error,
+    ErrorPos,
+    Stream,
+    TextFrame,
+    Tokenize,
+};
 
 /// Path's segment token.
 #[allow(missing_docs)]
-#[derive(Copy,Clone,Debug,PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Token {
     MoveTo {
         abs: bool,
@@ -95,22 +101,20 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     ///
     /// # Errors
     ///
-    /// - Most of the `Error` types can occur.
-    ///
-    /// # Notes
-    ///
-    /// - By SVG spec any invalid data inside path data should stop the parsing of this data,
+    /// - By the SVG spec any invalid data inside path data should stop parsing of this data,
     ///   but not the whole document.
     ///
-    ///   This function will return `EndOfStream` on any kind of error.
-    ///   Library will print a warning to stderr.
+    ///   This function will return `Token::EndOfStream` on any kind of error
+    ///   and print a warning to stderr.
     ///
-    ///   In other words - you will get as much data as possible.
+    ///   In other words, you will retrieve as much data as possible.
     ///
     ///   Example: `M 10 20 L 30 40 #!@$1 L 50 60` -> `M 10 20 L 30 40`
     ///
-    /// - We don't support implicit commands, so all commands will be converted to explicit one.
-    ///   It mostly affects implicit MoveTo, which will be converted, according to spec,
+    /// # Notes
+    ///
+    /// - We do not support implicit commands, so all commands will be converted to explicit one.
+    ///   It mostly affects implicit MoveTo, which will be converted, according to the spec,
     ///   into explicit LineTo.
     ///
     ///   Example: `M 10 20 30 40 50 60` -> `M 10 20 L 30 40 L 50 60`
@@ -125,8 +129,10 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
         macro_rules! data_error {
             () => ({
-                warnln!("Invalid path data at {}. The remaining data is ignored.",
-                         s.gen_error_pos());
+                warnln!(
+                    "Invalid path data at {}. The remaining data is ignored.",
+                    s.gen_error_pos()
+                );
                 return Ok(Token::EndOfStream);
             })
         }
@@ -138,6 +144,10 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     Err(_) => data_error!(),
                 }
             )
+        }
+
+        macro_rules! parse_num {
+            () => ( try_num!(s.parse_list_number()); )
         }
 
         let has_prev_cmd = self.prev_cmd.is_some();
@@ -153,7 +163,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             match first_char {
                 b'M' | b'm' => {}
                 _ => {
-                    warnln!("Warning: First segment must be MoveTo. \
+                    warnln!("First segment must be MoveTo. \
                              The remaining data is ignored.");
                     return Ok(Token::EndOfStream);
                 }
@@ -164,21 +174,21 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         let cmd: u8;
         if is_cmd(first_char) {
             is_implicit_move_to = false;
-
             cmd = first_char;
             s.advance_raw(1);
         } else if is_digit(first_char) && has_prev_cmd {
             // unwrap is safe, because we checked 'has_prev_cmd'
             let prev_cmd = self.prev_cmd.unwrap();
 
-            // ClosePath can't be followed by a number
             if prev_cmd == b'Z' || prev_cmd == b'z' {
-                data_error!();
+                warnln!("ClosePath cannot be followed by a number. \
+                         The remaining data is ignored.");
+                return Ok(Token::EndOfStream);
             }
 
             if prev_cmd == b'M' || prev_cmd == b'm' {
-                // 'If a moveto is followed by multiple pairs of coordinates, the subsequent
-                // pairs are treated as implicit lineto commands.'
+                // 'If a moveto is followed by multiple pairs of coordinates,
+                // the subsequent pairs are treated as implicit lineto commands.'
                 // So we parse them as LineTo.
                 is_implicit_move_to = true;
                 cmd = if is_absolute(prev_cmd) { b'L' } else { b'l' };
@@ -194,109 +204,94 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         let absolute = is_absolute(cmd);
         let token = match cmdl {
             b'm' => {
-                let x = try_num!(s.parse_list_number());
-                let y = try_num!(s.parse_list_number());
-
-                Token::MoveTo { abs: absolute, x: x, y: y }
+                Token::MoveTo {
+                    abs: absolute,
+                    x: parse_num!(),
+                    y: parse_num!(),
+                }
             }
             b'l' => {
-                let x = try_num!(s.parse_list_number());
-                let y = try_num!(s.parse_list_number());
-                Token::LineTo { abs: absolute, x: x, y: y }
+                Token::LineTo {
+                    abs: absolute,
+                    x: parse_num!(),
+                    y: parse_num!(),
+                }
             }
             b'h' => {
-                let x = try_num!(s.parse_list_number());
-                Token::HorizontalLineTo { abs: absolute, x: x }
+                Token::HorizontalLineTo {
+                    abs: absolute,
+                    x: parse_num!(),
+                }
             }
             b'v' => {
-                let y = try_num!(s.parse_list_number());
-                Token::VerticalLineTo { abs: absolute, y: y }
+                Token::VerticalLineTo {
+                    abs: absolute,
+                    y: parse_num!(),
+                }
             }
             b'c' => {
-                let x1 = try_num!(s.parse_list_number());
-                let y1 = try_num!(s.parse_list_number());
-                let x2 = try_num!(s.parse_list_number());
-                let y2 = try_num!(s.parse_list_number());
-                let x  = try_num!(s.parse_list_number());
-                let y  = try_num!(s.parse_list_number());
                 Token::CurveTo {
                     abs: absolute,
-                    x1: x1,
-                    y1: y1,
-                    x2: x2,
-                    y2: y2,
-                    x: x,
-                    y: y,
+                    x1: parse_num!(),
+                    y1: parse_num!(),
+                    x2: parse_num!(),
+                    y2: parse_num!(),
+                    x:  parse_num!(),
+                    y:  parse_num!(),
                 }
             }
             b's' => {
-                let x2 = try_num!(s.parse_list_number());
-                let y2 = try_num!(s.parse_list_number());
-                let x  = try_num!(s.parse_list_number());
-                let y  = try_num!(s.parse_list_number());
                 Token::SmoothCurveTo {
                     abs: absolute,
-                    x2: x2,
-                    y2: y2,
-                    x: x,
-                    y: y,
+                    x2: parse_num!(),
+                    y2: parse_num!(),
+                    x:  parse_num!(),
+                    y:  parse_num!(),
                 }
             }
             b'q' => {
-                let x1 = try_num!(s.parse_list_number());
-                let y1 = try_num!(s.parse_list_number());
-                let x  = try_num!(s.parse_list_number());
-                let y  = try_num!(s.parse_list_number());
                 Token::Quadratic {
                     abs: absolute,
-                    x1: x1,
-                    y1: y1,
-                    x: x,
-                    y: y,
+                    x1: parse_num!(),
+                    y1: parse_num!(),
+                    x:  parse_num!(),
+                    y:  parse_num!(),
                 }
             }
             b't' => {
-                let x = try_num!(s.parse_list_number());
-                let y = try_num!(s.parse_list_number());
-                Token::SmoothQuadratic { abs: absolute, x: x, y: y }
-            }
-            b'a' => {
-                let rx = try_num!(s.parse_list_number());
-                let ry = try_num!(s.parse_list_number());
-                let angle = try_num!(s.parse_list_number());
-
-                // By SVG spec 'large-arc' and 'sweep' must contain only one char
-                // and can be written without any separators, aka: 10 20 30 01 10 20.
-                let la = try_num!(parse_flag(s));
-                let sweep = try_num!(parse_flag(s));
-
-                let x = try_num!(s.parse_list_number());
-                let y = try_num!(s.parse_list_number());
-
-                Token::EllipticalArc {
+                Token::SmoothQuadratic {
                     abs: absolute,
-                    rx: rx,
-                    ry: ry,
-                    x_axis_rotation: angle,
-                    large_arc: la,
-                    sweep: sweep,
-                    x: x,
-                    y: y,
+                    x: parse_num!(),
+                    y: parse_num!(),
                 }
             }
-            b'z' => Token::ClosePath { abs: absolute },
+            b'a' => {
+                Token::EllipticalArc {
+                    abs: absolute,
+                    rx: parse_num!(),
+                    ry: parse_num!(),
+                    x_axis_rotation: parse_num!(),
+                    large_arc: try_num!(parse_flag(s)),
+                    sweep: try_num!(parse_flag(s)),
+                    x: parse_num!(),
+                    y: parse_num!(),
+                }
+            }
+            b'z' => {
+                Token::ClosePath {
+                    abs: absolute,
+                }
+            }
             _ => unreachable!(),
         };
 
-        if is_implicit_move_to {
-            self.prev_cmd = if is_absolute(cmd) {
-                Some(b'M')
+        self.prev_cmd = Some(
+            if is_implicit_move_to {
+                if is_absolute(cmd) { b'M' } else { b'm' }
             } else {
-                Some(b'm')
-            };
-        } else {
-            self.prev_cmd = Some(cmd);
-        }
+                cmd
+            }
+        );
 
         Ok(token)
     }
@@ -362,6 +357,8 @@ fn is_digit(c: u8) -> bool {
     }
 }
 
+// By the SVG spec 'large-arc' and 'sweep' must contain only one char
+// and can be written without any separators, aka: 10 20 30 01 10 20.
 fn parse_flag(s: &mut Stream) -> Result<bool, Error> {
     s.skip_spaces();
     let c = s.curr_char()?;

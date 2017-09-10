@@ -8,7 +8,7 @@ use std::str;
 /// Position of an error.
 ///
 /// Position indicates row/line and column. Starting positions is 1:1.
-#[derive(Clone,Copy,PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct ErrorPos {
     #[allow(missing_docs)]
     pub row: usize,
@@ -33,7 +33,7 @@ impl fmt::Display for ErrorPos {
 }
 
 /// List of all errors.
-#[derive(Clone,Copy,PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Error {
     /// The steam ended earlier than we expected.
     ///

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// List of all SVG length units.
-#[derive(Clone,Copy,Debug,PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(missing_docs)]
 pub enum LengthUnit {
     None,
@@ -20,7 +20,7 @@ pub enum LengthUnit {
 
 /// Representation of the [`<length>`] type.
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
-#[derive(Clone,Copy,Debug,PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Length {
     #[allow(missing_docs)]
     pub num: f64,

@@ -6,9 +6,14 @@
 //!
 //! [`<transform-list>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 
-use {Tokenize, Stream, TextFrame, Error};
+use {
+    Error,
+    Stream,
+    TextFrame,
+    Tokenize,
+};
 
-#[derive(Clone,Copy,PartialEq,Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 #[allow(missing_docs)]
 pub enum Token {
     Matrix {
@@ -70,7 +75,6 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     ///   `translate(<cx> <cy>) rotate(<rotate-angle>) translate(-<cx> -<cy>)`.
     ///   Just like the spec is stated.
     fn parse_next(&mut self) -> Result<Token, Error> {
-
         if let Some(a) = self.last_angle {
             self.last_angle = None;
             return Ok(Token::Rotate {
@@ -79,11 +83,11 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         }
 
         if let Some((x, y)) = self.rotate_ts {
-                self.rotate_ts = None;
-                return Ok(Token::Translate {
-                    tx: -x,
-                    ty: -y,
-                });
+            self.rotate_ts = None;
+            return Ok(Token::Translate {
+                tx: -x,
+                ty: -y,
+            });
         }
 
         let s = &mut self.stream;
