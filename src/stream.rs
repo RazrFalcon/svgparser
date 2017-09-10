@@ -161,7 +161,7 @@ impl<'a> Stream<'a> {
     /// Sets current position.
     // TODO: remove, parser should be consuming only
     #[inline]
-    pub fn set_pos_raw(&mut self, pos: usize) {
+    pub fn set_pos_unchecked(&mut self, pos: usize) {
         self.pos = pos;
     }
 
@@ -173,7 +173,7 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("text");
-    /// s.advance_raw(4);
+    /// s.advance_unchecked(4);
     /// assert_eq!(s.at_end(), true);
     /// assert_eq!(s.left(), 0);
     /// ```
@@ -188,7 +188,7 @@ impl<'a> Stream<'a> {
     ///
     /// Accessing stream after reaching end via safe methods will produce `svgparser::Error`.
     ///
-    /// Accessing stream after reaching end via *_raw methods will produce
+    /// Accessing stream after reaching end via *_unchecked methods will produce
     /// a Rust's bound checking error.
     ///
     /// [`pos()`]: #method.pos
@@ -199,10 +199,10 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("text");
-    /// s.advance_raw(2);
-    /// assert_eq!(s.curr_char_raw(), b'x');
+    /// s.advance_unchecked(2);
+    /// assert_eq!(s.curr_char_unchecked(), b'x');
     /// assert_eq!(s.at_end(), false);
-    /// s.advance_raw(2);
+    /// s.advance_unchecked(2);
     /// assert_eq!(s.at_end(), true);
     /// ```
     #[inline]
@@ -221,15 +221,15 @@ impl<'a> Stream<'a> {
             return Err(self.gen_end_of_stream_error());
         }
 
-        Ok(self.curr_char_raw())
+        Ok(self.curr_char_unchecked())
     }
 
     /// Unsafe version of [`curr_char()`].
     ///
     /// [`curr_char()`]: #method.curr_char
     #[inline]
-    pub fn curr_char_raw(&self) -> u8 {
-        self.get_char_raw(self.pos)
+    pub fn curr_char_unchecked(&self) -> u8 {
+        self.get_char_unchecked(self.pos)
     }
 
     /// Compares selected char with char from current stream position.
@@ -243,15 +243,15 @@ impl<'a> Stream<'a> {
             return Err(self.gen_end_of_stream_error());
         }
 
-        Ok(self.curr_char_raw() == c)
+        Ok(self.curr_char_unchecked() == c)
     }
 
     /// Unsafe version of [`is_char_eq()`].
     ///
     /// [`is_char_eq()`]: #method.is_char_eq
     #[inline]
-    pub fn is_char_eq_raw(&self, c: u8) -> bool {
-        self.curr_char_raw() == c
+    pub fn is_char_eq_unchecked(&self, c: u8) -> bool {
+        self.curr_char_unchecked() == c
     }
 
     /// Returns char at the position relative to current.
@@ -266,7 +266,7 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("text");
-    /// s.advance_raw(2);
+    /// s.advance_unchecked(2);
     /// assert_eq!(s.char_at(-2).unwrap(), b't');
     /// assert_eq!(s.char_at(-1).unwrap(), b'e');
     /// assert_eq!(s.char_at(0).unwrap(),  b'x');
@@ -281,7 +281,7 @@ impl<'a> Stream<'a> {
         }
 
         let new_pos: isize = self.pos as isize + pos;
-        Ok(self.get_char_raw(new_pos as usize))
+        Ok(self.get_char_unchecked(new_pos as usize))
     }
 
     /// Moves back by `n` chars.
@@ -333,11 +333,11 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("text");
-    /// s.advance_raw(2); // ok
-    /// s.advance_raw(20); // will cause panic via debug_assert!().
+    /// s.advance_unchecked(2); // ok
+    /// s.advance_unchecked(20); // will cause panic via debug_assert!().
     /// ```
     #[inline]
-    pub fn advance_raw(&mut self, n: usize) {
+    pub fn advance_unchecked(&mut self, n: usize) {
         debug_assert!(self.pos + n <= self.end);
         self.pos += n;
     }
@@ -353,7 +353,7 @@ impl<'a> Stream<'a> {
     ///
     /// let mut s = Stream::from_str("t e x t");
     /// assert_eq!(s.is_space().unwrap(), false);
-    /// s.advance_raw(1);
+    /// s.advance_unchecked(1);
     /// assert_eq!(s.is_space().unwrap(), true);
     /// ```
     #[inline]
@@ -366,8 +366,8 @@ impl<'a> Stream<'a> {
     ///
     /// [`is_space()`]: #method.is_space
     #[inline]
-    pub fn is_space_raw(&self) -> bool {
-        is_space(self.curr_char_raw())
+    pub fn is_space_unchecked(&self) -> bool {
+        is_space(self.curr_char_unchecked())
     }
 
     /// Skips (white)space's.
@@ -380,7 +380,7 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("Some \t\n\rtext");
-    /// s.advance_raw(4);
+    /// s.advance_unchecked(4);
     /// s.skip_spaces();
     /// assert_eq!(s.slice_tail(), "text");
     /// ```
@@ -390,24 +390,24 @@ impl<'a> Stream<'a> {
         while !self.at_end() {
             advance = false;
 
-            if self.is_space_raw() {
+            if self.is_space_unchecked() {
                 advance = true;
-            } else if self.is_char_eq_raw(b'&') && self.starts_with(b"&#x") {
+            } else if self.is_char_eq_unchecked(b'&') && self.starts_with(b"&#x") {
                 // Check for (#x20 | #x9 | #xD | #xA).
                 if let Some(l) = self.len_to(b';').ok() {
-                    let value = self.slice_next_raw(l + 1);
+                    let value = self.slice_next_unchecked(l + 1);
 
                     if let Some(v) = Stream::parse_entity_reference(value) {
                         if v < 255 && is_space(v as u8) {
                             advance = true;
-                            self.advance_raw(l);
+                            self.advance_unchecked(l);
                         }
                     }
                 }
             }
 
             if advance {
-                self.advance_raw(1);
+                self.advance_unchecked(1);
             } else {
                 break;
             }
@@ -505,27 +505,27 @@ impl<'a> Stream<'a> {
     /// ```
     #[inline]
     pub fn trim_trailing_spaces(&mut self) {
-        while !self.at_end() && is_space(self.get_char_raw(self.end - 1)) {
+        while !self.at_end() && is_space(self.get_char_unchecked(self.end - 1)) {
             self.end -= 1;
         }
     }
 
     /// Checks that the current char is a letter.
     #[inline]
-    pub fn is_letter_raw(&self) -> bool {
-        is_letter(self.curr_char_raw())
+    pub fn is_letter_unchecked(&self) -> bool {
+        is_letter(self.curr_char_unchecked())
     }
 
     /// Checks that the current char is a digit.
     #[inline]
-    pub fn is_digit_raw(&self) -> bool {
-        is_digit(self.curr_char_raw())
+    pub fn is_digit_unchecked(&self) -> bool {
+        is_digit(self.curr_char_unchecked())
     }
 
     /// Checks that the current char is a valid part of an ident token.
     #[inline]
-    pub fn is_ident_raw(&self) -> bool {
-        let c = self.curr_char_raw();
+    pub fn is_ident_unchecked(&self) -> bool {
+        let c = self.curr_char_unchecked();
         match c {
               b'0'...b'9'
             | b'A'...b'Z'
@@ -538,7 +538,7 @@ impl<'a> Stream<'a> {
     }
 
     #[inline]
-    fn get_char_raw(&self, pos: usize) -> u8 {
+    fn get_char_unchecked(&self, pos: usize) -> u8 {
         self.text.as_bytes()[pos]
     }
 
@@ -560,7 +560,7 @@ impl<'a> Stream<'a> {
     pub fn len_to(&self, c: u8) -> Result<usize, Error> {
         let mut n = 0;
         while self.pos + n != self.end {
-            if self.get_char_raw(self.pos + n) == c {
+            if self.get_char_unchecked(self.pos + n) == c {
                 return Ok(n);
             } else {
                 n += 1;
@@ -587,7 +587,7 @@ impl<'a> Stream<'a> {
     pub fn len_to_or_end(&self, c: u8) -> usize {
         let mut n = 0;
         while self.pos + n != self.end {
-            if self.get_char_raw(self.pos + n) == c {
+            if self.get_char_unchecked(self.pos + n) == c {
                 break;
             } else {
                 n += 1;
@@ -615,7 +615,7 @@ impl<'a> Stream<'a> {
     pub fn len_to_space_or_end(&self) -> usize {
         let mut n = 0;
         while self.pos + n != self.end {
-            if is_space(self.get_char_raw(self.pos + n)) {
+            if is_space(self.get_char_unchecked(self.pos + n)) {
                 break;
             } else {
                 n += 1;
@@ -643,7 +643,7 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn jump_to(&mut self, c: u8) -> Result<(), Error> {
         let l = self.len_to(c)?;
-        self.advance_raw(l);
+        self.advance_unchecked(l);
         Ok(())
     }
 
@@ -661,7 +661,7 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn jump_to_or_end(&mut self, c: u8) {
         let l = self.len_to_or_end(c);
-        self.advance_raw(l);
+        self.advance_unchecked(l);
     }
 
     /// Jumps to the end of the stream.
@@ -678,7 +678,7 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn jump_to_end(&mut self) {
         let l = self.left();
-        self.advance_raw(l);
+        self.advance_unchecked(l);
     }
 
     /// Returns reference to data with length `len` and advance stream to the same length.
@@ -689,22 +689,22 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("Some text.");
-    /// assert_eq!(s.read_raw(4), "Some");
+    /// assert_eq!(s.read_unchecked(4), "Some");
     /// assert_eq!(s.pos(), 4);
     /// ```
     #[inline]
-    pub fn read_raw(&mut self, len: usize) -> &'a str {
-        let s = self.slice_next_raw(len);
-        self.advance_raw(s.len());
+    pub fn read_unchecked(&mut self, len: usize) -> &'a str {
+        let s = self.slice_next_unchecked(len);
+        self.advance_unchecked(s.len());
         s
     }
 
     /// Returns reference to the data until selected char and advance stream by the data length.
     ///
-    /// Shorthand for: [`len_to()`] + [`read_raw()`].
+    /// Shorthand for: [`len_to()`] + [`read_unchecked()`].
     ///
     /// [`len_to()`]: #method.len_to
-    /// [`read_raw()`]: #method.read_raw
+    /// [`read_unchecked()`]: #method.read_unchecked
     ///
     /// # Errors
     ///
@@ -722,7 +722,7 @@ impl<'a> Stream<'a> {
     #[inline]
     pub fn read_to(&mut self, c: u8) -> Result<&'a str, Error> {
         let len = self.len_to(c)?;
-        let s = self.read_raw(len);
+        let s = self.read_unchecked(len);
         Ok(s)
     }
 
@@ -734,10 +734,10 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let s = Stream::from_str("Text");
-    /// assert_eq!(s.slice_next_raw(3), "Tex");
+    /// assert_eq!(s.slice_next_unchecked(3), "Tex");
     /// ```
     #[inline]
-    pub fn slice_next_raw(&self, len: usize) -> &'a str {
+    pub fn slice_next_unchecked(&self, len: usize) -> &'a str {
         &self.text[self.pos..(self.pos + len)]
     }
 
@@ -749,15 +749,15 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let s = Stream::from_str("Text");
-    /// assert_eq!(s.slice_region_raw(1, 3), "ex");
+    /// assert_eq!(s.slice_region_unchecked(1, 3), "ex");
     /// ```
     #[inline]
-    pub fn slice_region_raw(&self, start: usize, end: usize) -> &'a str {
+    pub fn slice_region_unchecked(&self, start: usize, end: usize) -> &'a str {
         &self.text[start..end]
     }
 
     /// Returns data of the stream within selected region as `TextFrame`.
-    pub fn slice_frame_raw(&self, start: usize, end: usize) -> TextFrame<'a> {
+    pub fn slice_frame_unchecked(&self, start: usize, end: usize) -> TextFrame<'a> {
         debug_assert!(start <= end);
 
         TextFrame::from_substr(self.frame.slice(), start, end)
@@ -846,12 +846,12 @@ impl<'a> Stream<'a> {
     pub fn consume_char(&mut self, c: u8) -> Result<(), Error> {
         if !self.is_char_eq(c)? {
             return Err(Error::InvalidChar {
-                current: self.curr_char_raw() as char,
+                current: self.curr_char_unchecked() as char,
                 expected: c as char,
                 pos: self.gen_error_pos(),
             });
         }
-        self.advance_raw(1);
+        self.advance_unchecked(1);
         Ok(())
     }
 
@@ -896,7 +896,7 @@ impl<'a> Stream<'a> {
 
         // consume sign
         match self.curr_char()? {
-            b'+' | b'-' => self.advance_raw(1), // skip sign
+            b'+' | b'-' => self.advance_unchecked(1), // skip sign
             _ => {}
         }
 
@@ -920,13 +920,13 @@ impl<'a> Stream<'a> {
         if !self.at_end() {
             // current char must be a dot or an exponent sign
 
-            let mut c = self.curr_char_raw();
+            let mut c = self.curr_char_unchecked();
             if c == b'.' {
-                self.advance_raw(1); // skip dot
+                self.advance_unchecked(1); // skip dot
                 self.consume_digits();
                 if !self.at_end() {
                     // Could have an exponent component.
-                    c = self.curr_char_raw();
+                    c = self.curr_char_unchecked();
                 }
             }
             if c == b'e' || c == b'E' {
@@ -938,14 +938,14 @@ impl<'a> Stream<'a> {
 
         // consume exponent
         if check_exponent && !self.at_end() {
-            let c = self.curr_char_raw();
+            let c = self.curr_char_unchecked();
 
             if c == b'e' || c == b'E' {
-                self.advance_raw(1); // skip 'e'
+                self.advance_unchecked(1); // skip 'e'
 
                 let c = self.curr_char()?;
                 if c == b'+' || c == b'-' {
-                    self.advance_raw(1); // skip sign
+                    self.advance_unchecked(1); // skip sign
                     self.consume_digits();
                 } else if is_digit(c) {
                     self.consume_digits();
@@ -960,7 +960,7 @@ impl<'a> Stream<'a> {
         }
 
         // use default f64 parser now
-        let s = self.slice_region_raw(start, self.pos());
+        let s = self.slice_region_unchecked(start, self.pos());
         match f64::from_str(s) {
             Ok(n) => {
                 if n.is_finite() {
@@ -976,8 +976,8 @@ impl<'a> Stream<'a> {
 
     #[inline]
     fn consume_digits(&mut self) {
-        while !self.at_end() && self.is_digit_raw() {
-            self.advance_raw(1);
+        while !self.at_end() && self.is_digit_unchecked() {
+            self.advance_unchecked(1);
         }
     }
 
@@ -1029,7 +1029,7 @@ impl<'a> Stream<'a> {
 
         // consume sign
         match self.curr_char()? {
-            b'+' | b'-' => self.advance_raw(1),
+            b'+' | b'-' => self.advance_unchecked(1),
             _ => {}
         }
 
@@ -1041,7 +1041,7 @@ impl<'a> Stream<'a> {
         self.consume_digits();
 
         // use default i32 parser now
-        let s = self.slice_region_raw(start, self.pos());
+        let s = self.slice_region_unchecked(start, self.pos());
         match i32::from_str(s) {
             Ok(n) => Ok(n),
             Err(_) => gen_err!(),
@@ -1132,8 +1132,8 @@ impl<'a> Stream<'a> {
     #[inline]
     fn parse_list_separator(&mut self) {
         // manually check for end, because reaching the end is not error for this function
-        if !self.at_end() && self.is_char_eq_raw(b',') {
-            self.advance_raw(1);
+        if !self.at_end() && self.is_char_eq_unchecked(b',') {
+            self.advance_unchecked(1);
         }
     }
 

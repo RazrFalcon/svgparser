@@ -82,22 +82,22 @@ impl Color {
                 7 => {
                     // #rrggbb
                     s.advance(1)?;
-                    color.red = hex_pair(s.read_raw(2).as_bytes());
-                    color.green = hex_pair(s.read_raw(2).as_bytes());
-                    color.blue = hex_pair(s.read_raw(2).as_bytes());
+                    color.red = hex_pair(s.read_unchecked(2).as_bytes());
+                    color.green = hex_pair(s.read_unchecked(2).as_bytes());
+                    color.blue = hex_pair(s.read_unchecked(2).as_bytes());
                 }
                 4 => {
                     // #rgb
-                    s.advance_raw(1);
-                    color.red = short_hex(s.curr_char_raw());
-                    s.advance_raw(1);
-                    color.green = short_hex(s.curr_char_raw());
-                    s.advance_raw(1);
-                    color.blue = short_hex(s.curr_char_raw());
-                    s.advance_raw(1);
+                    s.advance_unchecked(1);
+                    color.red = short_hex(s.curr_char_unchecked());
+                    s.advance_unchecked(1);
+                    color.green = short_hex(s.curr_char_unchecked());
+                    s.advance_unchecked(1);
+                    color.blue = short_hex(s.curr_char_unchecked());
+                    s.advance_unchecked(1);
                 }
                 _ => {
-                    s.set_pos_raw(start);
+                    s.set_pos_unchecked(start);
                     return Err(Error::InvalidColor(s.gen_error_pos()));
                 }
             }
@@ -126,13 +126,13 @@ impl Color {
             s.consume_char(b')')?;
         } else {
             let l = s.len_to_space_or_end();
-            match rgb_color_from_name(s.slice_next_raw(l)) {
+            match rgb_color_from_name(s.slice_next_unchecked(l)) {
                 Some(c) => {
                     color = c;
-                    s.advance_raw(l);
+                    s.advance_unchecked(l);
                 }
                 None => {
-                    s.set_pos_raw(start);
+                    s.set_pos_unchecked(start);
                     return Err(Error::InvalidColor(s.gen_error_pos()));
                 }
             }

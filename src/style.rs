@@ -81,7 +81,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             return Ok(Token::EndOfStream);
         }
 
-        let c = self.stream.curr_char_raw();
+        let c = self.stream.curr_char_unchecked();
         if c == b'/' {
             skip_comment(&mut self.stream)?;
             return self.parse_next();
@@ -112,15 +112,15 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
     let name = {
         let start_pos = stream.pos();
         while !stream.at_end() {
-            let c = stream.curr_char_raw();
+            let c = stream.curr_char_unchecked();
             if is_valid_ident_char(c) {
-                stream.advance_raw(1);
+                stream.advance_unchecked(1);
             } else {
                 break;
             }
         }
 
-        stream.slice_region_raw(start_pos, stream.pos())
+        stream.slice_region_unchecked(start_pos, stream.pos())
     };
 
     if name.is_empty() {
@@ -139,7 +139,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
     } else if stream.is_char_eq(b'&')? {
         // skip escaped start quote aka '&apos;'
         if stream.starts_with(b"&apos;") {
-            stream.advance_raw(6);
+            stream.advance_unchecked(6);
             end_char = b'&';
         } else {
             return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
@@ -165,17 +165,17 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         value_len -= 1;
     }
 
-    let text_frame = stream.slice_frame_raw(stream.pos(), stream.pos() + value_len);
+    let text_frame = stream.slice_frame_unchecked(stream.pos(), stream.pos() + value_len);
 
-    stream.advance_raw(value_len);
+    stream.advance_unchecked(value_len);
     stream.skip_spaces();
 
     if !stream.at_end() {
-        if stream.is_char_eq_raw(b'\'') {
-            stream.advance_raw(1);
-        } else if stream.is_char_eq_raw(b'&') {
+        if stream.is_char_eq_unchecked(b'\'') {
+            stream.advance_unchecked(1);
+        } else if stream.is_char_eq_unchecked(b'&') {
             if stream.starts_with(b"&apos;") {
-                stream.advance_raw(6);
+                stream.advance_unchecked(6);
             } else {
                 return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
             }
@@ -183,8 +183,8 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
     }
 
     // ';;;' is valid style data, we need to skip it
-    while !stream.at_end() && stream.is_char_eq_raw(b';') {
-        stream.advance_raw(1);
+    while !stream.at_end() && stream.is_char_eq_unchecked(b';') {
+        stream.advance_unchecked(1);
         stream.skip_spaces();
     }
 
@@ -197,7 +197,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
 
 fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
     // extract 'text' from '&text;'
-    stream.advance_raw(1); // &
+    stream.advance_unchecked(1); // &
 
     let mut len = stream.len_to_space_or_end(); // ;
     if len == 0 {
@@ -205,7 +205,7 @@ fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
     }
     len -= 1;
 
-    let name = stream.read_raw(len);
+    let name = stream.read_unchecked(len);
     stream.consume_char(b';')?;
 
     Ok(Token::EntityRef(name))
@@ -215,11 +215,11 @@ fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
     // prefixed attributes are not supported, aka '-webkit-*'
     let l = stream.len_to_or_end(b';');
     warnln!("Style attribute '{}' is skipped.",
-             stream.slice_next_raw(l));
+             stream.slice_next_unchecked(l));
 
-    stream.advance_raw(l);
+    stream.advance_unchecked(l);
     if !stream.at_end() {
-        stream.advance_raw(1);
+        stream.advance_unchecked(1);
     }
 
     Ok(())

@@ -194,7 +194,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     };
 
                     Ok(Token::ElementEnd(end))
-                } else if self.stream.is_char_eq_raw(b'<') {
+                } else if self.stream.is_char_eq_unchecked(b'<') {
                     self.depth += 1;
                     self.parse_element()
                 } else if self.depth > 0 {
@@ -202,14 +202,14 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     self.stream.skip_spaces();
 
                     if self.stream.is_char_eq(b'<')? {
-                        let text = self.stream.slice_region_raw(start, self.stream.pos());
+                        let text = self.stream.slice_region_unchecked(start, self.stream.pos());
                         Ok(Token::Whitespace(text))
                     } else {
                         let b = self.stream.pos() - start;
                         self.stream.back(b)?;
                         let end = self.stream.pos() + self.stream.len_to(b'<')?;
-                        let text_frame = self.stream.slice_frame_raw(self.stream.pos(), end);
-                        self.stream.advance_raw(text_frame.len());
+                        let text_frame = self.stream.slice_frame_unchecked(self.stream.pos(), end);
+                        self.stream.advance_unchecked(text_frame.len());
 
                         Ok(Token::Text(text_frame))
                     }
@@ -258,13 +258,13 @@ impl<'a> Tokenizer<'a> {
         if !self.stream.starts_with(b"<?xml ") {
             return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
-        self.stream.advance_raw(6); // '<?xml '
+        self.stream.advance_unchecked(6); // '<?xml '
 
         // TODO: parse attributes
 
         // TODO: ? can be inside the string
         let l = self.stream.len_to(b'?')?;
-        let s = self.stream.read_raw(l);
+        let s = self.stream.read_unchecked(l);
 
         self.stream.consume_char(b'?')?;
         self.stream.consume_char(b'>')?;
@@ -286,7 +286,7 @@ impl<'a> Tokenizer<'a> {
                 return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
             }
 
-            self.stream.advance_raw(len);
+            self.stream.advance_unchecked(len);
             if self.stream.char_at(-1)? == b'-' && self.stream.char_at(-2)? == b'-' {
                 break;
             }
@@ -295,7 +295,7 @@ impl<'a> Tokenizer<'a> {
 
         // save data between <!-- and -->
         let end_pos = self.stream.pos() - 2;
-        let s = self.stream.slice_region_raw(start_pos, end_pos);
+        let s = self.stream.slice_region_unchecked(start_pos, end_pos);
         self.stream.advance(1)?;
 
         Ok(Token::Comment(s))
@@ -315,12 +315,12 @@ impl<'a> Tokenizer<'a> {
 
         // go back to CDATA start to properly init substream.
         let end = self.stream.pos();
-        self.stream.set_pos_raw(start_pos);
+        self.stream.set_pos_unchecked(start_pos);
 
-        let text_frame = self.stream.slice_frame_raw(self.stream.pos(), end);
+        let text_frame = self.stream.slice_frame_unchecked(self.stream.pos(), end);
 
         // go to end of CDATA again
-        self.stream.set_pos_raw(end);
+        self.stream.set_pos_unchecked(end);
         self.stream.advance(3)?;
 
         Ok(Token::Cdata(text_frame))
@@ -332,7 +332,7 @@ impl<'a> Tokenizer<'a> {
 
         debug_assert!(self.stream.starts_with(b"<!DOCTYPE"));
 
-        self.stream.advance_raw(9); // '<!DOCTYPE'
+        self.stream.advance_unchecked(9); // '<!DOCTYPE'
         self.stream.consume_char(b' ')?;
         let start = self.stream.pos();
 
@@ -352,7 +352,7 @@ impl<'a> Tokenizer<'a> {
 
         if self.stream.is_char_eq(b'>')? {
             // empty DOCTYPE
-            let text = self.stream.slice_region_raw(start, self.stream.pos());
+            let text = self.stream.slice_region_unchecked(start, self.stream.pos());
             self.stream.advance(1)?;
             Ok(Token::DtdEmpty(text))
         } else {
@@ -360,7 +360,7 @@ impl<'a> Tokenizer<'a> {
             self.state = State::Dtd;
 
             // skip space at the end
-            let text = self.stream.slice_region_raw(start, self.stream.pos() - 1);
+            let text = self.stream.slice_region_unchecked(start, self.stream.pos() - 1);
             self.stream.advance(1)?; // [
             self.stream.skip_spaces();
 
@@ -379,12 +379,12 @@ impl<'a> Tokenizer<'a> {
 
             let value_len = self.stream.len_to(b'"')?;
 
-            let text_frame = self.stream.slice_frame_raw(
+            let text_frame = self.stream.slice_frame_unchecked(
                 self.stream.pos(),
                 self.stream.pos() + value_len
             );
 
-            self.stream.advance_raw(value_len);
+            self.stream.advance_unchecked(value_len);
 
             self.stream.consume_char(b'"')?;
             self.stream.skip_spaces();
@@ -403,9 +403,9 @@ impl<'a> Tokenizer<'a> {
             let l = self.stream.len_to(b'>')? + 1;
             warnln!(
                 "Unsupported DOCTYPE object: '{}'.",
-                self.stream.slice_next_raw(l)
+                self.stream.slice_next_unchecked(l)
             );
-            self.stream.advance_raw(l);
+            self.stream.advance_unchecked(l);
 
             self.stream.skip_spaces();
             self.parse_next()
@@ -413,13 +413,13 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn parse_element(&mut self) -> Result<Token<'a>, Error> {
-        debug_assert!(self.stream.is_char_eq_raw(b'<'));
+        debug_assert!(self.stream.is_char_eq_unchecked(b'<'));
         self.stream.advance(1)?; // <
 
         let start_pos = self.stream.pos();
 
         // consume a tag name
-        while !self.stream.at_end() && self.stream.is_ident_raw() {
+        while !self.stream.at_end() && self.stream.is_ident_unchecked() {
             self.stream.advance(1)?;
         }
 
@@ -428,9 +428,9 @@ impl<'a> Tokenizer<'a> {
         // '<tagname/'
         // '<tagname>'
         if !self.stream.at_end() {
-            if     !self.stream.is_space_raw()
-                && !self.stream.is_char_eq_raw(b'/')
-                && !self.stream.is_char_eq_raw(b'>')
+            if     !self.stream.is_space_unchecked()
+                && !self.stream.is_char_eq_unchecked(b'/')
+                && !self.stream.is_char_eq_unchecked(b'>')
             {
                 return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
             }
@@ -445,7 +445,7 @@ impl<'a> Tokenizer<'a> {
         }
 
         // TODO: implement read_back(start_pos)
-        let tag_name = self.stream.slice_region_raw(start_pos, self.stream.pos());
+        let tag_name = self.stream.slice_region_unchecked(start_pos, self.stream.pos());
         self.stream.skip_spaces();
         self.state = State::Attributes;
 
@@ -473,7 +473,7 @@ impl<'a> Tokenizer<'a> {
         }
 
         if self.stream.is_char_eq(b'>')? {
-            self.stream.advance_raw(1);
+            self.stream.advance_unchecked(1);
             self.state = State::Unknown;
             self.curr_elem = None;
             return Ok(Token::ElementEnd(ElementEnd::Open));
@@ -484,7 +484,7 @@ impl<'a> Tokenizer<'a> {
         let name = {
             let start = self.stream.pos();
             // consume an attribute name
-            while !self.stream.at_end() && self.stream.is_ident_raw() {
+            while !self.stream.at_end() && self.stream.is_ident_unchecked() {
                 self.stream.advance(1)?;
             }
 
@@ -493,7 +493,7 @@ impl<'a> Tokenizer<'a> {
                 return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
             }
 
-            self.stream.slice_region_raw(start, start + len)
+            self.stream.slice_region_unchecked(start, start + len)
         };
 
         self.stream.skip_spaces();
@@ -503,7 +503,7 @@ impl<'a> Tokenizer<'a> {
 
         if !(self.stream.is_char_eq(b'"')? || self.stream.is_char_eq(b'\'')?) {
             return Err(Error::InvalidChar {
-                current: self.stream.curr_char_raw() as char,
+                current: self.stream.curr_char_unchecked() as char,
                 expected: '"',
                 pos: self.stream.gen_error_pos(),
             });
@@ -513,9 +513,9 @@ impl<'a> Tokenizer<'a> {
         self.stream.advance(1)?; // quote
 
         let end = self.stream.pos() + self.stream.len_to(quote)?;
-        let text_frame = self.stream.slice_frame_raw(self.stream.pos(), end);
+        let text_frame = self.stream.slice_frame_unchecked(self.stream.pos(), end);
 
-        self.stream.advance_raw(text_frame.len());
+        self.stream.advance_unchecked(text_frame.len());
         self.stream.advance(1)?; // quote
 
         self.stream.skip_spaces();

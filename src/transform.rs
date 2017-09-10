@@ -103,7 +103,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             return Err(Error::UnexpectedEndOfStream(s.gen_error_pos()));
         }
 
-        let t = match s.slice_next_raw(5) {
+        let t = match s.slice_next_unchecked(5) {
             "matri" => {
                 s.advance(6)?;
                 s.skip_spaces();
@@ -225,7 +225,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         s.skip_spaces();
 
         if !s.at_end() && s.is_char_eq(b',')? {
-            s.advance_raw(1);
+            s.advance_unchecked(1);
         }
 
         Ok(t)

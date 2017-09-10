@@ -110,12 +110,12 @@ impl<'a> Tokenize<'a> for TextUnescape<'a> {
             return Ok(None);
         }
 
-        let mut c = self.stream.curr_char_raw();
+        let mut c = self.stream.curr_char_unchecked();
 
         // Check for XML character entity references.
         if c == b'&' {
             if let Some(l) = self.stream.len_to(b';').ok() {
-                let value = self.stream.slice_next_raw(l + 1);
+                let value = self.stream.slice_next_unchecked(l + 1);
 
                 if let Some(v) = Stream::parse_entity_reference(value) {
                     // Reset data.
@@ -127,7 +127,7 @@ impl<'a> Tokenize<'a> for TextUnescape<'a> {
                     c = self.buf[0];
                     self.buf_idx = 1;
 
-                    self.stream.advance_raw(l);
+                    self.stream.advance_unchecked(l);
                 }
             }
         }
@@ -138,7 +138,7 @@ impl<'a> Tokenize<'a> for TextUnescape<'a> {
             _ => c,
         };
 
-        self.stream.advance_raw(1);
+        self.stream.advance_unchecked(1);
 
         // \r should be ignored.
         if c == b'\r' {

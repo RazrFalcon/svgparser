@@ -151,7 +151,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         }
 
         let has_prev_cmd = self.prev_cmd.is_some();
-        let first_char = s.curr_char_raw();
+        let first_char = s.curr_char_unchecked();
 
         if !has_prev_cmd && !is_cmd(first_char) {
             warnln!("'{}' is not a command. \
@@ -175,7 +175,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         if is_cmd(first_char) {
             is_implicit_move_to = false;
             cmd = first_char;
-            s.advance_raw(1);
+            s.advance_unchecked(1);
         } else if is_digit(first_char) && has_prev_cmd {
             // unwrap is safe, because we checked 'has_prev_cmd'
             let prev_cmd = self.prev_cmd.unwrap();

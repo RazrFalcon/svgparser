@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - 100..900 values of the `font-weight` will be parsed as `ValueId` and not as `Number` now.
+- All \*\_raw methods in `Stream` module are renamed to \*\_unchecked.
 
 ## [0.4.2] - 2017-07-08
 ### Fixed

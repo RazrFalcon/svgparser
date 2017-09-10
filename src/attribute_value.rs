@@ -165,7 +165,7 @@ impl<'a> AttributeValue<'a> {
 
         macro_rules! invalid_attr {
             () => ({
-                stream.set_pos_raw(start_pos);
+                stream.set_pos_unchecked(start_pos);
                 Err(Error::InvalidAttributeValue(stream.gen_error_pos()))
             })
         }
@@ -186,11 +186,11 @@ impl<'a> AttributeValue<'a> {
         }
 
         if !stream.at_end() && stream.curr_char()? == b'&' {
-            stream.advance_raw(1);
+            stream.advance_unchecked(1);
             let len = stream.len_to(b';')?;
             // TODO: attribute can contain many refs, not only one
             // TODO: advance to the end of the stream
-            return Ok(AttributeValue::EntityRef(stream.slice_next_raw(len)));
+            return Ok(AttributeValue::EntityRef(stream.slice_next_unchecked(len)));
         }
 
         match aid {
@@ -740,12 +740,12 @@ macro_rules! try_opt {
 }
 
 fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
-    if !stream.at_end() && stream.is_char_eq_raw(b'u') {
+    if !stream.at_end() && stream.is_char_eq_unchecked(b'u') {
         try_opt!(stream.advance(5).ok());
         let link_len = try_opt!(stream.len_to(b')').ok());
-        let link = stream.read_raw(link_len);
+        let link = stream.read_unchecked(link_len);
 
-        stream.advance_raw(1); // ')'
+        stream.advance_unchecked(1); // ')'
         stream.skip_spaces();
 
         // get fallback
@@ -766,7 +766,7 @@ fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>
             if let Some(v) = vid {
                 Some(AttributeValue::FuncIRIWithFallback(link, v))
             } else {
-                let frame = stream.slice_frame_raw(stream.pos(), stream.pos() + stream.left());
+                let frame = stream.slice_frame_unchecked(stream.pos(), stream.pos() + stream.left());
                 let color = try_opt!(Color::from_frame(frame).ok());
                 Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))
             }
@@ -779,9 +779,9 @@ fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>
 }
 
 fn parse_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
-    if !stream.at_end() && stream.is_char_eq_raw(b'u') {
+    if !stream.at_end() && stream.is_char_eq_unchecked(b'u') {
         try_opt!(stream.advance(5).ok());
-        let link = stream.slice_next_raw(try_opt!(stream.len_to(b')').ok()));
+        let link = stream.slice_next_unchecked(try_opt!(stream.len_to(b')').ok()));
         Some(AttributeValue::FuncIRI(link))
     } else {
         None
@@ -790,7 +790,7 @@ fn parse_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
 
 fn parse_iri<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
     // empty xlink:href is a valid attribute
-    if !stream.at_end() && stream.is_char_eq_raw(b'#') {
+    if !stream.at_end() && stream.is_char_eq_unchecked(b'#') {
         // extract internal link
         stream.advance(1)?;
         let link = stream.slice_tail();
@@ -811,7 +811,7 @@ fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error>
 }
 
 fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let frame = stream.slice_frame_raw(stream.pos(), stream.pos() + stream.left());
+    let frame = stream.slice_frame_unchecked(stream.pos(), stream.pos() + stream.left());
     let c = Color::from_frame(frame)?;
     Ok(AttributeValue::Color(c))
 }
