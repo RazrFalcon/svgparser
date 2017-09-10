@@ -15,6 +15,16 @@ use {
 
 const BUF_END: usize = 4;
 
+/// Spaces processing type.
+///
+/// Details: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
+#[derive(Clone, Copy, PartialEq, Debug)]
+#[allow(missing_docs)]
+pub enum XmlSpace {
+    Default,
+    Preserve,
+}
+
 /// XML escaped text to plain text converter.
 ///
 /// Processing is done as described in: https://www.w3.org/TR/SVG11/text.html#WhiteSpace
@@ -43,9 +53,9 @@ const BUF_END: usize = 4;
 /// Version which will allocate a `String`:
 ///
 /// ```
-/// use svgparser::TextUnescape;
+/// use svgparser::{TextUnescape, XmlSpace};
 ///
-/// let s = TextUnescape::unescape("&gt;", false).unwrap();
+/// let s = TextUnescape::unescape("&gt;", XmlSpace::Default).unwrap();
 /// assert_eq!(s, ">");
 /// ```
 pub struct TextUnescape<'a> {
@@ -58,10 +68,10 @@ pub struct TextUnescape<'a> {
 
 impl<'a> TextUnescape<'a> {
     /// Converts provided text into an unescaped one.
-    pub fn unescape(text: &str, preserve_spaces: bool) -> Result<String, Error> {
+    pub fn unescape(text: &str, space: XmlSpace) -> Result<String, Error> {
         let mut v = Vec::new();
         let mut t = TextUnescape::from_str(text);
-        t.set_preserve_spaces(preserve_spaces);
+        t.set_xml_space(space);
         loop {
             match t.parse_next()? {
                 Some(c) => v.push(c),
@@ -73,11 +83,8 @@ impl<'a> TextUnescape<'a> {
     }
 
     /// Sets the flag that prevents spaces from being striped.
-    ///
-    /// - `true` equals `xml:space="preserve"`
-    /// - `false` equals `xml:space="default"`
-    pub fn set_preserve_spaces(&mut self, flag: bool) {
-        self.preserve_spaces = flag;
+    pub fn set_xml_space(&mut self, kind: XmlSpace) {
+        self.preserve_spaces = kind == XmlSpace::Preserve;
     }
 }
 
