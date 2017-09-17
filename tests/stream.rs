@@ -39,6 +39,7 @@ test_number!(number_20, "1em", 1.0);
 test_number!(number_21, "12345678901234567890", 12345678901234567000.0);
 test_number!(number_22, "0.", 0.0);
 test_number!(number_23, "1.3e-2", 0.013);
+test_number!(number_24, "1e", 1.0);
 
 // ---
 
@@ -54,8 +55,8 @@ macro_rules! test_number_err {
 
 test_number_err!(number_err_1, "q",    Error::InvalidNumber(ErrorPos::new(1,1)));
 test_number_err!(number_err_2, "",     Error::InvalidNumber(ErrorPos::new(1,1)));
-test_number_err!(number_err_3, "-",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
-test_number_err!(number_err_4, "+",    Error::UnexpectedEndOfStream(ErrorPos::new(1,2)));
+test_number_err!(number_err_3, "-",    Error::InvalidNumber(ErrorPos::new(1,1)));
+test_number_err!(number_err_4, "+",    Error::InvalidNumber(ErrorPos::new(1,1)));
 test_number_err!(number_err_5, "-q",   Error::InvalidNumber(ErrorPos::new(1,1)));
 test_number_err!(number_err_6, ".",    Error::InvalidNumber(ErrorPos::new(1,1)));
 test_number_err!(number_err_7, "99999999e99999999",  Error::InvalidNumber(ErrorPos::new(1,1)));

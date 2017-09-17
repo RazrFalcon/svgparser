@@ -293,6 +293,11 @@ impl<'a> Stream<'a> {
         Ok(())
     }
 
+    #[inline]
+    fn back_unchecked(&mut self, n: usize) {
+        self.pos -= n;
+    }
+
     /// Advance by `n` chars.
     ///
     /// # Errors
@@ -390,9 +395,11 @@ impl<'a> Stream<'a> {
         while !self.at_end() {
             advance = false;
 
-            if self.is_space_unchecked() {
+            let c = self.curr_char_unchecked();
+
+            if is_space(c) {
                 advance = true;
-            } else if self.is_char_eq_unchecked(b'&') && self.starts_with(b"&#x") {
+            } else if c == b'&' && self.starts_with(b"&#x") {
                 // Check for (#x20 | #x9 | #xD | #xA).
                 if let Some(l) = self.len_to(b';').ok() {
                     let value = self.slice_next_unchecked(l + 1);
@@ -864,7 +871,7 @@ impl<'a> Stream<'a> {
     ///
     /// # Errors
     ///
-    /// Can return most of the `Error` errors.
+    /// Returns only `InvalidNumber`.
     ///
     /// # Examples
     ///
@@ -895,26 +902,23 @@ impl<'a> Stream<'a> {
         }
 
         // consume sign
-        match self.curr_char()? {
+        match self.curr_char_unchecked() {
             b'+' | b'-' => self.advance_unchecked(1), // skip sign
             _ => {}
         }
 
         // consume integer
-        {
+        if !self.at_end() {
             // current char must be a digit or a dot
-
-            let c = self.curr_char()?;
+            let c = self.curr_char_unchecked();
             if is_digit(c) {
                 self.consume_digits();
-            } else if c == b'.' {
-                // nothing
-            } else {
+            } else if c != b'.' {
                 return gen_err!();
             }
+        } else {
+            return gen_err!();
         }
-
-        let mut check_exponent = false;
 
         // consume fraction
         if !self.at_end() {
@@ -929,49 +933,41 @@ impl<'a> Stream<'a> {
                     c = self.curr_char_unchecked();
                 }
             }
-            if c == b'e' || c == b'E' {
-                check_exponent = true;
-            } else {
-                // do nothing
-            }
-        }
-
-        // consume exponent
-        if check_exponent && !self.at_end() {
-            let c = self.curr_char_unchecked();
 
             if c == b'e' || c == b'E' {
                 self.advance_unchecked(1); // skip 'e'
 
-                let c = self.curr_char()?;
-                if c == b'+' || c == b'-' {
-                    self.advance_unchecked(1); // skip sign
-                    self.consume_digits();
-                } else if is_digit(c) {
-                    self.consume_digits();
+                if !self.at_end() {
+                    let c = self.curr_char_unchecked();
+                    if c == b'+' || c == b'-' {
+                        self.advance_unchecked(1); // skip sign
+                        self.consume_digits();
+                    } else if is_digit(c) {
+                        self.consume_digits();
+                    } else {
+                        // not an exponent
+                        // probably 'ex' or 'em'
+                        self.back_unchecked(1);
+                    }
                 } else {
-                    // not an exponent
-                    // probably 'ex' or 'em'
-                    self.back(1)?;
+                    self.back_unchecked(1);
                 }
-            } else {
-                // no exponent
             }
         }
 
-        // use default f64 parser now
         let s = self.slice_region_unchecked(start, self.pos());
-        match f64::from_str(s) {
-            Ok(n) => {
-                if n.is_finite() {
-                    Ok(n)
-                } else {
-                    // inf, nan, etc. are an error
-                    gen_err!()
-                }
+
+        // use default f64 parser now
+
+        let r = f64::from_str(s);
+        if let Ok(n) = r {
+            // inf, nan, etc. are an error
+            if n.is_finite() {
+                return Ok(n);
             }
-            Err(_) => gen_err!(),
         }
+
+        gen_err!()
     }
 
     #[inline]

@@ -24,5 +24,9 @@ bencher = "0.1"
 name = "parser"
 harness = false
 
-# [lib]
-# doctest = false
+[[bench]]
+name = "path"
+harness = false
+
+[lib]
+doctest = false
