@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - All \*\_raw methods in `Stream` module are renamed to \*\_unchecked.
 - `Stream::parse_number` returns only `InvalidNumber` error now.
 
+### Fixed
+- Panic during `Color` parsing.
+
 ## [0.4.2] - 2017-07-08
 ### Fixed
 - `font-size='small'` parsing.

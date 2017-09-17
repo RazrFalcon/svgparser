@@ -81,10 +81,21 @@ impl Color {
             match s.len_to_space_or_end() {
                 7 => {
                     // #rrggbb
-                    s.advance(1)?;
-                    color.red = hex_pair(s.read_unchecked(2).as_bytes());
-                    color.green = hex_pair(s.read_unchecked(2).as_bytes());
-                    color.blue = hex_pair(s.read_unchecked(2).as_bytes());
+
+                    macro_rules! get_hex_pair {
+                        () => ({
+                            s.advance_unchecked(1);
+                            let c1 = s.curr_char_unchecked();
+                            s.advance_unchecked(1);
+                            let c2 = s.curr_char_unchecked();
+                            hex_pair(c1, c2)
+                        })
+                    }
+
+                    color.red = get_hex_pair!();
+                    color.green = get_hex_pair!();
+                    color.blue = get_hex_pair!();
+                    s.advance_unchecked(1);
                 }
                 4 => {
                     // #rgb
@@ -175,8 +186,8 @@ fn short_hex(c: u8) -> u8 {
 }
 
 #[inline]
-fn hex_pair(chars: &[u8]) -> u8 {
-    let h1 = from_hex(chars[0]);
-    let h2 = from_hex(chars[1]);
+fn hex_pair(c1: u8, c2: u8) -> u8 {
+    let h1 = from_hex(c1);
+    let h2 = from_hex(c2);
     (h1 << 4) | h2
 }

@@ -1081,28 +1081,27 @@ impl<'a> Stream<'a> {
             return Ok(Length::new(n, LengthUnit::None));
         }
 
-        let u;
-        if self.starts_with(b"%") {
-            u = LengthUnit::Percent;
+        let u = if self.starts_with(b"%") {
+            LengthUnit::Percent
         } else if self.starts_with(b"em") {
-            u = LengthUnit::Em;
+            LengthUnit::Em
         } else if self.starts_with(b"ex") {
-            u = LengthUnit::Ex;
+            LengthUnit::Ex
         } else if self.starts_with(b"px") {
-            u = LengthUnit::Px;
+            LengthUnit::Px
         } else if self.starts_with(b"in") {
-            u = LengthUnit::In;
+            LengthUnit::In
         } else if self.starts_with(b"cm") {
-            u = LengthUnit::Cm;
+            LengthUnit::Cm
         } else if self.starts_with(b"mm") {
-            u = LengthUnit::Mm;
+            LengthUnit::Mm
         } else if self.starts_with(b"pt") {
-            u = LengthUnit::Pt;
+            LengthUnit::Pt
         } else if self.starts_with(b"pc") {
-            u = LengthUnit::Pc;
+            LengthUnit::Pc
         } else {
-            u = LengthUnit::None;
-        }
+            LengthUnit::None
+        };
 
         match u {
             LengthUnit::Percent => self.advance(1)?,

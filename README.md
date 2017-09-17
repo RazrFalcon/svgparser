@@ -53,6 +53,12 @@ See the documentation for details.
 ### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of the `<length>` type.
 
+### Safety
+
+ - The library should not panic. Any panic considered as a critical bug
+   and should be reported.
+ - The library forbids unsafe code.
+
 ### Usage
 
 Dependency: [Rust](https://www.rust-lang.org/) >= 1.13

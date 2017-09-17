@@ -49,6 +49,13 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
 
 ### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of the `<length>` type.
+
+### Safety
+
+ - The library should not panic. Any panic considered as a critical bug
+   and should be reported.
+ - The library forbids unsafe code.
+
 */
 
 #![doc(html_root_url = "https://docs.rs/svgparser/0.5.0")]

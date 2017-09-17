@@ -139,3 +139,9 @@ test_error!(
     "rgb(-0\x0d",
     Error::UnexpectedEndOfStream(ErrorPos::new(1, 8))
 );
+
+test_error!(
+    invalid_input_2,
+    "#9ߞpx! ;",
+    Error::InvalidColor(ErrorPos::new(1, 9))
+);

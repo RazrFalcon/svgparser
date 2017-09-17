@@ -1,0 +1,46 @@
+[package]
+name = "svgparser-fuzz"
+version = "0.0.1"
+authors = ["Automatically generated"]
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies.svgparser]
+path = ".."
+
+[dependencies.libfuzzer-sys]
+git = "https://github.com/rust-fuzz/libfuzzer-sys.git"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_text_unescape"
+path = "fuzz_targets/fuzz_text_unescape.rs"
+
+[[bin]]
+name = "fuzz_transform"
+path = "fuzz_targets/fuzz_transform.rs"
+
+[[bin]]
+name = "fuzz_svg"
+path = "fuzz_targets/fuzz_svg.rs"
+
+[[bin]]
+name = "fuzz_color"
+path = "fuzz_targets/fuzz_color.rs"
+
+[[bin]]
+name = "fuzz_length"
+path = "fuzz_targets/fuzz_length.rs"
+
+[[bin]]
+name = "fuzz_style"
+path = "fuzz_targets/fuzz_style.rs"
+
+[[bin]]
+name = "fuzz_path"
+path = "fuzz_targets/fuzz_path.rs"

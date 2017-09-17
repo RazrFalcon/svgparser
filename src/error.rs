@@ -96,7 +96,7 @@ impl fmt::Display for Error {
             Error::InvalidTransform(ref pos) =>
                 write!(f, "Invalid transform at {}", pos),
             Error::InvalidAttributeValue(ref pos) =>
-                write!(f, "Invalid attribute at {}", pos),
+                write!(f, "Invalid attribute value at {}", pos),
             Error::InvalidAdvance{ ref expected, ref total, ref pos } =>
                 write!(f, "Attempt to advance to the pos {} from {}, but total len is {}",
                        expected, pos, total),
