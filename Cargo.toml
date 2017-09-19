@@ -29,4 +29,4 @@ name = "path"
 harness = false
 
 [lib]
-doctest = false
+doctest = true

@@ -77,8 +77,6 @@ pub enum Token {
     ClosePath {
         abs: bool,
     },
-    /// The end of the stream.
-    EndOfStream,
 }
 
 /// Tokenizer for the \<path\> data.
@@ -104,7 +102,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     /// - By the SVG spec any invalid data inside path data should stop parsing of this data,
     ///   but not the whole document.
     ///
-    ///   This function will return `Token::EndOfStream` on any kind of error
+    ///   This function will return `Error::EndOfStream` on any kind of error
     ///   and print a warning to stderr.
     ///
     ///   In other words, you will retrieve as much data as possible.
@@ -124,7 +122,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         s.skip_spaces();
 
         if s.at_end() {
-            return Ok(Token::EndOfStream);
+            return Err(Error::EndOfStream);
         }
 
         macro_rules! data_error {
@@ -133,7 +131,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     "Invalid path data at {}. The remaining data is ignored.",
                     s.gen_error_pos()
                 );
-                return Ok(Token::EndOfStream);
+                return Err(Error::EndOfStream);
             })
         }
 
@@ -156,7 +154,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         if !has_prev_cmd && !is_cmd(first_char) {
             warnln!("'{}' is not a command. \
                      The remaining data is ignored.", first_char as char);
-            return Ok(Token::EndOfStream);
+            return Err(Error::EndOfStream);
         }
 
         if !has_prev_cmd {
@@ -165,7 +163,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 _ => {
                     warnln!("First segment must be MoveTo. \
                              The remaining data is ignored.");
-                    return Ok(Token::EndOfStream);
+                    return Err(Error::EndOfStream);
                 }
             }
         }
@@ -183,7 +181,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             if prev_cmd == b'Z' || prev_cmd == b'z' {
                 warnln!("ClosePath cannot be followed by a number. \
                          The remaining data is ignored.");
-                return Ok(Token::EndOfStream);
+                return Err(Error::EndOfStream);
             }
 
             if prev_cmd == b'M' || prev_cmd == b'm' {

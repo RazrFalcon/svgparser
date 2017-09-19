@@ -78,20 +78,20 @@ macro_rules! entity_assert_eq {
 #[test]
 fn parse_empty_1() {
     let mut p = svg::Tokenizer::from_str("");
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_empty_2() {
     let mut p = svg::Tokenizer::from_str(" \t\n \t ");
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_declaration_1() {
     let mut p = svg::Tokenizer::from_str("<?xml text?>");
     basic_assert_eq!(p, svg::Token::Declaration("text"));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -99,21 +99,21 @@ fn parse_declaration_2() {
     let mut p = svg::Tokenizer::from_str("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
     basic_assert_eq!(p,
                svg::Token::Declaration("version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\""));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_comment_1() {
     let mut p = svg::Tokenizer::from_str("<!-- comment -->");
     basic_assert_eq!(p, svg::Token::Comment(" comment "));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_comment_2() {
     let mut p = svg::Tokenizer::from_str("<!-- <tag/> -->");
     basic_assert_eq!(p, svg::Token::Comment(" <tag/> "));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -121,35 +121,35 @@ fn parse_comment_3() {
     let mut p = svg::Tokenizer::from_str("<!-- qwe1 --><!-- qwe2 -->");
     basic_assert_eq!(p, svg::Token::Comment(" qwe1 "));
     basic_assert_eq!(p, svg::Token::Comment(" qwe2 "));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_comment_4() {
     let mut p = svg::Tokenizer::from_str("<!---->");
     basic_assert_eq!(p, svg::Token::Comment(""));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_cdata_1() {
     let mut p = svg::Tokenizer::from_str("<![CDATA[content]]>");
     cdata_assert_eq!(p, "content");
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_cdata_2() {
     let mut p = svg::Tokenizer::from_str("<![CDATA[<message>text</message>]]>");
     cdata_assert_eq!(p, "<message>text</message>");
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_malformed_xml_inside_cdata() {
     let mut p = svg::Tokenizer::from_str("<![CDATA[</this is malformed!</malformed</malformed & worse>]]>");
     cdata_assert_eq!(p, "</this is malformed!</malformed</malformed & worse>");
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -157,7 +157,7 @@ fn parse_multiply_cdata() {
     let mut p = svg::Tokenizer::from_str("<![CDATA[1]]><![CDATA[2]]>");
     cdata_assert_eq!(p, "1");
     cdata_assert_eq!(p, "2");
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -167,7 +167,7 @@ fn parse_cdata_inside_elem_1() {
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
     cdata_assert_eq!(p, "data");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Style)));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -179,14 +179,14 @@ fn parse_cdata_inside_elem_2() {
     cdata_assert_eq!(p, "data");
     basic_assert_eq!(p, svg::Token::Whitespace("\n"));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Style)));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
 fn parse_entity_1() {
     let mut p = svg::Tokenizer::from_str("<!DOCTYPE note SYSTEM \"Note.dtd\">");
     basic_assert_eq!(p, svg::Token::DtdEmpty("note SYSTEM \"Note.dtd\""));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -200,7 +200,7 @@ fn parse_entity_2() {
         svg::Token::DtdStart("html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"
              \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\""));
     basic_assert_eq!(p, svg::Token::DtdEnd);
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -213,7 +213,7 @@ fn parse_entity_3() {
     basic_assert_eq!(p, svg::Token::DtdStart("svg PUBLIC"));
     entity_assert_eq!(p, "ns_extend", "http://ns.adobe.com/Extensibility/1.0/");
     basic_assert_eq!(p, svg::Token::DtdEnd);
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -229,7 +229,7 @@ fn parse_entity_4() {
     basic_assert_eq!(p, svg::Token::DtdStart("svg PUBLIC"));
     entity_assert_eq!(p, "ns_extend", "http://ns.adobe.com/Extensibility/1.0/");
     basic_assert_eq!(p, svg::Token::DtdEnd);
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -237,7 +237,7 @@ fn parse_elem_1() {
     let mut p = svg::Tokenizer::from_str("<svg/>");
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -246,7 +246,7 @@ fn parse_elem_2() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Svg)));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -257,7 +257,7 @@ fn parse_elem_3() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Rect));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Svg)));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -266,7 +266,7 @@ fn parse_attributes_1() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     attr_assert_eq!(p, AId::Version, "1.0");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -275,7 +275,7 @@ fn parse_attributes_2() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     attr_assert_eq!(p, AId::Version, "1.0");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -284,7 +284,7 @@ fn parse_attributes_3() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     attr_assert_eq!(p, AId::Font, "'Verdana'");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -294,7 +294,7 @@ fn parse_attributes_4() {
     attr_assert_eq!(p, AId::Version, "1.0");
     attr_assert_eq!(p, AId::Color, "red");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -303,7 +303,7 @@ fn parse_attributes_5() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     attr_assert_eq!(p, AId::Xmlns, "http://www.w3.org/2000/svg");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -313,7 +313,7 @@ fn parse_attributes_6() {
     attr_assert_eq!(p, AId::Version, "1.0");
     attr_assert_eq!(p, AId::Color, "red");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -323,7 +323,7 @@ fn parse_attributes_7() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     attr_assert_eq!(p, AId::Version, "1.0' color='red");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -333,7 +333,7 @@ fn parse_attributes_8() {
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Svg));
     attr_assert_eq!(p, AId::Version, "1.0");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -344,7 +344,7 @@ fn parse_attributes_9() {
     attr_assert_eq!(p, AId::X1, "1.0");
     attr_assert_eq!(p, AId::XlinkHref, "#link");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -355,7 +355,7 @@ fn parse_attributes_10() {
     attr_assert_eq!(p, AId::Color, "red");
     xml_attr_assert_eq!(p, "mycolor", "red");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -365,7 +365,7 @@ fn parse_text_1() {
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
     text_assert_eq!(p, "text");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseXml("p")));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -375,7 +375,7 @@ fn parse_text_2() {
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
     text_assert_eq!(p, " text ");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseXml("p")));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -393,7 +393,7 @@ fn parse_text_3() {
     text_assert_eq!(p, "q3");
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Tspan)));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Text)));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -403,7 +403,7 @@ fn parse_whitespace_1() {
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Open));
     basic_assert_eq!(p, svg::Token::Whitespace(" "));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::CloseSvg(EId::Text)));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 // whitespaces outside element are ignored
@@ -412,7 +412,7 @@ fn parse_whitespace_2() {
     let mut p = svg::Tokenizer::from_str(" <text/> ");
     basic_assert_eq!(p, svg::Token::SvgElementStart(EId::Text));
     basic_assert_eq!(p, svg::Token::ElementEnd(svg::ElementEnd::Empty));
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 #[test]
@@ -425,7 +425,7 @@ fn skip_byte_order_1() {
     let t = str::from_utf8(&s).unwrap();
 
     let mut p = svg::Tokenizer::from_str(t);
-    assert_eq!(p.parse_next().unwrap(), svg::Token::EndOfStream);
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 // The idea of this tests is to prove that any error correctly reported as svgparser::error,

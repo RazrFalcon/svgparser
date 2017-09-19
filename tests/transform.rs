@@ -15,7 +15,7 @@ macro_rules! test {
             $(
                 assert_eq!(ts.parse_next().unwrap(), $value);
             )*
-            assert_eq!(ts.parse_next().unwrap(), Token::EndOfStream);
+            assert_eq!(ts.parse_next().unwrap_err(), Error::EndOfStream);
         }
     )
 }
@@ -95,5 +95,5 @@ fn error_2() {
 #[test]
 fn error_3() {
     let mut ts = transform::Tokenizer::from_str(" ");
-    assert_eq!(ts.parse_next().unwrap(), Token::EndOfStream);
+    assert_eq!(ts.parse_next().unwrap_err(), Error::EndOfStream);
 }

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Text unescaping support via `TextUnescape`.
+- `Tokens` iterator.
 - Character entity references for whitespaces parsing.
   So #x20, #x9, #xD, #xA will be parsed correctly now.
 
@@ -14,9 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - 100..900 values of the `font-weight` will be parsed as `ValueId` and not as `Number` now.
 - All \*\_raw methods in `Stream` module are renamed to \*\_unchecked.
 - `Stream::parse_number` returns only `InvalidNumber` error now.
+- **Breaking change.** All `EndOfStream` tokens are removed.
+  End of stream is indicated via `Error::EndOfStream` now.
+
+  Prefer using a `Tokens` iterator.
 
 ### Fixed
-- Panic during `Color` parsing.
+- Panic during a `Color` parsing.
 
 ## [0.4.2] - 2017-07-08
 ### Fixed

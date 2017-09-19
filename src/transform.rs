@@ -41,7 +41,6 @@ pub enum Token {
     SkewY {
         angle: f64,
     },
-    EndOfStream,
 }
 
 /// Transform tokenizer.
@@ -96,7 +95,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
         if s.at_end() {
             // empty attribute is still a valid value
-            return Ok(Token::EndOfStream);
+            return Err(Error::EndOfStream);
         }
 
         if s.left() < 5 {

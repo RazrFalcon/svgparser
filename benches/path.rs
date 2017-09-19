@@ -20,23 +20,11 @@ fn load_file(path: &str) -> String {
 
 fn collect_paths(text: &str) -> Vec<String> {
     let mut paths = Vec::new();
-    let mut p = svg::Tokenizer::from_str(text);
-    loop {
-        match p.parse_next() {
-            Ok(t) => {
-                match t {
-                    svg::Token::EndOfStream => break,
-                    svg::Token::SvgAttribute(aid, value) => {
-                        if aid == AttributeId::D {
-                            paths.push(value.slice().to_owned());
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            Err(e) => {
-                panic!("Error: {:?}.", e);
-            }
+    let mut tokens = svg::Tokenizer::from_str(text).tokens();
+
+    for token in &mut tokens {
+        if let svg::Token::SvgAttribute(AttributeId::D, value) = token {
+            paths.push(value.slice().to_owned());
         }
     }
 
@@ -45,19 +33,8 @@ fn collect_paths(text: &str) -> Vec<String> {
 
 fn parse_paths(paths: &[String]) {
     for path in paths {
-        let mut p = path::Tokenizer::from_str(path);
-        loop {
-            match p.parse_next() {
-                Ok(token) => {
-                    if token == path::Token::EndOfStream {
-                        break;
-                    }
-                }
-                Err(_) => {
-                    break;
-                }
-            }
-        }
+        let mut tokens = path::Tokenizer::from_str(path).tokens();
+        for _ in &mut tokens {}
     }
 }
 

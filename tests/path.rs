@@ -4,7 +4,7 @@
 
 extern crate svgparser;
 
-use svgparser::Tokenize;
+use svgparser::{Tokenize, Error};
 use svgparser::path::{Tokenizer, Token};
 
 macro_rules! test {
@@ -15,7 +15,7 @@ macro_rules! test {
             $(
                 assert_eq!(s.parse_next().unwrap(), $seg);
             )*
-            assert_eq!(s.parse_next().unwrap(), Token::EndOfStream);
+            assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
         }
     )
 }
@@ -229,5 +229,5 @@ fn invalid_2() {
     let mut s = Tokenizer::from_str("M0 0 Z 2");
     assert_eq!(s.parse_next().unwrap(), Token::MoveTo { abs: true, x: 0.0, y: 0.0 });
     assert_eq!(s.parse_next().unwrap(), Token::ClosePath { abs: true });
-    assert_eq!(s.parse_next().unwrap(), Token::EndOfStream);
+    assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
 }

@@ -26,8 +26,6 @@ pub enum Token<'a> {
     SvgAttribute(AttributeId, TextFrame<'a>),
     /// Tuple contains ENTITY reference. Just a name without `&` and `;`.
     EntityRef(&'a str),
-    /// The end of the stream.
-    EndOfStream,
 }
 
 impl<'a> fmt::Debug for Token<'a> {
@@ -39,8 +37,6 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "SvgAttribute({:?}, {:?})", id, value),
             Token::EntityRef(name) =>
                 write!(f, "EntityRef({})", name),
-            Token::EndOfStream =>
-                write!(f, "EndOfStream"),
         }
     }
 }
@@ -49,8 +45,6 @@ impl<'a> fmt::Debug for Token<'a> {
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
 }
-
-// TODO: create InvalidStyle instead of InvalidAttributeValue
 
 impl<'a> Tokenize<'a> for Tokenizer<'a> {
     type Token = Token<'a>;
@@ -78,7 +72,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         self.stream.skip_spaces();
 
         if self.stream.at_end() {
-            return Ok(Token::EndOfStream);
+            return Err(Error::EndOfStream);
         }
 
         let c = self.stream.curr_char_unchecked();

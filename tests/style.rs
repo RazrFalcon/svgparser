@@ -28,7 +28,7 @@ macro_rules! test_attr {
                     _ => unreachable!(),
                 }
             )*
-            assert_eq!(s.parse_next().unwrap(), style::Token::EndOfStream);
+            assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
         }
     )
 }
@@ -75,7 +75,7 @@ fn parse_style_9() {
     let mut s = style::Tokenizer::from_str("&st0; &st1;");
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("st0"));
     assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("st1"));
-    assert_eq!(s.parse_next().unwrap(), style::Token::EndOfStream);
+    assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
 test_attr!(parse_style_10, "/**/",
@@ -84,19 +84,19 @@ test_attr!(parse_style_10, "/**/",
 #[test]
 fn invalid_1() {
     let mut s = style::Tokenizer::from_str(":");
-    assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,1)));
+    assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,1)));
 }
 
 #[test]
 fn invalid_2() {
     let mut s = style::Tokenizer::from_str("name:'");
-    assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,7)));
+    assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,7)));
 }
 
 #[test]
 fn invalid_3() {
     let mut s = style::Tokenizer::from_str("&\x0a96M*9");
-    assert_eq!(s.parse_next().err().unwrap(), Error::InvalidAttributeValue(ErrorPos::new(1,2)));
+    assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,2)));
 }
 
 #[test]

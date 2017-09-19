@@ -57,8 +57,6 @@ pub enum Token<'a> {
     DtdEnd,
     /// The token contains declaration data without `<?` and `?>`.
     Declaration(&'a str),
-    /// The end of the stream.
-    EndOfStream,
 }
 
 // TODO: remove
@@ -100,8 +98,6 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "DtdEnd"),
             Token::Declaration(s) =>
                 write!(f, "Declaration({})", s),
-            Token::EndOfStream =>
-                write!(f, "EndOfStream"),
         }
     }
 }
@@ -163,7 +159,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             State::Unknown => {
                 if self.stream.at_end() {
                     self.state = State::Finished;
-                    return Ok(Token::EndOfStream);
+                    return Err(Error::EndOfStream);
                 }
 
                 if self.stream.starts_with(b"<?") {
@@ -231,10 +227,9 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             State::AtStart => {
                 if self.stream.at_end() {
                     self.state = State::Finished;
-                    return Ok(Token::EndOfStream);
+                    return Err(Error::EndOfStream);
                 }
 
-                // TODO: is needed after str::from_utf8()?
                 // skip byte order
                 if self.stream.is_char_eq(0xEF)? {
                     self.stream.advance(3)?; // EF BB BF
@@ -244,7 +239,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 self.parse_next()
             }
             State::Finished => {
-                Ok(Token::EndOfStream)
+                Err(Error::EndOfStream)
             }
         }
     }

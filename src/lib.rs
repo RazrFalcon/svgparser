@@ -74,7 +74,7 @@ pub use error::{Error, ErrorPos};
 pub use length::{Length, LengthUnit};
 pub use stream::{TextFrame, Stream};
 pub use text::{TextUnescape, XmlSpace};
-pub use tokenize::Tokenize;
+pub use tokenize::{Tokenize, Tokens};
 pub use value_id::ValueId;
 pub use values_list::{NumberList, LengthList};
 
@@ -82,12 +82,12 @@ pub use values_list::{NumberList, LengthList};
 #[macro_export]
 macro_rules! warnln {
     ($msg:expr) => ({
-        use std::io::Write; // TODO: remove
+        use std::io::Write;
         writeln!(&mut ::std::io::stderr(), "Warning: {}", $msg).unwrap()
     });
 
     ($fmt:expr, $($arg:tt)*) => ({
-        use std::io::Write; // TODO: remove
+        use std::io::Write;
         writeln!(&mut ::std::io::stderr(), concat!("Warning: ", $fmt), $($arg)*).unwrap()
     });
 }
@@ -109,5 +109,3 @@ mod text;
 mod tokenize;
 mod value_id;
 mod values_list;
-
-// TODO: add a prelude module

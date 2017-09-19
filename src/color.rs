@@ -38,7 +38,7 @@ impl Color {
 
     /// Parses `Color` from `TextFrame`.
     ///
-    /// Parsing is done according to [`spec`]:
+    /// Parsing is done according to [spec]:
     ///
     /// ```text
     /// color    ::= "#" hexdigit hexdigit hexdigit (hexdigit hexdigit hexdigit)?
@@ -49,7 +49,7 @@ impl Color {
     /// comma    ::= wsp* "," wsp*
     /// ```
     /// \* The SVG spec has an error. There should be `number`,
-    /// not an `integer` for percent values ([`details`]).
+    /// not an `integer` for percent values ([details]).
     ///
     /// # Errors
     ///
@@ -65,8 +65,8 @@ impl Color {
     ///
     ///  - Any non-`hexdigit` bytes will be treated as `0`.
     ///
-    /// [`spec`]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
-    /// [`details`]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
+    /// [spec]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
+    /// [details]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
     pub fn from_frame(frame: TextFrame) -> Result<Color, Error> {
         let mut s = Stream::from_frame(frame);
 
@@ -170,7 +170,6 @@ impl FromStr for Color {
 
 #[inline]
 fn from_hex(c: u8) -> u8 {
-    // TODO: validate?
     match c {
         b'0'...b'9' => c - b'0',
         b'a'...b'f' => c - b'a' + 10,

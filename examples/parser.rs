@@ -64,15 +64,12 @@ fn parse(text: &str) -> Result<(), Error> {
 
     // Begin parsing.
 
-    // Create a tokenizer.
-    let mut p = svg::Tokenizer::from_str(text);
+    // Create a tokenizer iterator.
+    let mut p = svg::Tokenizer::from_str(text).tokens();
 
-    // Loop until 'EndOfStream'.
-    //
-    // We don't use iterators for a better flow control.
-    loop {
-        // Get next token.
-        match p.parse_next()? {
+    // Loop through tokens.
+    for token in &mut p {
+        match token {
             svg::Token::XmlElementStart(tag_name) => {
                 // Emits on a non-SVG element.
                 //
@@ -157,13 +154,10 @@ fn parse(text: &str) -> Result<(), Error> {
 
                 println!("Declaration node: {}", declaration);
             }
-            svg::Token::EndOfStream => {
-                // Parsing finished.
-
-                break;
-            }
         }
     }
+
+    p.error()?;
 
     Ok(())
 }
@@ -180,33 +174,23 @@ fn parse_svg_attribute(eid: ElementId, aid: AttributeId, value: TextFrame, depth
         AttributeId::D => {
             print_indent!("SVG path:", depth);
 
-            let mut p = path::Tokenizer::from_frame(value);
-            loop {
-                match p.parse_next() {
-                    Ok(token) => {
-                        if token != path::Token::EndOfStream {
-                            print_indent!("{:?}", depth + 1, token)
-                        } else {
-                            break;
-                        }
-                    }
-                    Err(e) => {
-                        // By the SVG spec, any invalid data occurred in the path should
-                        // stop parsing of this path, but not the whole document.
-                        // So we just show a warning and continue parsing.
-                        use std::io::Write;
-                        writeln!(&mut ::std::io::stderr(), "Warning: {:?}", e).unwrap();
-                        break;
-                    }
-                }
+            // By the SVG spec, any invalid data occurred in the path should
+            // stop parsing of this path, but not the whole document.
+            //
+            // This function will return `Error::EndOfStream` on any kind of error
+            // and will print a warning to stderr.
+            // So there is no point in error checking.
+            let mut p = path::Tokenizer::from_frame(value).tokens();
+            for segment in &mut p {
+                print_indent!("{:?}", depth + 1, segment)
             }
         }
         AttributeId::Style => {
             print_indent!("SVG style:", depth);
 
-            let mut p = style::Tokenizer::from_frame(value);
-            loop {
-                match p.parse_next()? {
+            let mut p = style::Tokenizer::from_frame(value).tokens();
+            for token in &mut p {
+                match token {
                     style::Token::XmlAttribute(name, value) => {
                         print_indent!("Non-SVG attribute: {} = '{}'", depth + 1, name, value);
                     }
@@ -216,26 +200,22 @@ fn parse_svg_attribute(eid: ElementId, aid: AttributeId, value: TextFrame, depth
                     style::Token::EntityRef(name) => {
                         print_indent!("Entity reference: {}", depth + 1, name)
                     }
-                    style::Token::EndOfStream => {
-                        break;
-                    }
                 }
             }
+
+            p.error()?;
         }
           AttributeId::Transform
         | AttributeId::GradientTransform
         | AttributeId::PatternTransform => {
             print_indent!("SVG transform:", depth);
 
-            let mut p = transform::Tokenizer::from_frame(value);
-            loop {
-                let token = p.parse_next()?;
-                if token != transform::Token::EndOfStream {
-                    print_indent!("{:?}", depth + 1, token)
-                } else {
-                    break;
-                }
+            let mut p = transform::Tokenizer::from_frame(value).tokens();
+            for ts in &mut p {
+                print_indent!("{:?}", depth + 1, ts)
             }
+
+            p.error()?;
         }
         _ => {
             // We need ElementId for attribute parsing.

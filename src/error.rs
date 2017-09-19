@@ -35,6 +35,11 @@ impl fmt::Display for ErrorPos {
 /// List of all errors.
 #[derive(Clone, Copy, PartialEq)]
 pub enum Error {
+    /// The end of the stream.
+    ///
+    /// Technically, it's not an error, but an indication
+    /// that current tokenizer is ended it's parsing.
+    EndOfStream,
     /// The steam ended earlier than we expected.
     ///
     /// Should only appear on invalid input data.
@@ -79,6 +84,8 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Error::EndOfStream =>
+                write!(f, "End of stream"),
             Error::UnexpectedEndOfStream(ref pos) =>
                 write!(f, "Unexpected end of stream at {}", pos),
             Error::InvalidChar{ref current, ref expected, ref pos} =>

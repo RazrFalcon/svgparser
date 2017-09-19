@@ -19,21 +19,8 @@ fn load_file(path: &str) -> String {
 }
 
 fn parse(text: &str) {
-    let mut p = svg::Tokenizer::from_str(text);
-    loop {
-        match p.parse_next() {
-            Ok(t) => {
-                match t {
-                    svg::Token::EndOfStream => break,
-                    _ => {}
-                }
-            }
-            Err(e) => {
-                println!("Error: {:?}.", e);
-                return;
-            }
-        }
-    }
+    let mut tokens = svg::Tokenizer::from_str(text).tokens();
+    for _ in &mut tokens { }
 }
 
 fn skull(bencher: &mut Bencher) {
