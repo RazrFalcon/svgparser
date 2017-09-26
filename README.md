@@ -1,12 +1,10 @@
-## libsvgparser
+## libsvgparser [![Build Status](https://travis-ci.org/RazrFalcon/libsvgparser.svg?branch=master)](https://travis-ci.org/RazrFalcon/libsvgparser)
 
 *libsvgparser* is a streaming parser/tokenizer for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
 It's not an XML parser since it does not only split the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
-
-[![Build Status](https://travis-ci.org/RazrFalcon/libsvgparser.svg?branch=master)](https://travis-ci.org/RazrFalcon/libsvgparser)
 
 ### [Documentation](https://docs.rs/svgparser/)
 
@@ -48,7 +46,6 @@ See the documentation for details.
    but will be bound to 0..1 range.
  - Implicit path commands are not supported. All commands are parsed as explicit.
  - Implicit MoveTo commands will be automatically converted into explicit LineTo.
- - No escape support for text. It will be emitted as is.
 
 ### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of the `<length>` type.
@@ -59,6 +56,16 @@ See the documentation for details.
    and should be reported.
  - The library forbids unsafe code.
 
+### Alternatives
+
+- [svg](https://crates.io/crates/svg), which has about 10% of `svgparser` features.
+  Also has minimal writing capabilities, unlike `svgparser`, which is parser only.
+
+If you need writing and DOM manipulations - checkout
+[svgdom](https://crates.io/crates/svgdom) crate, which is built on top of `svgparser`.
+
+If you know about other alternatives - please send a pull request.
+
 ### Usage
 
 Dependency: [Rust](https://www.rust-lang.org/) >= 1.13
@@ -67,7 +74,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgparser = "0.4"
+svgparser = "0.5"
 ```
 
 ### License
