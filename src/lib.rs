@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /*!
-*libsvgparser* is a streaming parser/tokenizer for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
+*libsvgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
 It's not an XML parser since it does not only split the content into the XML nodes,
@@ -45,7 +45,6 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
    but will be bound to 0..1 range.
  - Implicit path commands are not supported. All commands are parsed as explicit.
  - Implicit MoveTo commands will be automatically converted into explicit LineTo.
- - No escape support for text. It will be emitted as is.
 
 ### Differences between *libsvgparser* and SVG spec
  - `<percentage>` type is part of the `<length>` type.
@@ -55,7 +54,6 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - The library should not panic. Any panic considered as a critical bug
    and should be reported.
  - The library forbids unsafe code.
-
 */
 
 #![doc(html_root_url = "https://docs.rs/svgparser/0.5.0")]
