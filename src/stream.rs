@@ -958,7 +958,6 @@ impl<'a> Stream<'a> {
         let s = self.slice_region_unchecked(start, self.pos());
 
         // use default f64 parser now
-
         let r = f64::from_str(s);
         if let Ok(n) = r {
             // inf, nan, etc. are an error

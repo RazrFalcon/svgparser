@@ -207,13 +207,12 @@ fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
 
 fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
     // prefixed attributes are not supported, aka '-webkit-*'
-    let l = stream.len_to_or_end(b';');
-    warnln!("Style attribute '{}' is skipped.",
-             stream.slice_next_unchecked(l));
 
-    stream.advance_unchecked(l);
-    if !stream.at_end() {
-        stream.advance_unchecked(1);
+    stream.advance_unchecked(1); // -
+    let t = parse_attribute(stream)?;
+
+    if let Token::XmlAttribute(name, _) = t {
+        warnln!("Style attribute '-{}' is skipped.", name);
     }
 
     Ok(())

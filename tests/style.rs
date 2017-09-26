@@ -78,7 +78,10 @@ fn parse_style_9() {
     assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
 }
 
-test_attr!(parse_style_10, "/**/",
+test_attr!(parse_style_10, "/**/", );
+
+test_attr!(parse_style_11, "font-family:Cantarell;-inkscape-font-specification:&apos;Cantarell Bold&apos;",
+    (AId::FontFamily, "Cantarell")
 );
 
 #[test]
