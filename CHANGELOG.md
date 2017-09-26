@@ -6,14 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [0.4.3] - 2017-09-03
+## [0.5.0] - 2017-09-26
 ### Added
 - Text unescaping support via `TextUnescape`.
 - `Tokens` iterator.
-- Character entity references for whitespaces parsing.
-  So #x20, #x9, #xD, #xA will be parsed correctly now.
 
-<<<<<<< HEAD
 ### Changed
 - 100..900 values of the `font-weight` will be parsed as `ValueId` and not as `Number` now.
 - All \*\_raw methods in `Stream` module are renamed to \*\_unchecked.
@@ -25,6 +22,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Panic during a `Color` parsing.
+
+## [0.4.3] - 2017-09-03
+### Added
+- Character entity references for whitespaces parsing.
+  So #x20, #x9, #xD, #xA will be parsed correctly now.
+
+### Fixed
 - Prefixed items parsing inside a style attribute.
 
 ## [0.4.2] - 2017-07-08
@@ -153,7 +157,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/RazrFalcon/libsvgparser/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/RazrFalcon/libsvgparser/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/RazrFalcon/libsvgparser/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/RazrFalcon/libsvgparser/compare/v0.4.0...v0.4.1
