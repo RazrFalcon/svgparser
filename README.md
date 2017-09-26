@@ -6,6 +6,16 @@ data format without heap allocations.
 It's not an XML parser since it does not only split the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
+**Table of Contents**
+- [Documentation](#documentation)
+- [Supported SVG types](#supported-svg-types)
+- [Benefits](#benefits)
+- [Limitations](#limitations)
+- [Safety](#safety)
+- [Alternatives](#alternatives)
+- [Usage](#usage)
+- [License](#license)
+
 ### [Documentation](https://docs.rs/svgparser/)
 
 ### Supported SVG types
@@ -46,9 +56,6 @@ See the documentation for details.
    but will be bound to 0..1 range.
  - Implicit path commands are not supported. All commands are parsed as explicit.
  - Implicit MoveTo commands will be automatically converted into explicit LineTo.
-
-### Differences between *libsvgparser* and SVG spec
- - `<percentage>` type is part of the `<length>` type.
 
 ### Safety
 

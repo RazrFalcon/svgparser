@@ -46,9 +46,6 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - Implicit path commands are not supported. All commands are parsed as explicit.
  - Implicit MoveTo commands will be automatically converted into explicit LineTo.
 
-### Differences between *libsvgparser* and SVG spec
- - `<percentage>` type is part of the `<length>` type.
-
 ### Safety
 
  - The library should not panic. Any panic considered as a critical bug
