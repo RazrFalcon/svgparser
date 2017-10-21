@@ -32,4 +32,5 @@
         line
         text
     </text>
+    <text>character entity references: &gt; &#0062; &#x003E;</text>
 </svg>

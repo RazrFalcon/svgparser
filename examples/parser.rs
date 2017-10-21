@@ -4,16 +4,18 @@ use std::{env, fs, str};
 use std::io::Read;
 
 use svgparser::{
-    svg,
     path,
-    transform,
     style,
-    Tokenize,
+    svg,
+    transform,
     AttributeId,
-    ElementId,
-    TextFrame,
     AttributeValue,
+    ElementId,
     Error,
+    TextFrame,
+    TextUnescape,
+    Tokenize,
+    XmlSpace,
 };
 
 fn main() {
@@ -81,7 +83,7 @@ fn parse(text: &str) -> Result<(), Error> {
                 // Emits on an SVG element.
                 //
                 // Note that this token represent only '<tag' part.
-                // Attributes and closing tag will be emitted next.
+                // Attributes and closing tag will be emitted later.
                 //
                 // You can check list of all SVG elements here: codegen/spec/elements.txt
 
@@ -116,8 +118,12 @@ fn parse(text: &str) -> Result<(), Error> {
                 // Basically everything between > and <.
                 //
                 // Token::Whitespace will not be emitted inside Token::Text.
+                //
+                // Use 'TextUnescape' to convert text entity references,
+                // remove unneeded spaces and other.
 
-                print_indent!("Text node: '{}'", depth + 1, text.slice());
+                print_indent!("Text node: '{}'", depth + 1,
+                              TextUnescape::unescape(text.slice(), XmlSpace::Default)?);
             }
             svg::Token::Cdata(cdata) => {
                 // CDATA usually used inside the 'style' element and contain CSS,

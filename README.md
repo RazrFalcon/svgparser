@@ -6,7 +6,7 @@ data format without heap allocations.
 It's not an XML parser since it does not only split the content into the XML nodes,
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
-**Table of Contents**
+## Table of Contents
 - [Documentation](#documentation)
 - [Supported SVG types](#supported-svg-types)
 - [Benefits](#benefits)
