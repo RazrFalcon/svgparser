@@ -162,7 +162,8 @@ fn gen_colors() -> Result<()> {
     writeln!(f, "static {}: ::phf::Map<&'static str, {}> = {};\n", map_name, struct_name, map_data)?;
 
     writeln!(f, "pub fn rgb_color_from_name(text: &str) -> Option<{}> {{", struct_name)?;
-    writeln!(f, "    {}.get(text).cloned()", map_name)?;
+    writeln!(f, "    let s = text.to_lowercase();")?;
+    writeln!(f, "    {}.get(s.as_str()).cloned()", map_name)?;
     writeln!(f, "}}")?;
 
     Ok(())

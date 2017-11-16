@@ -192,5 +192,6 @@ static COLORS: ::phf::Map<&'static str, Color> = ::phf::Map {
 };
 
 pub fn rgb_color_from_name(text: &str) -> Option<Color> {
-    COLORS.get(text).cloned()
+    let s = text.to_lowercase();
+    COLORS.get(s.as_str()).cloned()
 }

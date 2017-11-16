@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Case-insensitive parsing for color names.
 
 ## [0.5.0] - 2017-09-26
 ### Added

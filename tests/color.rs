@@ -84,6 +84,18 @@ test_parse!(
 );
 
 test_parse!(
+    name_red_upper_case,
+    "RED",
+    Color::new(255, 0, 0)
+);
+
+test_parse!(
+    name_red_mixed_case,
+    "ReD",
+    Color::new(255, 0, 0)
+);
+
+test_parse!(
     name_cornflowerblue,
     "cornflowerblue",
     Color::new(100, 149, 237)
@@ -101,18 +113,6 @@ macro_rules! test_error {
 test_error!(
     case_insensitive_parsing_not_supported_1,
     "RGB(50, 50, 50)",
-    Error::InvalidColor(ErrorPos::new(1, 1))
-);
-
-test_error!(
-    case_insensitive_parsing_not_supported_2,
-    "Red",
-    Error::InvalidColor(ErrorPos::new(1, 1))
-);
-
-test_error!(
-    case_insensitive_parsing_not_supported_3,
-    "RED",
     Error::InvalidColor(ErrorPos::new(1, 1))
 );
 
