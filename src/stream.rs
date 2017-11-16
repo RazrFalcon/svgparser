@@ -72,6 +72,14 @@ impl<'a> TextFrame<'a> {
         &self.text[self.start..self.end]
     }
 
+    /// Returns an underling string region as `TextFrame`.
+    pub fn slice_region(&self, start: usize, end: usize) -> TextFrame<'a> {
+        let start = self.start + start;
+        let end = self.start + end;
+
+        TextFrame::from_substr(self.text, start, end)
+    }
+
     /// Returns an underling string.
     pub fn full_slice(&self) -> &'a str {
         &self.text
@@ -767,7 +775,7 @@ impl<'a> Stream<'a> {
     pub fn slice_frame_unchecked(&self, start: usize, end: usize) -> TextFrame<'a> {
         debug_assert!(start <= end);
 
-        TextFrame::from_substr(self.frame.slice(), start, end)
+        self.frame.slice_region(start, end)
     }
 
     /// Returns complete data of the stream.
@@ -788,8 +796,9 @@ impl<'a> Stream<'a> {
 
     /// Returns complete data of the stream as `TextFrame`.
     #[inline]
+    #[deprecated]
     pub fn slice_frame(&self) -> TextFrame<'a> {
-        TextFrame::from_substr(self.frame.slice(), self.frame.start(), self.frame.end())
+        self.frame.slice_region(self.frame.start(), self.frame.end())
     }
 
     /// Returns tail data of the stream.

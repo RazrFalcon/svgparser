@@ -60,11 +60,11 @@ test!(paint_7, AId::Stroke, "url(#link) red",
 test!(paint_8, AId::Fill, "url(#link) none",
     AV::FuncIRIWithFallback("link", PaintFallback::PredefValue(ValueId::None)));
 
-// color is last type that we check during parsing <paint>, so any error will be like that
-test_err!(paint_err_1, AId::Fill, "#link", Error::InvalidColor(ErrorPos::new(1, 1)));
-
 test!(ref_1, AId::Class, "&ref;", AV::EntityRef("ref"));
 
 test!(eb_1, AId::EnableBackground, "new    ", AV::String("new"));
+
+// color is last type that we check during parsing <paint>, so any error will be like that
+test_err!(paint_err_1, AId::Fill, "#link", Error::InvalidColor(ErrorPos::new(1, 1)));
 
 // TODO: test all supported attributes, probably via codegen.

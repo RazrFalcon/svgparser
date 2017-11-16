@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Case-insensitive parsing for color names.
 
+### Fixed
+- Error position calculation.
+
 ## [0.5.0] - 2017-09-26
 ### Added
 - Text unescaping support via `TextUnescape`.
