@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Case-insensitive parsing for color names.
 - `svg::Token::ProcessingInstruction`.
+- `Stream::consume_string`.
+- `Stream::consume_name`.
+
+### Changed
+- `Stream::read_unchecked` and `Stream::read_to` returns `TextFrame` instead of `&str` now.
 
 ### Fixed
 - Error position calculation.

@@ -743,7 +743,7 @@ fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>
     if !stream.at_end() && stream.is_char_eq_unchecked(b'u') {
         try_opt!(stream.advance(5).ok());
         let link_len = try_opt!(stream.len_to(b')').ok());
-        let link = stream.read_unchecked(link_len);
+        let link = stream.read_unchecked(link_len).slice();
 
         stream.advance_unchecked(1); // ')'
         stream.skip_spaces();

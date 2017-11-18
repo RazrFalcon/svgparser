@@ -139,6 +139,33 @@ fn is_letter(c: u8) -> bool {
     }
 }
 
+fn is_name_start_char(c: u8) -> bool {
+    match c {
+          b'A'...b'Z'
+        | b'a'...b'z'
+        | 0xC0...0xD6
+        | 0xD8...0xF6
+        | b':'
+        | b'_' => true,
+        _ => false,
+    }
+}
+
+fn is_name_char(c: u8) -> bool {
+    if is_name_start_char(c) {
+        return true;
+    }
+
+    if is_digit(c) {
+        return true;
+    }
+
+    match c {
+        b'-' | b'.' | 0xB7 => true,
+        _ => false,
+    }
+}
+
 impl<'a> Stream<'a> {
     /// Constructs a new `Stream` from string.
     pub fn from_frame(text_frame: TextFrame<'a>) -> Stream {
@@ -537,21 +564,6 @@ impl<'a> Stream<'a> {
         is_digit(self.curr_char_unchecked())
     }
 
-    /// Checks that the current char is a valid part of an ident token.
-    #[inline]
-    pub fn is_ident_unchecked(&self) -> bool {
-        let c = self.curr_char_unchecked();
-        match c {
-              b'0'...b'9'
-            | b'A'...b'Z'
-            | b'a'...b'z'
-            | b'-'
-            | b'_'
-            | b':' => true,
-            _ => false,
-        }
-    }
-
     #[inline]
     fn get_char_unchecked(&self, pos: usize) -> u8 {
         self.text.as_bytes()[pos]
@@ -704,13 +716,12 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("Some text.");
-    /// assert_eq!(s.read_unchecked(4), "Some");
+    /// assert_eq!(s.read_unchecked(4).slice(), "Some");
     /// assert_eq!(s.pos(), 4);
     /// ```
-    #[inline]
-    pub fn read_unchecked(&mut self, len: usize) -> &'a str {
-        let s = self.slice_next_unchecked(len);
-        self.advance_unchecked(s.len());
+    pub fn read_unchecked(&mut self, len: usize) -> TextFrame<'a> {
+        let s = self.slice_frame_unchecked(self.pos, self.pos + len);
+        self.advance_unchecked(len);
         s
     }
 
@@ -731,11 +742,10 @@ impl<'a> Stream<'a> {
     /// use svgparser::Stream;
     ///
     /// let mut s = Stream::from_str("Some text.");
-    /// assert_eq!(s.read_to(b'm').unwrap(), "So");
+    /// assert_eq!(s.read_to(b'm').unwrap().slice(), "So");
     /// assert_eq!(s.pos(), 2);
     /// ```
-    #[inline]
-    pub fn read_to(&mut self, c: u8) -> Result<&'a str, Error> {
+    pub fn read_to(&mut self, c: u8) -> Result<TextFrame<'a>, Error> {
         let len = self.len_to(c)?;
         let s = self.read_unchecked(len);
         Ok(s)
@@ -867,8 +877,64 @@ impl<'a> Stream<'a> {
                 pos: self.gen_error_pos(),
             });
         }
+
         self.advance_unchecked(1);
         Ok(())
+    }
+
+    /// Consumes selected string.
+    ///
+    /// # Errors
+    ///
+    /// If of the chars is not equal - we will get `Error::InvalidChar`.
+    pub fn consume_string(&mut self, text: &[u8]) -> Result<(), Error> {
+        if !self.starts_with(text) {
+            for c in text {
+                self.consume_char(*c)?;
+            }
+
+            // unreachable
+        }
+
+        self.advance_unchecked(text.len());
+        Ok(())
+    }
+
+    /// Consumes XML name.
+    ///
+    /// Based on https://www.w3.org/TR/xml/#NT-Name, but doesn't follow it strictly.
+    pub fn consume_name(&mut self) -> Result<&'a str, Error> {
+        if self.at_end() {
+            return Err(Error::InvalidSvgToken(self.gen_error_pos()));
+        }
+
+        let start = self.pos();
+
+        if is_name_start_char(self.curr_char()?) {
+            self.advance_unchecked(1);
+        } else {
+            return Err(Error::InvalidSvgToken(self.gen_error_pos()));
+        }
+
+        while !self.at_end() {
+            let c = self.curr_char_unchecked();
+            if !is_name_char(c) {
+                break;
+            }
+
+            self.advance_unchecked(1);
+        }
+
+        if !self.is_char_boundary(start) || !self.is_char_boundary(self.pos) {
+            return Err(Error::InvalidSvgToken(self.gen_error_pos()));
+        }
+
+        // TODO: implement read_back(start_pos)
+        Ok(self.slice_region_unchecked(start, self.pos()))
+    }
+
+    fn is_char_boundary(&self, idx: usize) -> bool {
+        self.frame.text.is_char_boundary(idx)
     }
 
     /// Parses number from the stream.

@@ -539,7 +539,7 @@ fn invalid_structure_3() {
 #[test]
 fn invalid_structure_4() {
     let mut p = svg::Tokenizer::from_str("<?></g");
-    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1, 3)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 3)));
 }
 
 #[test]
@@ -566,4 +566,10 @@ fn invalid_structure_7() {
 fn invalid_structure_8() {
     let mut p = svg::Tokenizer::from_str("<!-->");
     assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 5)));
+}
+
+#[test]
+fn invalid_structure_9() {
+    let mut p = svg::Tokenizer::from_str("<ջOCTYPE");
+    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 3)));
 }

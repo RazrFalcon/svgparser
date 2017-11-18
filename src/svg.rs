@@ -4,7 +4,6 @@
 
 //! Module for parsing SVG structure.
 
-use std::cmp;
 use std::fmt;
 use std::str;
 
@@ -212,8 +211,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     self.parse_dtd()
                 } else if self.stream.starts_with(b"</") {
                     self.stream.advance(2)?; // </
-                    let tag_name = self.stream.read_to(b'>')?;
-                    self.stream.advance(1)?; // >
+                    let tag_name = self.stream.consume_name()?;
+                    self.stream.consume_char(b'>')?;
 
                     if self.depth == 0 {
                         // Error will occur on the next closing tag after invalid,
@@ -287,26 +286,20 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 
 impl<'a> Tokenizer<'a> {
     fn parse_pi(&mut self) -> Result<Token<'a>, Error> {
-        self.stream.consume_char(b'<')?;
-        self.stream.consume_char(b'?')?;
+        self.stream.consume_string(b"<?")?;
 
-        let let_to_space = self.stream.len_to(b' ')?;
-        let let_to_end = self.stream.len_to(b'?')?;
-
-        let target = self.stream.read_unchecked(cmp::min(let_to_space, let_to_end));
+        let target = self.stream.consume_name()?;
 
         self.stream.skip_spaces();
 
         if self.stream.is_char_eq(b'?')? {
-            self.stream.consume_char(b'?')?;
-            self.stream.consume_char(b'>')?;
+            self.stream.consume_string(b"?>")?;
 
             Ok(Token::ProcessingInstruction(target, None))
         } else {
-            let content = self.stream.read_to(b'?')?;
+            let content = self.stream.read_to(b'?')?.slice();
 
-            self.stream.consume_char(b'?')?;
-            self.stream.consume_char(b'>')?;
+            self.stream.consume_string(b"?>")?;
 
             if target == "xml" {
                 // TODO: parse attributes
@@ -417,7 +410,7 @@ impl<'a> Tokenizer<'a> {
         if self.stream.starts_with(b"<!ENTITY") {
             self.stream.advance(9)?; // '<!ENTITY '
 
-            let key = self.stream.read_to(b' ')?;
+            let key = self.stream.read_to(b' ')?.slice();
 
             self.stream.skip_spaces();
             self.stream.consume_char(b'"')?;
@@ -461,12 +454,7 @@ impl<'a> Tokenizer<'a> {
         debug_assert!(self.stream.is_char_eq_unchecked(b'<'));
         self.stream.advance(1)?; // <
 
-        let start_pos = self.stream.pos();
-
-        // consume a tag name
-        while !self.stream.at_end() && self.stream.is_ident_unchecked() {
-            self.stream.advance(1)?;
-        }
+        let tag_name = self.stream.consume_name()?;
 
         // check that current char is a valid one:
         // '<tagname '
@@ -484,13 +472,6 @@ impl<'a> Tokenizer<'a> {
             return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
         }
 
-        // check that element has tag name
-        if start_pos == self.stream.pos() {
-            return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
-        }
-
-        // TODO: implement read_back(start_pos)
-        let tag_name = self.stream.slice_region_unchecked(start_pos, self.stream.pos());
         self.stream.skip_spaces();
         self.state = State::Attributes;
 
@@ -526,20 +507,7 @@ impl<'a> Tokenizer<'a> {
 
         self.stream.skip_spaces();
 
-        let name = {
-            let start = self.stream.pos();
-            // consume an attribute name
-            while !self.stream.at_end() && self.stream.is_ident_unchecked() {
-                self.stream.advance(1)?;
-            }
-
-            let len = self.stream.pos() - start;
-            if len == 0 {
-                return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
-            }
-
-            self.stream.slice_region_unchecked(start, start + len)
-        };
+        let name = self.stream.consume_name()?;
 
         self.stream.skip_spaces();
 
@@ -556,21 +524,17 @@ impl<'a> Tokenizer<'a> {
 
         let quote = self.stream.curr_char()?;
         self.stream.advance(1)?; // quote
-
-        let end = self.stream.pos() + self.stream.len_to(quote)?;
-        let text_frame = self.stream.slice_frame_unchecked(self.stream.pos(), end);
-
-        self.stream.advance_unchecked(text_frame.len());
+        let value = self.stream.read_to(quote)?;
         self.stream.advance(1)?; // quote
 
         self.stream.skip_spaces();
 
         if let Some(_) = self.curr_elem {
             if let Some(aid) = AttributeId::from_name(name) {
-                return Ok(Token::SvgAttribute(aid, text_frame));
+                return Ok(Token::SvgAttribute(aid, value));
             }
         }
 
-        Ok(Token::XmlAttribute(name, text_frame.slice()))
+        Ok(Token::XmlAttribute(name, value.slice()))
     }
 }

@@ -198,7 +198,7 @@ fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
         Err(_) => return Err(Error::InvalidAttributeValue(stream.gen_error_pos())),
     };
 
-    let name = stream.read_unchecked(len);
+    let name = stream.read_unchecked(len).slice();
 
     stream.skip_spaces();
     stream.consume_char(b';')?;
