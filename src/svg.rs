@@ -4,6 +4,7 @@
 
 //! Module for parsing SVG structure.
 
+use std::cmp;
 use std::fmt;
 use std::str;
 
@@ -19,44 +20,81 @@ use {
 /// SVG token.
 #[derive(PartialEq)]
 pub enum Token<'a> {
-    /// The token contains tag name of an XML element.
+    /// The XML element tag name token.
+    ///
+    /// Example: `<nonsvg ...` -> `"nonsvg"`
     XmlElementStart(&'a str),
-    /// The token contains tag name of an SVG element.
+    /// The SVG element tag name token.
+    ///
+    /// Example: `<svg ...` -> `ElementId::Svg`
     SvgElementStart(ElementId),
-    /// The token contains a type of enclosing tag.
+    /// The element end token.
+    ///
+    /// Contains a type of an enclosing tag.
     ElementEnd(ElementEnd<'a>),
-    /// The token contains an XML attribute name and value.
+    /// The XML attribute token.
     ///
     /// Can appear in XML and SVG elements.
+    ///
+    /// Example: `<nonsvg non-svg="value">` -> `"non-svg", "value"`
     XmlAttribute(&'a str, &'a str),
-    /// The token contains an SVG attribute name and value.
+    /// The SVG attribute token.
     ///
     /// Can appear only in SVG elements.
+    ///
+    /// Example: `<svg width="100pt">` -> `AttributeId::Width, "100pt"`
     SvgAttribute(AttributeId, TextFrame<'a>),
-    /// The token contains text between elements including whitespaces.
+    /// The text token.
     ///
+    /// Contains text between elements including whitespaces.
     /// Basically everything between `>` and `<`.
-    Text(TextFrame<'a>),
-    /// The token contains CDATA data without `<![CDATA[` and `]]>`.
-    Cdata(TextFrame<'a>),
-    /// The token represents whitespaces between elements.
     ///
-    /// It will contain only ` \n\t\r` characters.
+    /// Contains text as is. Use `TextUnescape` to unescape it.
+    ///
+    /// Example: `<text>text</text>` -> `"text"`
+    Text(TextFrame<'a>),
+    /// The CDATA token.
+    ///
+    /// Example: `<![CDATA[text]]>` -> `"text"`
+    Cdata(TextFrame<'a>),
+    /// The whitespace token.
+    ///
+    /// It will contain only `\n \t\r` characters.
     ///
     /// If there is a text between elements - `Whitespace` will not be emitted at all.
+    ///
+    /// Example: `<rect/>\n<rect/>` -> `"\n"`
     Whitespace(&'a str),
-    /// The token contains comment data without `<!--` and `-->`.
+    /// The comment token.
+    ///
+    /// Example: `<!-- text -->` -> `" text "`
     Comment(&'a str),
-    /// The token contains a title of empty DOCTYPE.
+    /// The empty DOCTYPE token.
+    ///
+    /// Example: `<!DOCTYPE note SYSTEM "Note.dtd">` -> `"note SYSTEM "Note.dtd""`
     DtdEmpty(&'a str),
-    /// The token contains a title of DOCTYPE.
+    /// The DOCTYPE start token.
+    ///
+    /// Example: `<!DOCTYPE svg PUBLIC [` -> `svg PUBLIC`
     DtdStart(&'a str),
-    /// The token contains name and value of ENTITY.
+    /// The ENTITY token.
+    ///
+    /// Can appear only inside the DTD.
+    ///
+    /// Example: `<!ENTITY ns_extend "http://test.com">` -> `"ns_extend", "http://test.com"`
     Entity(&'a str, TextFrame<'a>),
-    /// The token indicates DOCTYPE end.
+    /// The DOCTYPE end token.
+    ///
+    /// Example: `]>`
     DtdEnd,
-    /// The token contains declaration data without `<?` and `?>`.
+    /// The XML declaration token.
+    ///
+    /// Example: `<?xml version="1.0"?>` -> `" version="1.0""`
     Declaration(&'a str),
+    /// The XML processing instruction token.
+    ///
+    /// Example: `<?target content?>` -> `"target", "content"`
+    ProcessingInstruction(&'a str, Option<&'a str>),
 }
 
 // TODO: remove
@@ -98,6 +136,8 @@ impl<'a> fmt::Debug for Token<'a> {
                 write!(f, "DtdEnd"),
             Token::Declaration(s) =>
                 write!(f, "Declaration({})", s),
+            Token::ProcessingInstruction(t, c) =>
+                write!(f, "ProcessingInstruction({}, {:?})", t, c),
         }
     }
 }
@@ -163,7 +203,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 }
 
                 if self.stream.starts_with(b"<?") {
-                    self.parse_declaration()
+                    self.parse_pi()
                 } else if self.stream.starts_with(b"<!--") {
                     self.parse_comment()
                 } else if self.stream.starts_with(b"<![") {
@@ -246,25 +286,35 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
 }
 
 impl<'a> Tokenizer<'a> {
-    fn parse_declaration(&mut self) -> Result<Token<'a>, Error> {
-        debug_assert!(self.stream.starts_with(b"<?"));
-
-        // we are parsing the Declaration, not the Processing Instruction
-        if !self.stream.starts_with(b"<?xml ") {
-            return Err(Error::InvalidSvgToken(self.stream.gen_error_pos()));
-        }
-        self.stream.advance_unchecked(6); // '<?xml '
-
-        // TODO: parse attributes
-
-        // TODO: ? can be inside the string
-        let l = self.stream.len_to(b'?')?;
-        let s = self.stream.read_unchecked(l);
-
+    fn parse_pi(&mut self) -> Result<Token<'a>, Error> {
+        self.stream.consume_char(b'<')?;
         self.stream.consume_char(b'?')?;
-        self.stream.consume_char(b'>')?;
 
-        Ok(Token::Declaration(s))
+        let let_to_space = self.stream.len_to(b' ')?;
+        let let_to_end = self.stream.len_to(b'?')?;
+
+        let target = self.stream.read_unchecked(cmp::min(let_to_space, let_to_end));
+
+        self.stream.skip_spaces();
+
+        if self.stream.is_char_eq(b'?')? {
+            self.stream.consume_char(b'?')?;
+            self.stream.consume_char(b'>')?;
+
+            Ok(Token::ProcessingInstruction(target, None))
+        } else {
+            let content = self.stream.read_to(b'?')?;
+
+            self.stream.consume_char(b'?')?;
+            self.stream.consume_char(b'>')?;
+
+            if target == "xml" {
+                // TODO: parse attributes
+                Ok(Token::Declaration(content))
+            } else {
+                Ok(Token::ProcessingInstruction(target, Some(content)))
+            }
+        }
     }
 
     fn parse_comment(&mut self) -> Result<Token<'a>, Error> {

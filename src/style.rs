@@ -193,13 +193,14 @@ fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
     // extract 'text' from '&text;'
     stream.advance_unchecked(1); // &
 
-    let mut len = stream.len_to_space_or_end(); // ;
-    if len == 0 {
-        return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
-    }
-    len -= 1;
+    let len = match stream.len_to(b';') {
+        Ok(l) => l,
+        Err(_) => return Err(Error::InvalidAttributeValue(stream.gen_error_pos())),
+    };
 
     let name = stream.read_unchecked(len);
+
+    stream.skip_spaces();
     stream.consume_char(b';')?;
 
     Ok(Token::EntityRef(name))

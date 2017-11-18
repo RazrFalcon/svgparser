@@ -155,10 +155,11 @@ fn parse(text: &str) -> Result<(), Error> {
             svg::Token::Declaration(declaration) => {
                 // Currently, svgparser doesn't split declaration content,
                 // so everything between '<?xml ' and '?>' will be parsed as one string.
-                //
-                // Any non '<?xml' declarations are not supported.
 
                 println!("Declaration node: {}", declaration);
+            }
+            svg::Token::ProcessingInstruction(target, content) => {
+                println!("Processing Instruction node: {}, {:?}", target, content);
             }
         }
     }

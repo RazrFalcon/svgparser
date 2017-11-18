@@ -5,26 +5,10 @@ extern crate svgparser;
 
 use std::str;
 
-use svgparser::{style, Tokenize, Error};
+use svgparser::{style, Tokenize};
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = str::from_utf8(data) {
-        let mut p = style::Tokenizer::from_str(s);
-        loop {
-            match p.parse_next() {
-                Ok(token) => {
-                    if token == style::Token::EndOfStream {
-                        break;
-                    }
-                }
-                Err(e) => {
-                    match e {
-                        Error::UnexpectedEndOfStream(_)
-                        | Error::InvalidAttributeValue(_) => {}
-                        _ => panic!("{:?}", e),
-                    }
-                }
-            }
-        }
+        for _ in style::Tokenizer::from_str(s).tokens() {}
     }
 });

@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Case-insensitive parsing for color names.
+- `svg::Token::ProcessingInstruction`.
 
 ### Fixed
 - Error position calculation.
+- Panic during style attribute parsing.
 
 ## [0.5.0] - 2017-09-26
 ### Added

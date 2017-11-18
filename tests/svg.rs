@@ -103,6 +103,22 @@ fn parse_declaration_2() {
 }
 
 #[test]
+fn parse_pi_1() {
+    let mut p = svg::Tokenizer::from_str("<?xpacket begin='﻿' id=''?>");
+    basic_assert_eq!(p,
+               svg::Token::ProcessingInstruction("xpacket", Some("begin='﻿' id=''")));
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
+}
+
+#[test]
+fn parse_pi_2() {
+    let mut p = svg::Tokenizer::from_str("<?xpacket ?>");
+    basic_assert_eq!(p,
+               svg::Token::ProcessingInstruction("xpacket", None));
+    assert_eq!(p.parse_next().unwrap_err(), Error::EndOfStream);
+}
+
+#[test]
 fn parse_comment_1() {
     let mut p = svg::Tokenizer::from_str("<!-- comment -->");
     basic_assert_eq!(p, svg::Token::Comment(" comment "));
@@ -523,7 +539,7 @@ fn invalid_structure_3() {
 #[test]
 fn invalid_structure_4() {
     let mut p = svg::Tokenizer::from_str("<?></g");
-    assert_eq!(p.parse_next().err().unwrap(), Error::InvalidSvgToken(ErrorPos::new(1, 1)));
+    assert_eq!(p.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1, 3)));
 }
 
 #[test]

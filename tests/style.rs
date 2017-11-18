@@ -85,6 +85,13 @@ test_attr!(parse_style_11, "font-family:Cantarell;-inkscape-font-specification:&
 );
 
 #[test]
+fn parse_style_12() {
+    let mut s = style::Tokenizer::from_str("&#x4B2ƿ  ;");
+    assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("#x4B2ƿ  "));
+    assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
+}
+
+#[test]
 fn invalid_1() {
     let mut s = style::Tokenizer::from_str(":");
     assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,1)));
