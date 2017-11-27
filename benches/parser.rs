@@ -8,7 +8,7 @@ use std::io::Read;
 
 use bencher::Bencher;
 
-use svgparser::{svg, Tokenize};
+use svgparser::{svg, FromSpan};
 
 fn load_file(path: &str) -> String {
     let path = env::current_dir().unwrap().join(path);
@@ -19,8 +19,9 @@ fn load_file(path: &str) -> String {
 }
 
 fn parse(text: &str) {
-    let mut tokens = svg::Tokenizer::from_str(text).tokens();
-    for _ in &mut tokens { }
+    for token in svg::Tokenizer::from_str(text) {
+        let _ = token.unwrap();
+    }
 }
 
 fn skull(bencher: &mut Bencher) {

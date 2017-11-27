@@ -2,125 +2,63 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::fmt;
 use std::str;
 
-/// Position of an error.
-///
-/// Position indicates row/line and column. Starting positions is 1:1.
-#[derive(Clone, Copy, PartialEq)]
-pub struct ErrorPos {
-    #[allow(missing_docs)]
-    pub row: usize,
-    #[allow(missing_docs)]
-    pub col: usize,
-}
+use error_chain;
+use xmlparser;
 
-impl ErrorPos {
-    /// Constructs a new error position.
-    pub fn new(row: usize, col: usize) -> ErrorPos {
-        ErrorPos {
-            row: row,
-            col: col,
+use {
+    ErrorPos,
+};
+
+
+error_chain! {
+    types {
+        Error, ErrorKind, ResultExt, Result;
+    }
+
+    links {
+        Xml(xmlparser::Error, xmlparser::ErrorKind) #[doc = "xmlparser errors"];
+        Stream(xmlparser::StreamError, xmlparser::StreamErrorKind) #[doc = "'Stream' errors"];
+    }
+
+    errors {
+        /// An invalid number.
+        InvalidNumber(pos: ErrorPos) {
+            display("invalid number at {}", pos)
+        }
+
+        /// An invalid length.
+        InvalidLength(pos: ErrorPos) {
+            display("invalid length at {}", pos)
+        }
+
+        /// An invalid color.
+        InvalidColor(pos: ErrorPos) {
+            display("invalid color at {}", pos)
+        }
+
+        /// An invalid transform.
+        InvalidTransform(pos: ErrorPos) {
+            display("invalid transform at {}", pos)
+        }
+
+        /// An invalid attribute value.
+        InvalidAttributeValue(pos: ErrorPos) {
+            display("invalid attribute value at {}", pos)
         }
     }
 }
 
-impl fmt::Display for ErrorPos {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}:{}", &self.row, &self.col)
-    }
+
+/// `ChainedError` additional methods.
+pub trait ChainedErrorExt {
+    /// Shorthand for `display_chain().to_string().trim()`.
+    fn full_chain(&self) -> String;
 }
 
-/// List of all errors.
-#[derive(Clone, Copy, PartialEq)]
-pub enum Error {
-    /// The end of the stream.
-    ///
-    /// Technically, it's not an error, but an indication
-    /// that current tokenizer is ended it's parsing.
-    EndOfStream,
-    /// The steam ended earlier than we expected.
-    ///
-    /// Should only appear on invalid input data.
-    /// Errors in the valid SVG should be handled by errors below.
-    UnexpectedEndOfStream(ErrorPos),
-    /// Can appear during consuming expected char.
-    InvalidChar {
-        /// Current char in the stream.
-        current: char,
-        /// Expected char.
-        expected: char,
-        /// Absolute stream position.
-        pos: ErrorPos,
-    },
-    /// Invalid SVG token.
-    InvalidSvgToken(ErrorPos),
-    /// The stream found closing tag without an opening tag.
-    UnexpectedClosingTag(ErrorPos),
-    /// Error during a number parsing.
-    InvalidNumber(ErrorPos),
-    /// Error during a length parsing.
-    InvalidLength(ErrorPos),
-    /// Error during a color parsing.
-    InvalidColor(ErrorPos),
-    /// Error during a transform parsing.
-    InvalidTransform(ErrorPos),
-    /// Invalid attribute value.
-    InvalidAttributeValue(ErrorPos),
-    /// Can appear during moving along the data stream.
-    InvalidAdvance {
-        /// The advance step.
-        expected: isize, // TODO: to usize when "look back" Stream features will be removed
-        /// Full length of the steam.
-        total: usize,
-        /// Absolute stream position.
-        pos: ErrorPos,
-    },
-    /// UTF-8 processing error.
-    Utf8Error(str::Utf8Error),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::EndOfStream =>
-                write!(f, "End of stream"),
-            Error::UnexpectedEndOfStream(ref pos) =>
-                write!(f, "Unexpected end of stream at {}", pos),
-            Error::InvalidChar{ref current, ref expected, ref pos} =>
-                write!(f, "Expected '{}', found '{}' at pos {}", expected, current, pos),
-            Error::InvalidSvgToken(ref pos) =>
-                write!(f, "Invalid SVG token at {}", pos),
-            Error::UnexpectedClosingTag(ref pos) =>
-                write!(f, "The stream found closing tag without an opening tag at {}", pos),
-            Error::InvalidNumber(ref pos) =>
-                write!(f, "Invalid number at {}", pos),
-            Error::InvalidLength(ref pos) =>
-                write!(f, "Invalid length at {}", pos),
-            Error::InvalidColor(ref pos) =>
-                write!(f, "Invalid color at {}", pos),
-            Error::InvalidTransform(ref pos) =>
-                write!(f, "Invalid transform at {}", pos),
-            Error::InvalidAttributeValue(ref pos) =>
-                write!(f, "Invalid attribute value at {}", pos),
-            Error::InvalidAdvance{ ref expected, ref total, ref pos } =>
-                write!(f, "Attempt to advance to the pos {} from {}, but total len is {}",
-                       expected, pos, total),
-            Error::Utf8Error(e) =>
-                write!(f, "{}", e),
-        }
-    }
-}
-
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", &self)
-    }
-}
-
-impl From<str::Utf8Error> for Error {
-    fn from(value: str::Utf8Error) -> Error {
-        Error::Utf8Error(value)
+impl<T: error_chain::ChainedError> ChainedErrorExt for T {
+    fn full_chain(&self) -> String {
+        self.display_chain().to_string().trim().to_owned()
     }
 }

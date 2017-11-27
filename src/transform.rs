@@ -6,11 +6,15 @@
 //!
 //! [`<transform-list>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 
+use error::{
+    Result,
+};
 use {
-    Error,
+    ErrorKind,
+    FromSpan,
     Stream,
-    TextFrame,
-    Tokenize,
+    StreamExt,
+    StrSpan,
 };
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -50,16 +54,18 @@ pub struct Tokenizer<'a> {
     last_angle: Option<f64>,
 }
 
-impl<'a> Tokenize<'a> for Tokenizer<'a> {
-    type Token = Token;
-
-    fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+impl<'a> FromSpan<'a> for Tokenizer<'a> {
+    fn from_span(span: StrSpan<'a>) -> Self {
         Tokenizer {
-            stream: Stream::from_frame(frame),
+            stream: Stream::from_span(span),
             rotate_ts: None,
             last_angle: None,
         }
     }
+}
+
+impl<'a> Iterator for Tokenizer<'a> {
+    type Item = Result<Token>;
 
     /// Extracts next transform from the stream.
     ///
@@ -73,40 +79,46 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     ///   It will be automatically split into three `Transform` tokens:
     ///   `translate(<cx> <cy>) rotate(<rotate-angle>) translate(-<cx> -<cy>)`.
     ///   Just like the spec is stated.
-    fn parse_next(&mut self) -> Result<Token, Error> {
+    fn next(&mut self) -> Option<Self::Item> {
         if let Some(a) = self.last_angle {
             self.last_angle = None;
-            return Ok(Token::Rotate {
+            return Some(Ok(Token::Rotate {
                 angle: a,
-            });
+            }));
         }
 
         if let Some((x, y)) = self.rotate_ts {
             self.rotate_ts = None;
-            return Ok(Token::Translate {
+            return Some(Ok(Token::Translate {
                 tx: -x,
                 ty: -y,
-            });
+            }));
         }
 
+        self.stream.skip_spaces();
+
+        if self.stream.at_end() {
+            // empty attribute is still a valid value
+            return None;
+        }
+
+        let ts = self.parse_next();
+        if ts.is_err() {
+            self.stream.jump_to_end();
+        }
+
+        Some(ts)
+    }
+}
+
+impl<'a> Tokenizer<'a> {
+    fn parse_next(&mut self) -> Result<Token> {
         let s = &mut self.stream;
 
-        s.skip_spaces();
-
-        if s.at_end() {
-            // empty attribute is still a valid value
-            return Err(Error::EndOfStream);
-        }
-
-        if s.left() < 5 {
-            return Err(Error::UnexpectedEndOfStream(s.gen_error_pos()));
-        }
-
-        let t = match s.slice_next_unchecked(5) {
-            "matri" => {
-                s.advance(6)?;
+        let t = match s.consume_name()?.to_str() {
+            "matrix" => {
                 s.skip_spaces();
-                s.consume_char(b'(')?;
+                s.consume_byte(b'(')?;
 
                 let a = s.parse_list_number()?;
                 let b = s.parse_list_number()?;
@@ -124,15 +136,14 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     f: f,
                 }
             }
-            "trans" => {
-                s.advance(9)?;
+            "translate" => {
                 s.skip_spaces();
-                s.consume_char(b'(')?;
+                s.consume_byte(b'(')?;
 
                 let x = s.parse_list_number()?;
                 s.skip_spaces();
 
-                let y = if s.is_char_eq(b')')? {
+                let y = if s.curr_byte()? == b')' {
                     // 'If <ty> is not provided, it is assumed to be zero.'
                     0.0
                 } else {
@@ -145,14 +156,13 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 }
             }
             "scale" => {
-                s.advance(5)?;
                 s.skip_spaces();
-                s.consume_char(b'(')?;
+                s.consume_byte(b'(')?;
 
                 let x = s.parse_list_number()?;
                 s.skip_spaces();
 
-                let y = if s.is_char_eq(b')')? {
+                let y = if s.curr_byte()? == b')' {
                     // 'If <sy> is not provided, it is assumed to be equal to <sx>.'
                     x
                 } else {
@@ -164,15 +174,14 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     sy: y,
                 }
             }
-            "rotat" => {
-                s.advance(6)?;
+            "rotate" => {
                 s.skip_spaces();
-                s.consume_char(b'(')?;
+                s.consume_byte(b'(')?;
 
                 let a = s.parse_list_number()?;
                 s.skip_spaces();
 
-                if !s.is_char_eq(b')')? {
+                if s.curr_byte()? != b')' {
                     // 'If optional parameters <cx> and <cy> are supplied, the rotate is about the
                     // point (cx, cy). The operation represents the equivalent of the following
                     // specification:
@@ -193,9 +202,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 }
             }
             "skewX" => {
-                s.advance(5)?;
                 s.skip_spaces();
-                s.consume_char(b'(')?;
+                s.consume_byte(b'(')?;
 
                 let a = s.parse_list_number()?;
 
@@ -204,9 +212,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 }
             }
             "skewY" => {
-                s.advance(5)?;
                 s.skip_spaces();
-                s.consume_char(b'(')?;
+                s.consume_byte(b'(')?;
 
                 let a = s.parse_list_number()?;
 
@@ -215,16 +222,16 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                 }
             }
             _ => {
-                return Err(Error::InvalidTransform(s.gen_error_pos()));
+                return Err(ErrorKind::InvalidTransform(s.gen_error_pos()).into());
             }
         };
 
         s.skip_spaces();
-        s.consume_char(b')')?;
+        s.consume_byte(b')')?;
         s.skip_spaces();
 
-        if !s.at_end() && s.is_char_eq(b',')? {
-            s.advance_unchecked(1);
+        if s.is_curr_byte_eq(b',') {
+            s.advance(1);
         }
 
         Ok(t)

@@ -9,12 +9,19 @@
 use std::fmt;
 use std::str;
 
+use xmlparser::{
+    Reference,
+};
+
+use error::{
+    Result,
+};
 use {
     AttributeId,
-    Error,
+    ErrorKind,
+    FromSpan,
     Stream,
-    TextFrame,
-    Tokenize,
+    StrSpan,
 };
 
 /// Style token.
@@ -23,7 +30,7 @@ pub enum Token<'a> {
     /// Tuple contains attribute's name and value of an XML element.
     XmlAttribute(&'a str, &'a str),
     /// Tuple contains attribute's ID and value of an SVG element.
-    SvgAttribute(AttributeId, TextFrame<'a>),
+    SvgAttribute(AttributeId, StrSpan<'a>),
     /// Tuple contains ENTITY reference. Just a name without `&` and `;`.
     EntityRef(&'a str),
 }
@@ -46,14 +53,16 @@ pub struct Tokenizer<'a> {
     stream: Stream<'a>,
 }
 
-impl<'a> Tokenize<'a> for Tokenizer<'a> {
-    type Token = Token<'a>;
-
-    fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+impl<'a> FromSpan<'a> for Tokenizer<'a> {
+    fn from_span(span: StrSpan<'a>) -> Self {
         Tokenizer {
-            stream: Stream::from_frame(frame)
+            stream: Stream::from_span(span)
         }
     }
+}
+
+impl<'a> Iterator for Tokenizer<'a> {
+    type Item = Result<Token<'a>>;
 
     /// Extracts next style object from the stream.
     ///
@@ -68,158 +77,118 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     /// - Objects with `-` prefix will be ignored since we can't write them as XML attributes.
     ///   Library will print a warning to stderr.
     /// - All comments are automatically skipped.
-    fn parse_next(&mut self) -> Result<Token<'a>, Error> {
+    fn next(&mut self) -> Option<Self::Item> {
         self.stream.skip_spaces();
 
         if self.stream.at_end() {
-            return Err(Error::EndOfStream);
+            return None;
         }
 
-        let c = self.stream.curr_char_unchecked();
+        macro_rules! try_opt2 {
+            ($expr:expr) => {
+                match $expr {
+                    Ok(value) => value,
+                    Err(e) => {
+                        self.stream.jump_to_end();
+                        return Some(Err(e.into()));
+                    }
+                }
+            }
+        }
+
+        let c = try_opt2!(self.stream.curr_byte());
         if c == b'/' {
-            skip_comment(&mut self.stream)?;
-            return self.parse_next();
+            try_opt2!(skip_comment(&mut self.stream));
+            return self.next();
         } else if c == b'-' {
-            parse_prefix(&mut self.stream)?;
-            return self.parse_next();
+            try_opt2!(parse_prefix(&mut self.stream));
+            return self.next();
         } else if c == b'&' {
-            return parse_entity_ref(&mut self.stream);
-        } else if is_valid_ident_char(c) {
-            return parse_attribute(&mut self.stream);
+            return Some(parse_entity_ref(&mut self.stream));
+        } else if is_ident_char(c) {
+            return Some(parse_attribute(&mut self.stream));
         } else {
-            return Err(Error::InvalidAttributeValue(self.stream.gen_error_pos()));
+            self.stream.jump_to_end();
+            return Some(Err(ErrorKind::InvalidAttributeValue(self.stream.gen_error_pos()).into()));
         }
     }
 }
 
-fn skip_comment(stream: &mut Stream) -> Result<(), Error> {
-    stream.advance(2)?; // skip /*
-    stream.jump_to(b'*')?;
-    stream.advance(2)?; // skip */
+fn skip_comment(stream: &mut Stream) -> Result<()> {
+    stream.skip_string(b"/*")?;
+    stream.skip_bytes(|_, c| c != b'*');
+    stream.skip_string(b"*/")?;
     stream.skip_spaces();
 
     Ok(())
 }
 
-fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
-    // consume an attribute name
-    let name = {
-        let start_pos = stream.pos();
-        while !stream.at_end() {
-            let c = stream.curr_char_unchecked();
-            if is_valid_ident_char(c) {
-                stream.advance_unchecked(1);
-            } else {
-                break;
-            }
-        }
-
-        stream.slice_region_unchecked(start_pos, stream.pos())
-    };
+fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
+    let name = stream.consume_bytes(|_, c| is_ident_char(c));
 
     if name.is_empty() {
-        return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
+        return Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos()).into());
     }
 
     stream.skip_spaces();
-    stream.consume_char(b':')?;
+    stream.consume_byte(b':')?;
     stream.skip_spaces();
 
-    let end_char;
-    if stream.is_char_eq(b'\'')? {
-        // skip start quote
-        stream.advance(1)?;
-        end_char = b';';
-    } else if stream.is_char_eq(b'&')? {
-        // skip escaped start quote aka '&apos;'
-        if stream.starts_with(b"&apos;") {
-            stream.advance_unchecked(6);
-            end_char = b'&';
-        } else {
-            return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
-        }
+    let value = if stream.curr_byte()? == b'\'' {
+        stream.advance(1);
+        let v = stream.consume_bytes(|_, c| c != b'\'');
+        stream.consume_byte(b'\'')?;
+        v
+    } else if stream.starts_with(b"&apos;") {
+        stream.advance(6);
+        let v = stream.consume_bytes(|_, c| c != b'&');
+        stream.skip_string(b"&apos;")?;
+        v
     } else {
-        end_char = b';';
+        stream.consume_bytes(|_, c| c != b';')
+    }.trim();
+
+    if value.len() == 0 {
+        return Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos()).into());
     }
 
-    let mut value_len = stream.len_to_or_end(end_char);
-
-    if value_len == 0 {
-        return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
-    }
-
-    // TODO: stream can be at the end
-    // skip end quote
-    if stream.char_at(value_len as isize - 1)? == b'\'' {
-        value_len -= 1;
-    }
-
-    // TODO: use is_space
-    while stream.char_at(value_len as isize - 1)? == b' ' {
-        value_len -= 1;
-    }
-
-    let text_frame = stream.slice_frame_unchecked(stream.pos(), stream.pos() + value_len);
-
-    stream.advance_unchecked(value_len);
     stream.skip_spaces();
-
-    if !stream.at_end() {
-        if stream.is_char_eq_unchecked(b'\'') {
-            stream.advance_unchecked(1);
-        } else if stream.is_char_eq_unchecked(b'&') {
-            if stream.starts_with(b"&apos;") {
-                stream.advance_unchecked(6);
-            } else {
-                return Err(Error::InvalidAttributeValue(stream.gen_error_pos()));
-            }
-        }
-    }
 
     // ';;;' is valid style data, we need to skip it
-    while !stream.at_end() && stream.is_char_eq_unchecked(b';') {
-        stream.advance_unchecked(1);
+    while stream.is_curr_byte_eq(b';') {
+        stream.advance(1);
         stream.skip_spaces();
     }
 
-    if let Some(aid) = AttributeId::from_name(name) {
-        return Ok(Token::SvgAttribute(aid, text_frame));
+    if let Some(aid) = AttributeId::from_name(name.to_str()) {
+        Ok(Token::SvgAttribute(aid, value))
+    } else {
+        Ok(Token::XmlAttribute(name.to_str(), value.to_str()))
     }
-
-    Ok(Token::XmlAttribute(name, text_frame.slice()))
 }
 
-fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>, Error> {
-    // extract 'text' from '&text;'
-    stream.advance_unchecked(1); // &
-
-    let len = match stream.len_to(b';') {
-        Ok(l) => l,
-        Err(_) => return Err(Error::InvalidAttributeValue(stream.gen_error_pos())),
-    };
-
-    let name = stream.read_unchecked(len).slice();
-
-    stream.skip_spaces();
-    stream.consume_char(b';')?;
-
-    Ok(Token::EntityRef(name))
+fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
+    if let Ok(Reference::EntityRef(name)) = stream.consume_reference() {
+        Ok(Token::EntityRef(name.to_str()))
+    } else {
+        Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos()).into())
+    }
 }
 
-fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<(), Error> {
+fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<()> {
     // prefixed attributes are not supported, aka '-webkit-*'
 
-    stream.advance_unchecked(1); // -
+    stream.advance(1); // -
     let t = parse_attribute(stream)?;
 
     if let Token::XmlAttribute(name, _) = t {
-        warnln!("Style attribute '-{}' is skipped.", name);
+        warn!("Style attribute '-{}' is skipped.", name);
     }
 
     Ok(())
 }
 
-fn is_valid_ident_char(c: u8) -> bool {
+fn is_ident_char(c: u8) -> bool {
     match c {
           b'0'...b'9'
         | b'A'...b'Z'

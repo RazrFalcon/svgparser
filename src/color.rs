@@ -4,13 +4,22 @@
 
 use std::str::FromStr;
 
+use xmlparser::{
+    XmlByteExt,
+};
+
+use error::{
+    Result,
+};
 use {
     Error,
+    ErrorKind,
     LengthUnit,
     Stream,
-    TextFrame,
+    StreamExt,
+    StrSpan,
 };
-use stream::bound;
+use streamext::bound;
 use colors::rgb_color_from_name;
 
 /// Representation of the [`<color>`] type.
@@ -36,7 +45,7 @@ impl Color {
         }
     }
 
-    /// Parses `Color` from `TextFrame`.
+    /// Parses `Color` from `StrSpan`.
     ///
     /// Parsing is done according to [spec]:
     ///
@@ -67,8 +76,8 @@ impl Color {
     ///
     /// [spec]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
     /// [details]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
-    pub fn from_frame(frame: TextFrame) -> Result<Color, Error> {
-        let mut s = Stream::from_frame(frame);
+    pub fn from_span(span: StrSpan) -> Result<Color> {
+        let mut s = Stream::from_span(span);
 
         s.skip_spaces();
 
@@ -76,44 +85,29 @@ impl Color {
 
         let mut color = Color::new(0, 0, 0);
 
-        if s.is_char_eq(b'#')? {
+        if s.curr_byte()? == b'#' {
+            s.advance(1);
+            let color_str = s.consume_bytes(|_, c| c.is_xml_hex_digit()).to_str().as_bytes();
             // get color data len until first space or stream end
-            match s.len_to_space_or_end() {
-                7 => {
+            match color_str.len() {
+                6 => {
                     // #rrggbb
-
-                    macro_rules! get_hex_pair {
-                        () => ({
-                            s.advance_unchecked(1);
-                            let c1 = s.curr_char_unchecked();
-                            s.advance_unchecked(1);
-                            let c2 = s.curr_char_unchecked();
-                            hex_pair(c1, c2)
-                        })
-                    }
-
-                    color.red = get_hex_pair!();
-                    color.green = get_hex_pair!();
-                    color.blue = get_hex_pair!();
-                    s.advance_unchecked(1);
+                    color.red   = hex_pair(color_str[0], color_str[1]);
+                    color.green = hex_pair(color_str[2], color_str[3]);
+                    color.blue  = hex_pair(color_str[4], color_str[5]);
                 }
-                4 => {
+                3 => {
                     // #rgb
-                    s.advance_unchecked(1);
-                    color.red = short_hex(s.curr_char_unchecked());
-                    s.advance_unchecked(1);
-                    color.green = short_hex(s.curr_char_unchecked());
-                    s.advance_unchecked(1);
-                    color.blue = short_hex(s.curr_char_unchecked());
-                    s.advance_unchecked(1);
+                    color.red = short_hex(color_str[0]);
+                    color.green = short_hex(color_str[1]);
+                    color.blue = short_hex(color_str[2]);
                 }
                 _ => {
-                    s.set_pos_unchecked(start);
-                    return Err(Error::InvalidColor(s.gen_error_pos()));
+                    return Err(ErrorKind::InvalidColor(s.gen_error_pos_from(start)).into());
                 }
             }
         } else if s.starts_with(b"rgb(") {
-            s.advance(4)?;
+            s.advance(4);
 
             let l = s.parse_list_length()?;
 
@@ -134,17 +128,15 @@ impl Color {
             }
 
             s.skip_spaces();
-            s.consume_char(b')')?;
+            s.consume_byte(b')')?;
         } else {
-            let l = s.len_to_space_or_end();
-            match rgb_color_from_name(s.slice_next_unchecked(l)) {
+            let name = s.consume_name()?;
+            match rgb_color_from_name(name.to_str()) {
                 Some(c) => {
                     color = c;
-                    s.advance_unchecked(l);
                 }
                 None => {
-                    s.set_pos_unchecked(start);
-                    return Err(Error::InvalidColor(s.gen_error_pos()));
+                    return Err(ErrorKind::InvalidColor(s.gen_error_pos_from(start)).into());
                 }
             }
         }
@@ -153,7 +145,7 @@ impl Color {
         // which is not supported.
         s.skip_spaces();
         if !s.at_end() {
-            return Err(Error::InvalidColor(s.gen_error_pos()));
+            return Err(ErrorKind::InvalidColor(s.gen_error_pos()).into());
         }
 
         Ok(color)
@@ -163,8 +155,8 @@ impl Color {
 impl FromStr for Color {
     type Err = Error;
 
-    fn from_str(text: &str) -> Result<Self, Self::Err> {
-        Color::from_frame(TextFrame::from_str(text))
+    fn from_str(text: &str) -> Result<Self> {
+        Color::from_span(StrSpan::from_str(text))
     }
 }
 

@@ -10,9 +10,8 @@ use svgparser::{
     PaintFallback,
     ElementId,
     Color,
-    Error,
-    ErrorPos,
     ValueId,
+    ChainedErrorExt,
 };
 
 macro_rules! test {
@@ -30,13 +29,13 @@ macro_rules! test_err {
         #[test]
         fn $name() {
             let v = AV::from_str(ElementId::Rect, $aid, $text);
-            assert_eq!(v.unwrap_err(), $err);
+            assert_eq!(v.unwrap_err().full_chain(), $err);
         }
     )
 }
 
-test_err!(empty_1, AId::Fill, "", Error::UnexpectedEndOfStream(ErrorPos::new(1, 1)));
-test_err!(empty_2, AId::Fill, " ", Error::UnexpectedEndOfStream(ErrorPos::new(1, 2)));
+test_err!(empty_1, AId::Fill, "", "Error: unexpected end of stream");
+test_err!(empty_2, AId::Fill, " ", "Error: unexpected end of stream");
 // unicode attribute can have spaces
 test!(unicode_1, AId::Unicode, " ", AV::String(" "));
 
@@ -65,6 +64,6 @@ test!(ref_1, AId::Class, "&ref;", AV::EntityRef("ref"));
 test!(eb_1, AId::EnableBackground, "new    ", AV::String("new"));
 
 // color is last type that we check during parsing <paint>, so any error will be like that
-test_err!(paint_err_1, AId::Fill, "#link", Error::InvalidColor(ErrorPos::new(1, 1)));
+test_err!(paint_err_1, AId::Fill, "#link", "Error: invalid color at 1:1");
 
 // TODO: test all supported attributes, probably via codegen.

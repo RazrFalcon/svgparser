@@ -7,16 +7,24 @@ use std::str;
 
 // TODO: parse viewBox
 
+use xmlparser::{
+    Reference,
+};
+
+use error::{
+    Result,
+};
 use {
     AttributeId,
     Color,
     ElementId,
-    Error,
+    ErrorKind,
     Length,
     LengthList,
     NumberList,
     Stream,
-    TextFrame,
+    StreamExt,
+    StrSpan,
     ValueId,
 };
 
@@ -111,7 +119,7 @@ macro_rules! parse_or {
 // TODO: more attributes
 // TODO: test, somehow
 impl<'a> AttributeValue<'a> {
-    /// Parses `AttributeValue` from [`TextFrame`].
+    /// Parses `AttributeValue` from [`StrSpan`].
     ///
     /// This function supports all [presentation attributes].
     ///
@@ -134,22 +142,25 @@ impl<'a> AttributeValue<'a> {
     /// - This function didn't correct most of the numeric values. If value has an incorrect
     ///   data, like `viewBox='0 0 -1 -5'` (negative w/h is error), it will be parsed as is.
     ///
-    /// [`TextFrame`]: struct.TextFrame.html
+    /// [`StrSpan`]: struct.StrSpan.html
     /// [presentation attributes]: https://www.w3.org/TR/SVG/propidx.html
-    pub fn from_frame(
+    pub fn from_span(
         eid: ElementId,
         aid: AttributeId,
-        frame: TextFrame<'a>,
-    ) -> Result<AttributeValue<'a>, Error> {
+        span: StrSpan<'a>,
+    ) -> Result<AttributeValue<'a>> {
         use AttributeId as AId;
 
-        let mut stream = Stream::from_frame(frame);
+        // 'unicode' attribute can contain spaces
+        let span = if aid != AId::Unicode { span.trim() } else { span };
+
+        let mut stream = Stream::from_span(span);
 
         let start_pos = stream.pos();
 
         macro_rules! parse_predef {
             ($($cmp:pat),+) => (
-                match ValueId::from_name(stream.slice_tail()) {
+                match ValueId::from_name(stream.slice_tail().to_str()) {
                     Some(v) => {
                         match v {
                             $(
@@ -165,8 +176,7 @@ impl<'a> AttributeValue<'a> {
 
         macro_rules! invalid_attr {
             () => ({
-                stream.set_pos_unchecked(start_pos);
-                Err(Error::InvalidAttributeValue(stream.gen_error_pos()))
+                Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos_from(start_pos)).into())
             })
         }
 
@@ -179,18 +189,13 @@ impl<'a> AttributeValue<'a> {
             })
         }
 
-        // 'unicode' attribute can contain spaces
-        if aid != AId::Unicode {
-            stream.skip_spaces();
-            stream.trim_trailing_spaces();
-        }
-
-        if !stream.at_end() && stream.curr_char()? == b'&' {
-            stream.advance_unchecked(1);
-            let len = stream.len_to(b';')?;
+        if stream.is_curr_byte_eq(b'&') {
             // TODO: attribute can contain many refs, not only one
             // TODO: advance to the end of the stream
-            return Ok(AttributeValue::EntityRef(stream.slice_next_unchecked(len)));
+            let r = stream.consume_reference();
+            if let Ok(Reference::EntityRef(name)) = r {
+                return Ok(AttributeValue::EntityRef(name.to_str()));
+            }
         }
 
         match aid {
@@ -202,7 +207,7 @@ impl<'a> AttributeValue<'a> {
                     | ElementId::Text
                     | ElementId::Tref
                     | ElementId::Tspan => {
-                        Ok(AttributeValue::LengthList(LengthList::from_frame(frame)))
+                        Ok(AttributeValue::LengthList(LengthList::from_span(span)))
                     }
                     _ => {
                         let l = stream.parse_length()?;
@@ -234,7 +239,7 @@ impl<'a> AttributeValue<'a> {
             | AId::FloodOpacity
             | AId::StrokeOpacity
             | AId::StopOpacity => {
-                fn get_opacity<'a>(mut s: Stream) -> Result<AttributeValue<'a>, Error> {
+                fn get_opacity<'a>(mut s: Stream) -> Result<AttributeValue<'a>> {
                     let mut n = s.parse_number()?;
                     n = f64_bound(0.0, n, 1.0);
                     Ok(AttributeValue::Number(n))
@@ -249,7 +254,7 @@ impl<'a> AttributeValue<'a> {
                 parse_or!(parse_predef!(
                     ValueId::None,
                     ValueId::Inherit
-                ), Ok(AttributeValue::LengthList(LengthList::from_frame(frame))))
+                ), Ok(AttributeValue::LengthList(LengthList::from_span(span))))
             }
 
             AId::Fill => {
@@ -261,7 +266,7 @@ impl<'a> AttributeValue<'a> {
                     | ElementId::AnimateColor
                     | ElementId::AnimateMotion
                     | ElementId::AnimateTransform
-                      => Ok(AttributeValue::String(stream.slice())),
+                      => Ok(AttributeValue::String(stream.span().to_str())),
                     _ => {
                         parse_or!(parse_predef!(
                             ValueId::None,
@@ -310,11 +315,11 @@ impl<'a> AttributeValue<'a> {
               AId::StdDeviation
             | AId::BaseFrequency => {
                 // TODO: this attributes can contain only one or two numbers
-                Ok(AttributeValue::NumberList(NumberList::from_frame(frame)))
+                Ok(AttributeValue::NumberList(NumberList::from_span(span)))
             }
 
             AId::Points => {
-                Ok(AttributeValue::NumberList(NumberList::from_frame(frame)))
+                Ok(AttributeValue::NumberList(NumberList::from_span(span)))
             }
 
             AId::AlignmentBaseline => {
@@ -666,11 +671,11 @@ impl<'a> AttributeValue<'a> {
             AId::GlyphOrientationVertical => {
                 parse_or!(parse_predef!(
                     ValueId::Auto,
-                    ValueId::Inherit), Ok(AttributeValue::String(stream.slice())))
+                    ValueId::Inherit), Ok(AttributeValue::String(stream.span().to_str())))
             }
 
             AId::Cursor => {
-                warnln!("The 'cursor' property is not fully supported");
+                warn!("The 'cursor' property is not fully supported");
 
                 parse_or_err!(parse_predef!(
                     ValueId::Auto,
@@ -699,7 +704,7 @@ impl<'a> AttributeValue<'a> {
                 parse_or!(parse_predef!(
                     ValueId::Accumulate,
                     ValueId::Inherit
-                ), Ok(AttributeValue::String(stream.slice())))
+                ), Ok(AttributeValue::String(stream.span().to_str())))
             }
 
             AId::FontFamily => {
@@ -707,14 +712,14 @@ impl<'a> AttributeValue<'a> {
 
                 parse_or!(parse_predef!(
                     ValueId::Inherit
-                ), Ok(AttributeValue::String(stream.slice())))
+                ), Ok(AttributeValue::String(stream.span().to_str())))
             }
 
             AId::ViewBox => {
-                Ok(AttributeValue::NumberList(NumberList::from_frame(frame)))
+                Ok(AttributeValue::NumberList(NumberList::from_span(span)))
             }
 
-            _ => Ok(AttributeValue::String(stream.slice())),
+            _ => Ok(AttributeValue::String(stream.span().to_str())),
         }
     }
 
@@ -723,36 +728,29 @@ impl<'a> AttributeValue<'a> {
     /// The same as [`from_frame`].
     ///
     /// [`from_frame`]: #method.from_frame
-    pub fn from_str(eid: ElementId, aid: AttributeId, text: &'a str)
-        -> Result<AttributeValue<'a>, Error>
+    pub fn from_str(
+        eid: ElementId,
+        aid: AttributeId,
+        text: &'a str,
+    ) -> Result<AttributeValue<'a>>
     {
-        AttributeValue::from_frame(eid, aid, TextFrame::from_str(text))
-    }
-}
-
-macro_rules! try_opt {
-    ($expr: expr) => {
-        match $expr {
-            Some(value) => value,
-            None => return None
-        }
+        AttributeValue::from_span(eid, aid, StrSpan::from_str(text))
     }
 }
 
 fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
-    if !stream.at_end() && stream.is_char_eq_unchecked(b'u') {
-        try_opt!(stream.advance(5).ok());
-        let link_len = try_opt!(stream.len_to(b')').ok());
-        let link = stream.read_unchecked(link_len).slice();
+    if !stream.at_end() && try_opt!(stream.curr_byte().ok()) == b'u' {
+        try_opt!(stream.skip_string(b"url(#").ok());
+        let link = try_opt!(stream.consume_name().ok()).to_str();
 
-        stream.advance_unchecked(1); // ')'
+        try_opt!(stream.consume_byte(b')').ok());
         stream.skip_spaces();
 
         // get fallback
         if !stream.at_end() {
             let fallback = stream.slice_tail();
 
-            let vid = match ValueId::from_name(fallback) {
+            let vid = match ValueId::from_name(fallback.to_str()) {
                 Some(v) => {
                     match v {
                           ValueId::None
@@ -766,8 +764,7 @@ fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>
             if let Some(v) = vid {
                 Some(AttributeValue::FuncIRIWithFallback(link, v))
             } else {
-                let frame = stream.slice_frame_unchecked(stream.pos(), stream.pos() + stream.left());
-                let color = try_opt!(Color::from_frame(frame).ok());
+                let color = try_opt!(Color::from_span(fallback).ok());
                 Some(AttributeValue::FuncIRIWithFallback(link, PaintFallback::Color(color)))
             }
         } else {
@@ -779,40 +776,41 @@ fn parse_paint_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>
 }
 
 fn parse_func_iri<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
-    if !stream.at_end() && stream.is_char_eq_unchecked(b'u') {
-        try_opt!(stream.advance(5).ok());
-        let link = stream.slice_next_unchecked(try_opt!(stream.len_to(b')').ok()));
+    if !stream.at_end() && try_opt!(stream.curr_byte().ok()) == b'u' {
+        try_opt!(stream.skip_string(b"url(#").ok());
+        let link = try_opt!(stream.consume_name().ok()).to_str();
+        try_opt!(stream.consume_byte(b')').ok());
+
         Some(AttributeValue::FuncIRI(link))
     } else {
         None
     }
 }
 
-fn parse_iri<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_iri<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>> {
     // empty xlink:href is a valid attribute
-    if !stream.at_end() && stream.is_char_eq_unchecked(b'#') {
+    if !stream.at_end() && stream.curr_byte()? == b'#' {
         // extract internal link
-        stream.advance(1)?;
+        stream.advance(1);
         let link = stream.slice_tail();
-        Ok(AttributeValue::IRI(link))
+        Ok(AttributeValue::IRI(link.to_str()))
     } else {
-        Ok(AttributeValue::String(stream.slice()))
+        Ok(AttributeValue::String(stream.span().to_str()))
     }
 }
 
-fn parse_length<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_length<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>> {
     let l = stream.parse_length()?;
     Ok(AttributeValue::Length(l))
 }
 
-fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
+fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>> {
     let l = stream.parse_number()?;
     Ok(AttributeValue::Number(l))
 }
 
-fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>, Error> {
-    let frame = stream.slice_frame_unchecked(stream.pos(), stream.pos() + stream.left());
-    let c = Color::from_frame(frame)?;
+fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>> {
+    let c = Color::from_span(stream.span())?;
     Ok(AttributeValue::Color(c))
 }
 

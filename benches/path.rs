@@ -8,7 +8,7 @@ use std::io::Read;
 
 use bencher::Bencher;
 
-use svgparser::{svg, path, AttributeId, Tokenize};
+use svgparser::{svg, path, AttributeId, FromSpan};
 
 fn load_file(path: &str) -> String {
     let path = env::current_dir().unwrap().join(path);
@@ -20,11 +20,11 @@ fn load_file(path: &str) -> String {
 
 fn collect_paths(text: &str) -> Vec<String> {
     let mut paths = Vec::new();
-    let mut tokens = svg::Tokenizer::from_str(text).tokens();
-
-    for token in &mut tokens {
-        if let svg::Token::SvgAttribute(AttributeId::D, value) = token {
-            paths.push(value.slice().to_owned());
+    for token in svg::Tokenizer::from_str(text) {
+        if let svg::Token::Attribute(name, value) = token.unwrap() {
+            if let svg::Name::Svg(AttributeId::D) = name {
+                paths.push(value.to_str().to_owned());
+            }
         }
     }
 
@@ -33,8 +33,7 @@ fn collect_paths(text: &str) -> Vec<String> {
 
 fn parse_paths(paths: &[String]) {
     for path in paths {
-        let mut tokens = path::Tokenizer::from_str(path).tokens();
-        for _ in &mut tokens {}
+        for _ in path::Tokenizer::from_str(path) {}
     }
 }
 

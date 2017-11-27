@@ -6,18 +6,11 @@ extern crate svgparser;
 use std::str;
 use std::str::FromStr;
 
-use svgparser::{Color, Error};
+use svgparser::Color;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = str::from_utf8(data) {
-        if let Err(e) = Color::from_str(s) {
-            match e {
-                Error::InvalidColor(_)
-                | Error::InvalidNumber(_)
-                | Error::InvalidChar { .. }
-                | Error::UnexpectedEndOfStream(_) => {}
-                _ => panic!("{:?}", e),
-            }
-        }
+        // Must not panic.
+        let _ = Color::from_str(s);
     }
 });

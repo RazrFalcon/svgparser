@@ -4,14 +4,11 @@
 
 extern crate svgparser;
 
-use std::str;
-
 use svgparser::style;
 use svgparser::{
-    Tokenize,
+    FromSpan,
     AttributeId as AId,
-    Error,
-    ErrorPos
+    ChainedError,
 };
 
 macro_rules! test_attr {
@@ -20,15 +17,16 @@ macro_rules! test_attr {
         fn $name() {
             let mut s = style::Tokenizer::from_str($text);
             $(
-                match s.parse_next().unwrap() {
+                match s.next().unwrap().unwrap() {
                     style::Token::SvgAttribute(aid, value) => {
                         assert_eq!(aid, $aid);
-                        assert_eq!(value.slice(), $avalue);
+                        assert_eq!(value.to_str(), $avalue);
                     },
                     _ => unreachable!(),
                 }
             )*
-            assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
+
+            assert_eq!(s.next().is_none(), true);
         }
     )
 }
@@ -73,9 +71,9 @@ test_attr!(parse_style_8, "  fill  :  none  ",
 #[test]
 fn parse_style_9() {
     let mut s = style::Tokenizer::from_str("&st0; &st1;");
-    assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("st0"));
-    assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("st1"));
-    assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
+    assert_eq!(s.next().unwrap().unwrap(), style::Token::EntityRef("st0"));
+    assert_eq!(s.next().unwrap().unwrap(), style::Token::EntityRef("st1"));
+    assert_eq!(s.next().is_none(), true);
 }
 
 test_attr!(parse_style_10, "/**/", );
@@ -84,33 +82,48 @@ test_attr!(parse_style_11, "font-family:Cantarell;-inkscape-font-specification:&
     (AId::FontFamily, "Cantarell")
 );
 
-#[test]
-fn parse_style_12() {
-    let mut s = style::Tokenizer::from_str("&#x4B2ƿ  ;");
-    assert_eq!(s.parse_next().unwrap(), style::Token::EntityRef("#x4B2ƿ  "));
-    assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
-}
+// TODO: technically incorrect, because value with spaces should be quoted
+test_attr!(parse_style_12, "font-family:Neue Frutiger 65",
+    (AId::FontFamily, "Neue Frutiger 65")
+);
 
 #[test]
 fn invalid_1() {
     let mut s = style::Tokenizer::from_str(":");
-    assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,1)));
+    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
+               "Error: invalid attribute value at 1:2\n");
 }
 
 #[test]
 fn invalid_2() {
     let mut s = style::Tokenizer::from_str("name:'");
-    assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,7)));
+    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
+               "Error: unexpected end of stream\n");
 }
 
 #[test]
 fn invalid_3() {
     let mut s = style::Tokenizer::from_str("&\x0a96M*9");
-    assert_eq!(s.parse_next().unwrap_err(), Error::InvalidAttributeValue(ErrorPos::new(1,2)));
+    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
+               "Error: invalid attribute value at 1:2\n");
 }
 
 #[test]
 fn invalid_4() {
     let mut s = style::Tokenizer::from_str("/*/**/");
-    assert_eq!(s.parse_next().is_err(), true);
+    assert_eq!(s.next().unwrap().is_err(), true);
+}
+
+#[test]
+fn invalid_5() {
+    let mut s = style::Tokenizer::from_str("&#x4B2ƿ  ;");
+    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
+               "Error: invalid attribute value at 1:7\n");
+}
+
+#[test]
+fn invalid_6() {
+    let mut s = style::Tokenizer::from_str("{");
+    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
+               "Error: invalid attribute value at 1:2\n");
 }

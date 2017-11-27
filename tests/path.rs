@@ -4,8 +4,13 @@
 
 extern crate svgparser;
 
-use svgparser::{Tokenize, Error};
-use svgparser::path::{Tokenizer, Token};
+use svgparser::{
+    FromSpan,
+};
+use svgparser::path::{
+    Tokenizer,
+    Token,
+};
 
 macro_rules! test {
     ($name:ident, $text:expr, $( $seg:expr ),*) => (
@@ -13,9 +18,10 @@ macro_rules! test {
         fn $name() {
             let mut s = Tokenizer::from_str($text);
             $(
-                assert_eq!(s.parse_next().unwrap(), $seg);
+                assert_eq!(s.next().unwrap(), $seg);
             )*
-            assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
+
+            assert_eq!(s.next().is_none(), true);
         }
     )
 }
@@ -227,7 +233,7 @@ test!(invalid_1, "M\t.", );
 fn invalid_2() {
     // ClosePath can't be followed by a number
     let mut s = Tokenizer::from_str("M0 0 Z 2");
-    assert_eq!(s.parse_next().unwrap(), Token::MoveTo { abs: true, x: 0.0, y: 0.0 });
-    assert_eq!(s.parse_next().unwrap(), Token::ClosePath { abs: true });
-    assert_eq!(s.parse_next().unwrap_err(), Error::EndOfStream);
+    assert_eq!(s.next().unwrap(), Token::MoveTo { abs: true, x: 0.0, y: 0.0 });
+    assert_eq!(s.next().unwrap(), Token::ClosePath { abs: true });
+    assert_eq!(s.next(), None);
 }

@@ -7,11 +7,10 @@
 //! [`<path>`]: https://www.w3.org/TR/SVG/paths.html#PathData
 
 use {
-    Error,
-    ErrorPos,
     Stream,
-    TextFrame,
-    Tokenize,
+    StreamExt,
+    StrSpan,
+    FromSpan,
 };
 
 /// Path's segment token.
@@ -85,15 +84,17 @@ pub struct Tokenizer<'a> {
     prev_cmd: Option<u8>,
 }
 
-impl<'a> Tokenize<'a> for Tokenizer<'a> {
-    type Token = Token;
-
-    fn from_frame(frame: TextFrame<'a>) -> Tokenizer<'a> {
+impl<'a> FromSpan<'a> for Tokenizer<'a> {
+    fn from_span(span: StrSpan<'a>) -> Self {
         Tokenizer {
-            stream: Stream::from_frame(frame),
+            stream: Stream::from_span(span),
             prev_cmd: None,
         }
     }
+}
+
+impl<'a> Iterator for Tokenizer<'a> {
+    type Item = Token;
 
     /// Extracts next path data segment from the stream.
     ///
@@ -116,22 +117,23 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
     ///   into explicit LineTo.
     ///
     ///   Example: `M 10 20 30 40 50 60` -> `M 10 20 L 30 40 L 50 60`
-    fn parse_next(&mut self) -> Result<Token, Error> {
+    fn next(&mut self) -> Option<Self::Item> {
         let s = &mut self.stream;
 
         s.skip_spaces();
 
         if s.at_end() {
-            return Err(Error::EndOfStream);
+            return None;
         }
 
         macro_rules! data_error {
             () => ({
-                warnln!(
+                warn!(
                     "Invalid path data at {}. The remaining data is ignored.",
                     s.gen_error_pos()
                 );
-                return Err(Error::EndOfStream);
+                s.jump_to_end();
+                return None;
             })
         }
 
@@ -149,21 +151,23 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         }
 
         let has_prev_cmd = self.prev_cmd.is_some();
-        let first_char = s.curr_char_unchecked();
+        let first_char = s.curr_byte().unwrap(); // TODO: remove unwrap
 
         if !has_prev_cmd && !is_cmd(first_char) {
-            warnln!("'{}' is not a command. \
-                     The remaining data is ignored.", first_char as char);
-            return Err(Error::EndOfStream);
+            warn!("'{}' is not a command. \
+                   The remaining data is ignored.", first_char as char);
+            s.jump_to_end();
+            return None;
         }
 
         if !has_prev_cmd {
             match first_char {
                 b'M' | b'm' => {}
                 _ => {
-                    warnln!("First segment must be MoveTo. \
-                             The remaining data is ignored.");
-                    return Err(Error::EndOfStream);
+                    warn!("First segment must be MoveTo. \
+                           The remaining data is ignored.");
+                    s.jump_to_end();
+                    return None;
                 }
             }
         }
@@ -173,15 +177,16 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
         if is_cmd(first_char) {
             is_implicit_move_to = false;
             cmd = first_char;
-            s.advance_unchecked(1);
+            s.advance(1);
         } else if is_digit(first_char) && has_prev_cmd {
             // unwrap is safe, because we checked 'has_prev_cmd'
             let prev_cmd = self.prev_cmd.unwrap();
 
             if prev_cmd == b'Z' || prev_cmd == b'z' {
-                warnln!("ClosePath cannot be followed by a number. \
-                         The remaining data is ignored.");
-                return Err(Error::EndOfStream);
+                warn!("ClosePath cannot be followed by a number. \
+                       The remaining data is ignored.");
+                s.jump_to_end();
+                return None;
             }
 
             if prev_cmd == b'M' || prev_cmd == b'm' {
@@ -269,8 +274,8 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
                     rx: parse_num!(),
                     ry: parse_num!(),
                     x_axis_rotation: parse_num!(),
-                    large_arc: try_num!(parse_flag(s)),
-                    sweep: try_num!(parse_flag(s)),
+                    large_arc: try_opt!(parse_flag(s)),
+                    sweep: try_opt!(parse_flag(s)),
                     x: parse_num!(),
                     y: parse_num!(),
                 }
@@ -291,7 +296,7 @@ impl<'a> Tokenize<'a> for Tokenizer<'a> {
             }
         );
 
-        Ok(token)
+        Some(token)
     }
 }
 
@@ -357,22 +362,22 @@ fn is_digit(c: u8) -> bool {
 
 // By the SVG spec 'large-arc' and 'sweep' must contain only one char
 // and can be written without any separators, aka: 10 20 30 01 10 20.
-fn parse_flag(s: &mut Stream) -> Result<bool, Error> {
+fn parse_flag(s: &mut Stream) -> Option<bool> {
     s.skip_spaces();
-    let c = s.curr_char()?;
+    let c = try_opt!(s.curr_byte().ok());
     match c {
         b'0' | b'1' => {
-            s.advance(1)?;
-            if s.is_char_eq(b',')? {
-                s.advance(1)?;
+            s.advance(1);
+            if try_opt!(s.curr_byte().ok()) == b',' {
+                s.advance(1);
             }
             s.skip_spaces();
 
-            Ok(c == b'1')
+            Some(c == b'1')
         }
         _ => {
             // error type is not relevant since it will be ignored
-            Err(Error::UnexpectedEndOfStream(ErrorPos::new(0, 0)))
+            None
         }
     }
 }

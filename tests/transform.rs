@@ -4,18 +4,25 @@
 
 extern crate svgparser;
 
-use svgparser::{Tokenize, Error, ErrorPos};
-use svgparser::transform::{self, Token};
+use svgparser::{
+    FromSpan,
+    ChainedErrorExt,
+};
+use svgparser::transform::{
+    Tokenizer,
+    Token,
+};
 
 macro_rules! test {
     ($name:ident, $text:expr, $($value:expr),*) => (
         #[test]
         fn $name() {
-            let mut ts = transform::Tokenizer::from_str($text);
+            let mut ts = Tokenizer::from_str($text);
             $(
-                assert_eq!(ts.parse_next().unwrap(), $value);
+                assert_eq!(ts.next().unwrap().unwrap(), $value);
             )*
-            assert_eq!(ts.parse_next().unwrap_err(), Error::EndOfStream);
+
+            assert_eq!(ts.next().is_none(), true);
         }
     )
 }
@@ -81,19 +88,28 @@ test!(ts_list_2, "translate(10,20), scale(2) ,  rotate(45),",
 
 #[test]
 fn error_1() {
-    let mut ts = transform::Tokenizer::from_str("text");
-    assert_eq!(ts.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1,1)));
+    let mut ts = Tokenizer::from_str("text");
+    assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
+               "Error: invalid transform at 1:5");
 }
 
 #[test]
 fn error_2() {
-    let mut ts = transform::Tokenizer::from_str("scale(2) text");
-    ts.parse_next().unwrap();
-    assert_eq!(ts.parse_next().err().unwrap(), Error::UnexpectedEndOfStream(ErrorPos::new(1,10)));
+    let mut ts = Tokenizer::from_str("scale(2) text");
+    let _ = ts.next().unwrap();
+    assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
+               "Error: invalid transform at 1:14");
 }
 
 #[test]
 fn error_3() {
-    let mut ts = transform::Tokenizer::from_str(" ");
-    assert_eq!(ts.parse_next().unwrap_err(), Error::EndOfStream);
+    let mut ts = Tokenizer::from_str(" ");
+    assert_eq!(ts.next().is_none(), true);
+}
+
+#[test]
+fn error_4() {
+    let mut ts = Tokenizer::from_str("???G");
+    assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
+               "Error: invalid name token");
 }

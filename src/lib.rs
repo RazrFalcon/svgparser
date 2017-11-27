@@ -53,38 +53,24 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - The library forbids unsafe code.
 */
 
-#![doc(html_root_url = "https://docs.rs/svgparser/0.5.0")]
+#![doc(html_root_url = "https://docs.rs/svgparser/0.6.0")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
-#![deny(unused_import_braces)]
 
+pub extern crate xmlparser;
 extern crate phf;
+#[macro_use] extern crate log;
+#[macro_use] extern crate error_chain;
 
-pub use attribute_id::AttributeId;
-pub use attribute_value::{AttributeValue, PaintFallback};
-pub use color::Color;
-pub use element_id::ElementId;
-pub use error::{Error, ErrorPos};
-pub use length::{Length, LengthUnit};
-pub use stream::{TextFrame, Stream};
-pub use text::{TextUnescape, XmlSpace};
-pub use tokenize::{Tokenize, Tokens};
-pub use value_id::ValueId;
-pub use values_list::{NumberList, LengthList};
 
-/// Prints warnings into stderr.
-#[macro_export]
-macro_rules! warnln {
-    ($msg:expr) => ({
-        use std::io::Write;
-        writeln!(&mut ::std::io::stderr(), "Warning: {}", $msg).unwrap()
-    });
-
-    ($fmt:expr, $($arg:tt)*) => ({
-        use std::io::Write;
-        writeln!(&mut ::std::io::stderr(), concat!("Warning: ", $fmt), $($arg)*).unwrap()
-    });
+macro_rules! try_opt {
+    ($expr: expr) => {
+        match $expr {
+            Some(value) => value,
+            None => return None
+        }
+    }
 }
 
 pub mod path;
@@ -99,8 +85,50 @@ mod colors;
 mod element_id;
 mod error;
 mod length;
-mod stream;
-mod text;
-mod tokenize;
+mod streamext;
 mod value_id;
 mod values_list;
+
+
+pub use attribute_id::{
+    AttributeId,
+};
+pub use attribute_value::{
+    AttributeValue,
+    PaintFallback,
+};
+pub use color::{
+    Color,
+};
+pub use element_id::{
+    ElementId,
+};
+pub use error::{
+    ChainedErrorExt,
+    Error,
+    ErrorKind,
+};
+pub use length::{
+    Length,
+    LengthUnit,
+};
+pub use streamext::{
+    StreamExt,
+};
+pub use value_id::{
+    ValueId,
+};
+pub use values_list::{
+    NumberList,
+    LengthList,
+};
+
+pub use xmlparser::{
+    ChainedError,
+    ErrorPos,
+    FromSpan,
+    Stream,
+    StrSpan,
+    TextUnescape,
+    XmlSpace,
+};

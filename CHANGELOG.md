@@ -5,20 +5,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+**Note:** this update contains a lot of breaking changes.
+
 ### Added
 - Case-insensitive parsing for color names.
 - `svg::Token::ProcessingInstruction`.
-- `Stream::consume_string`.
-- `Stream::consume_name`.
+- `error-chain` crate for errors.
+- `log` crate for warnings.
 
 ### Changed
-- `Stream::read_unchecked` and `Stream::read_to` returns `TextFrame` instead of `&str` now.
+- XML parsing moved to a separate crate: xmlparser.
+- All tokenizer's return `Option<Result<T>>` now and not `Result<T>`.
+- `path::Tokenizer` doesn't return errors anymore, because any error should stop parsing anyway.
+- Rename `TextFrame` to `StrSpan`.
+- Almost all fields in `svg::Token` enum are changed.
 
 ### Fixed
-- Error position calculation.
 - Panic during style attribute parsing.
 
+### Removed
+- `Tokenize` trait. The default `Iterator` is used now.
+- `Tokens` iterator. The default `Iterator` is used now.
+- `EndOfStream` error. Iterator will return `None` instead.
+- `Stream` struct.
+- `warnln!` macro. `log::warn!` is used instead.
+
 ## [0.5.0] - 2017-09-26
+**Note:** this update contains breaking changes.
+
 ### Added
 - Text unescaping support via `TextUnescape`.
 - `Tokens` iterator.

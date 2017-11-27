@@ -5,7 +5,7 @@ extern crate svgparser;
 
 use std::str;
 
-use svgparser::{Stream, Error};
+use svgparser::{Stream, StreamExt, SvgError, SvgErrorKind};
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = str::from_utf8(data) {
@@ -13,7 +13,7 @@ fuzz_target!(|data: &[u8]| {
 
         if let Err(e) = stream.parse_length() {
             match e {
-                Error::InvalidNumber(_) => {}
+                SvgError(SvgErrorKind::InvalidNumber(_), _) => {}
                 _ => panic!("{:?}", e),
             }
         }

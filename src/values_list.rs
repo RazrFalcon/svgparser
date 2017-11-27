@@ -6,7 +6,8 @@ use {
     Error,
     Length,
     Stream,
-    TextFrame,
+    StreamExt,
+    StrSpan,
 };
 
 /// Iterator over a list of [`<number>`] values.
@@ -15,14 +16,14 @@ use {
 pub struct NumberList<'a>(Stream<'a>);
 
 impl<'a> NumberList<'a> {
-    /// Constructs a new `NumberList` from `TextFrame`.
-    pub fn from_frame(frame: TextFrame<'a>) -> NumberList<'a> {
-        NumberList(Stream::from_frame(frame))
+    /// Constructs a new `NumberList` from `StrSpan`.
+    pub fn from_span(span: StrSpan<'a>) -> NumberList<'a> {
+        NumberList(Stream::from_span(span))
     }
 
     /// Returns an underling string.
     pub fn data(&self) -> &str {
-        self.0.slice()
+        self.0.span().to_str()
     }
 }
 
@@ -44,14 +45,14 @@ impl<'a> Iterator for NumberList<'a> {
 pub struct LengthList<'a>(Stream<'a>);
 
 impl<'a> LengthList<'a> {
-    /// Constructs a new `LengthList` from `TextFrame`.
-    pub fn from_frame(frame: TextFrame<'a>) -> LengthList<'a> {
-        LengthList(Stream::from_frame(frame))
+    /// Constructs a new `LengthList` from `StrSpan`.
+    pub fn from_span(span: StrSpan<'a>) -> LengthList<'a> {
+        LengthList(Stream::from_span(span))
     }
 
     /// Returns an underling string.
     pub fn data(&self) -> &str {
-        self.0.slice()
+        self.0.span().to_str()
     }
 }
 
