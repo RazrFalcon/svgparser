@@ -34,7 +34,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - Pretty fast.
 
 ### Limitations
- - All keywords must be lowercase. Case-insensitive parsing is not supported.
+ - All keywords must be lowercase. Case-insensitive parsing is supported only for color names.
    Still, it's extremely rare.
  - The `<color>` followed by the `<icccolor>` is not supported. As the `<icccolor>` itself.
  - Only ENTITY objects are parsed from the DOCTYPE. Other ignored.
@@ -125,7 +125,9 @@ pub use values_list::{
 
 pub use xmlparser::{
     ChainedError,
+    EntityDefinition,
     ErrorPos,
+    ExternalId,
     FromSpan,
     Stream,
     StrSpan,

@@ -124,20 +124,11 @@ fn parse(text: &str) -> Result<(), Error> {
             svg::Token::Comment(comment) => {
                 println!("Comment node: '{}'", comment);
             }
-            svg::Token::EmptyDtd(name) => {
-                println!("An empty DTD: '{}'", name);
-            }
-            svg::Token::DtdStart(name) => {
-                println!("DTD '{}' parsing started", name);
-            }
-            svg::Token::Entity(name, value) => {
+            svg::Token::EntityDeclaration(name, value) => {
                 // svgparser supports only 'ENTITY'.
                 // Any other DTD node will be ignored.
 
-                println!("Entity node: '{}' = '{}'", name, value.to_str());
-            }
-            svg::Token::DtdEnd => {
-                println!("DTD parsing ended");
+                println!("Entity declaration: '{}' = '{}'", name, value.to_str());
             }
             svg::Token::Declaration(version, encoding, standalone) => {
                 println!("Declaration node: version={} encoding={:?} standalone={:?}",

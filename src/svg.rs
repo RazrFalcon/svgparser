@@ -57,49 +57,48 @@ impl<'a> From<StrSpan<'a>> for AttrName<'a> {
 /// SVG token.
 #[derive(Debug)]
 pub enum Token<'a> {
-    /// The XML declaration token.
+    /// XML declaration token.
     ///
-    /// Example: `<?xml version="1.0"?>` -> `" version="1.0""`
+    /// Example: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` ->
+    /// `("1.0", "UTF-8", "yes")`
     Declaration(&'a str, Option<&'a str>, Option<&'a str>),
-    /// The XML processing instruction token.
+    /// XML processing instruction token.
     ///
-    /// Example: `<?target content?>` -> `"target", "content"`
+    /// Example: `<?target content?>` -> `("target", "content")`
     ProcessingInstruction(&'a str, Option<&'a str>),
-    /// The empty DOCTYPE token.
-    ///
-    /// Example: `<!DOCTYPE note SYSTEM "Note.dtd">` -> `"note SYSTEM "Note.dtd""`
-    EmptyDtd(&'a str),
-    /// The DOCTYPE start token.
-    ///
-    /// Example: `<!DOCTYPE svg PUBLIC [` -> `svg PUBLIC`
-    DtdStart(&'a str),
     /// The ENTITY token.
     ///
     /// Can appear only inside the DTD.
+    /// We emit only entities with [EntityValue](https://www.w3.org/TR/xml/#NT-EntityValue).
+    /// [ExternalID](https://www.w3.org/TR/xml/#NT-ExternalID) skipped.
     ///
-    /// Example: `<!ENTITY ns_extend "http://test.com">` -> `"ns_extend", "http://test.com"`
-    Entity(&'a str, StrSpan<'a>),
-    /// The DOCTYPE end token.
-    ///
-    /// Example: `]>`
-    DtdEnd,
-    /// The comment token.
+    /// Example: `<!ENTITY ns_extend "http://test.com">` -> `("ns_extend", "http://test.com")`
+    EntityDeclaration(&'a str, StrSpan<'a>),
+    /// Comment token.
     ///
     /// Example: `<!-- text -->` -> `" text "`
     Comment(&'a str),
-    /// The XML element tag name token.
+    /// Element start token.
     ///
-    /// Example: `<nonsvg ...` -> `"nonsvg"`
+    /// Example:
+    ///
+    /// `<nonsvg ...` -> `"nonsvg"`
+    ///
+    /// `<svg ...` -> `ElementId::SVG`
     ElementStart(TagName<'a>),
-    /// The XML element tag name token.
+    /// Element end token.
     ///
-    /// Example: `<nonsvg ...` -> `"nonsvg"`
+    /// See `ElementEnd` doc for example.
     ElementEnd(ElementEnd<'a>),
-    /// The XML element tag name token.
+    /// Attribute token.
     ///
-    /// Example: `name="value"` -> `"name", "value"`
+    /// Example:
+    ///
+    /// `name="value"` -> `("name", "value")`
+    ///
+    /// `fill="red"` -> `(AttributeId::Fill, "red")`
     Attribute(AttrName<'a>, StrSpan<'a>),
-    /// The text token.
+    /// Text token.
     ///
     /// Contains text between elements including whitespaces.
     /// Basically everything between `>` and `<`.
@@ -108,13 +107,14 @@ pub enum Token<'a> {
     ///
     /// Example: `<text>text</text>` -> `"text"`
     Text(StrSpan<'a>),
-    /// The CDATA token.
+    /// CDATA token.
     ///
     /// Example: `<![CDATA[text]]>` -> `"text"`
     Cdata(StrSpan<'a>),
-    /// The whitespace token.
+    /// Whitespaces token.
     ///
-    /// It will contain only `\n \t\r` characters.
+    /// It will contain only whitespace characters like `\n \t\r`
+    /// and escaped version of them, like `&#x20;`.
     ///
     /// If there is a text between elements - `Whitespace` will not be emitted at all.
     ///
@@ -202,24 +202,15 @@ impl<'a> Iterator for Tokenizer<'a> {
             xmlparser::Token::Comment(text) => {
                 Ok(Token::Comment(text.to_str()))
             }
-            xmlparser::Token::DtdStart(name, _) => {
-                Ok(Token::DtdStart(name.to_str()))
-            }
-            xmlparser::Token::EmptyDtd(name, _) => {
-                Ok(Token::EmptyDtd(name.to_str()))
-            }
             xmlparser::Token::EntityDecl(name, def) => {
                 match def {
                     xmlparser::EntityDefinition::EntityValue(value) => {
-                        Ok(Token::Entity(name.to_str(), value))
+                        Ok(Token::EntityDeclaration(name.to_str(), value))
                     }
                     _ => {
                         return self.next();
                     }
                 }
-            }
-            xmlparser::Token::DtdEnd => {
-                Ok(Token::DtdEnd)
             }
             xmlparser::Token::Declaration(version, encoding, standalone) => {
                 Ok(Token::Declaration(
@@ -233,6 +224,11 @@ impl<'a> Iterator for Tokenizer<'a> {
                     target.to_str(),
                     content.map(|s| s.to_str())
                 ))
+            }
+              xmlparser::Token::DtdStart(_, _)
+            | xmlparser::Token::EmptyDtd(_, _)
+            | xmlparser::Token::DtdEnd => {
+                return self.next();
             }
         };
 
