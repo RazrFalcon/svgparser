@@ -202,7 +202,7 @@ impl<'a> Iterator for Tokenizer<'a> {
             xmlparser::Token::Comment(text) => {
                 Ok(Token::Comment(text.to_str()))
             }
-            xmlparser::Token::EntityDecl(name, def) => {
+            xmlparser::Token::EntityDeclaration(name, def) => {
                 match def {
                     xmlparser::EntityDefinition::EntityValue(value) => {
                         Ok(Token::EntityDeclaration(name.to_str(), value))
