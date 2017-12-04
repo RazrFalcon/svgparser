@@ -21,6 +21,7 @@ fn load_file(path: &str) -> String {
 fn parse(text: &str) {
     for token in svg::Tokenizer::from_str(text) {
         let _ = token.unwrap();
+        // TODO: parse attribute values
     }
 }
 

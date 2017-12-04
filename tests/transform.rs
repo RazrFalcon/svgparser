@@ -90,7 +90,7 @@ test!(ts_list_2, "translate(10,20), scale(2) ,  rotate(45),",
 fn error_1() {
     let mut ts = Tokenizer::from_str("text");
     assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
-               "Error: invalid transform at 1:5");
+               "Error: unexpected end of stream");
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn error_2() {
     let mut ts = Tokenizer::from_str("scale(2) text");
     let _ = ts.next().unwrap();
     assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
-               "Error: invalid transform at 1:14");
+               "Error: unexpected end of stream");
 }
 
 #[test]

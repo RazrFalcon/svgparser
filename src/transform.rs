@@ -115,35 +115,27 @@ impl<'a> Tokenizer<'a> {
     fn parse_next(&mut self) -> Result<Token> {
         let s = &mut self.stream;
 
-        let t = match s.consume_name()?.to_str() {
-            "matrix" => {
-                s.skip_spaces();
-                s.consume_byte(b'(')?;
+        let start = s.pos();
+        let name = s.consume_name()?;
+        s.skip_spaces();
+        s.consume_byte(b'(')?;
 
-                let a = s.parse_list_number()?;
-                let b = s.parse_list_number()?;
-                let c = s.parse_list_number()?;
-                let d = s.parse_list_number()?;
-                let e = s.parse_list_number()?;
-                let f = s.parse_list_number()?;
-
+        let t = match name.as_bytes() {
+            b"matrix" => {
                 Token::Matrix {
-                    a: a,
-                    b: b,
-                    c: c,
-                    d: d,
-                    e: e,
-                    f: f,
+                    a: s.parse_list_number()?,
+                    b: s.parse_list_number()?,
+                    c: s.parse_list_number()?,
+                    d: s.parse_list_number()?,
+                    e: s.parse_list_number()?,
+                    f: s.parse_list_number()?,
                 }
             }
-            "translate" => {
-                s.skip_spaces();
-                s.consume_byte(b'(')?;
-
+            b"translate" => {
                 let x = s.parse_list_number()?;
                 s.skip_spaces();
 
-                let y = if s.curr_byte()? == b')' {
+                let y = if s.is_curr_byte_eq(b')') {
                     // 'If <ty> is not provided, it is assumed to be zero.'
                     0.0
                 } else {
@@ -155,14 +147,11 @@ impl<'a> Tokenizer<'a> {
                     ty: y,
                 }
             }
-            "scale" => {
-                s.skip_spaces();
-                s.consume_byte(b'(')?;
-
+            b"scale" => {
                 let x = s.parse_list_number()?;
                 s.skip_spaces();
 
-                let y = if s.curr_byte()? == b')' {
+                let y = if s.is_curr_byte_eq(b')') {
                     // 'If <sy> is not provided, it is assumed to be equal to <sx>.'
                     x
                 } else {
@@ -174,14 +163,11 @@ impl<'a> Tokenizer<'a> {
                     sy: y,
                 }
             }
-            "rotate" => {
-                s.skip_spaces();
-                s.consume_byte(b'(')?;
-
+            b"rotate" => {
                 let a = s.parse_list_number()?;
                 s.skip_spaces();
 
-                if s.curr_byte()? != b')' {
+                if !s.is_curr_byte_eq(b')') {
                     // 'If optional parameters <cx> and <cy> are supplied, the rotate is about the
                     // point (cx, cy). The operation represents the equivalent of the following
                     // specification:
@@ -201,28 +187,19 @@ impl<'a> Tokenizer<'a> {
                     }
                 }
             }
-            "skewX" => {
-                s.skip_spaces();
-                s.consume_byte(b'(')?;
-
-                let a = s.parse_list_number()?;
-
+            b"skewX" => {
                 Token::SkewX {
-                    angle: a,
+                    angle: s.parse_list_number()?,
                 }
             }
-            "skewY" => {
-                s.skip_spaces();
-                s.consume_byte(b'(')?;
-
-                let a = s.parse_list_number()?;
-
+            b"skewY" => {
                 Token::SkewY {
-                    angle: a,
+                    angle: s.parse_list_number()?,
                 }
             }
             _ => {
-                return Err(ErrorKind::InvalidTransform(s.gen_error_pos()).into());
+                let pos = s.gen_error_pos_from(start);
+                return Err(ErrorKind::InvalidTransform(pos).into());
             }
         };
 
