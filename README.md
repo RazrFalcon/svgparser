@@ -83,7 +83,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-svgparser = "0.5"
+svgparser = "0.6"
 ```
 
 ### License
