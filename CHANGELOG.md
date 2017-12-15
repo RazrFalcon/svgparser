@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Path parsing when subpath starts not with MoveTo.
 
 ## [0.6.0] - 2017-12-15
 **Note:** this update contains a lot of breaking changes.

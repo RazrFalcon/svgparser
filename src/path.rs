@@ -172,9 +172,22 @@ impl<'a> Iterator for Tokenizer<'a> {
             }
         }
 
+        // TODO: simplify
         let is_implicit_move_to;
         let cmd: u8;
         if is_cmd(first_char) {
+            if let Some(prev_cmd) = self.prev_cmd {
+                if to_relative(prev_cmd) == b'z' {
+                    let fcl = to_relative(first_char);
+                    if fcl != b'm' && fcl != b'z' {
+                        warn!("Subpath must start with MoveTo. \
+                               The remaining data is ignored.");
+                        s.jump_to_end();
+                        return None;
+                    }
+                }
+            }
+
             is_implicit_move_to = false;
             cmd = first_char;
             s.advance(1);

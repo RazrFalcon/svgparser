@@ -229,11 +229,14 @@ test!(close_path_3, "M10 20 L 30 40 Z Z Z",
 // first token should be EndOfStream
 test!(invalid_1, "M\t.", );
 
-#[test]
-fn invalid_2() {
-    // ClosePath can't be followed by a number
-    let mut s = Tokenizer::from_str("M0 0 Z 2");
-    assert_eq!(s.next().unwrap(), Token::MoveTo { abs: true, x: 0.0, y: 0.0 });
-    assert_eq!(s.next().unwrap(), Token::ClosePath { abs: true });
-    assert_eq!(s.next(), None);
-}
+// ClosePath can't be followed by a number
+test!(invalid_2, "M 0 0 Z 2",
+    Token::MoveTo { abs: true, x: 0.0, y: 0.0 },
+    Token::ClosePath { abs: true }
+);
+
+// Only MoveTo is allowed after ClosePath
+test!(invalid_3, "M 0 0 Z H 10",
+    Token::MoveTo { abs: true, x: 0.0, y: 0.0 },
+    Token::ClosePath { abs: true }
+);
