@@ -235,8 +235,9 @@ test!(invalid_2, "M 0 0 Z 2",
     Token::ClosePath { abs: true }
 );
 
-// Only MoveTo is allowed after ClosePath
+// ClosePath can be followed by any command
 test!(invalid_3, "M 0 0 Z H 10",
     Token::MoveTo { abs: true, x: 0.0, y: 0.0 },
-    Token::ClosePath { abs: true }
+    Token::ClosePath { abs: true },
+    Token::HorizontalLineTo { abs: true, x: 10.0 }
 );

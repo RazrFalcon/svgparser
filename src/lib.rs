@@ -53,7 +53,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - The library forbids unsafe code.
 */
 
-#![doc(html_root_url = "https://docs.rs/svgparser/0.6.1")]
+#![doc(html_root_url = "https://docs.rs/svgparser/0.6.2")]
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
