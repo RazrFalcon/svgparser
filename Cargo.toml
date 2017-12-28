@@ -16,8 +16,8 @@ travis-ci = { repository = "RazrFalcon/libsvgparser" }
 
 [dependencies]
 xmlparser = "0.1"
-phf = "=0.7.21"
-log = "0.3"
+phf = "0.7.21"
+log = "0.4"
 
 [dependencies.error-chain]
 version = "0.11"
