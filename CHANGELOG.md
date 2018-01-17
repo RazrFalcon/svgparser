@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.3] - 2018-01-17
+### Changed
+- `log` 0.3 -> 0.4
+
 ## [0.6.2] - 2017-12-16
 ### Fixed
 - Discard 0.6.1 changes.
@@ -192,7 +196,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.3...HEAD
+[0.6.3]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/RazrFalcon/libsvgparser/compare/v0.5.0...v0.6.0
