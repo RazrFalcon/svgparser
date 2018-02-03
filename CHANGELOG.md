@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.4] - 2018-02-03
+### Fixed
+- Invalid files in the crate package.
+
 ## [0.6.3] - 2018-01-17
 ### Changed
 - `log` 0.3 -> 0.4
@@ -196,7 +200,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.3...HEAD
+[Unreleased]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.4...HEAD
+[0.6.4]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/RazrFalcon/libsvgparser/compare/v0.6.0...v0.6.1
