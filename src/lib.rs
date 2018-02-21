@@ -85,6 +85,7 @@ mod colors;
 mod element_id;
 mod error;
 mod length;
+mod points;
 mod streamext;
 mod value_id;
 mod values_list;
@@ -111,6 +112,9 @@ pub use error::{
 pub use length::{
     Length,
     LengthUnit,
+};
+pub use points::{
+    Points,
 };
 pub use streamext::{
     StreamExt,

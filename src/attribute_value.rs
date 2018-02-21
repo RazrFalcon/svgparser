@@ -130,7 +130,7 @@ impl<'a> AttributeValue<'a> {
     ///
     /// # Notes
     ///
-    /// - `<transform>`, `<path>` and `<style>` values should be parsed using their
+    /// - `transform`, path's `d` and `style` attributes should be parsed using their
     ///   own tokenizer's. This function will parse them as `AttributeValue::String`, aka ignores.
     /// - `enable-background` and `cursor` are not fully implemented.
     ///   This function will try to parse a single predefined value. Other data will be parsed as
@@ -138,7 +138,7 @@ impl<'a> AttributeValue<'a> {
     ///
     ///   Library will print a warning to stderr.
     /// - `viewBox` will be parsed as `AttributeValue::NumberList`.
-    /// - `<opacity>` value will be bounded to 0..1 range.
+    /// - `opacity` value will be bounded to 0..1 range.
     /// - This function didn't correct most of the numeric values. If value has an incorrect
     ///   data, like `viewBox='0 0 -1 -5'` (negative w/h is error), it will be parsed as is.
     ///
@@ -315,10 +315,6 @@ impl<'a> AttributeValue<'a> {
               AId::StdDeviation
             | AId::BaseFrequency => {
                 // TODO: this attributes can contain only one or two numbers
-                Ok(AttributeValue::NumberList(NumberList::from_span(span)))
-            }
-
-            AId::Points => {
                 Ok(AttributeValue::NumberList(NumberList::from_span(span)))
             }
 

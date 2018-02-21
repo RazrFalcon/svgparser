@@ -26,7 +26,7 @@ fn main() {
     // Get a file path from the args.
     let args = env::args().collect::<Vec<String>>();
     if args.len() != 2 {
-        println!("Usage: extract_paths img.svg");
+        println!("Usage: parser img.svg");
         return;
     }
 

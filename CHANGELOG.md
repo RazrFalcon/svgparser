@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `points` attribute tokenizer: `Points`.
+
+### Changed
+- **Breaking**. `AttributeValue` parser no longer returns the `points` attribute
+  as a `NumberList`. Use a dedicated `Points` struct.
 
 ## [0.6.4] - 2018-02-03
 ### Fixed
