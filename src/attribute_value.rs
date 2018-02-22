@@ -40,6 +40,14 @@ pub struct ViewBox {
     pub h: f64,
 }
 
+impl ViewBox {
+    /// Creates a new `ViewBox`.
+    pub fn new(x: f64, y: f64, w: f64, h: f64) -> Self {
+        ViewBox { x: x, y: y, w: w, h: h }
+    }
+}
+
+
 /// The paint type fallback value in case when `FuncIRI` is not resolved.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PaintFallback {
