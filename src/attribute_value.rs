@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::fmt;
 use std::str;
 
 use xmlparser::{
@@ -13,13 +12,18 @@ use error::{
     Result,
 };
 use {
+    path,
+    style,
+    transform,
     AttributeId,
     Color,
     ElementId,
     ErrorKind,
+    FromSpan,
     Length,
     LengthList,
     NumberList,
+    Points,
     Stream,
     StreamExt,
     StrSpan,
@@ -48,7 +52,7 @@ pub enum PaintFallback {
 }
 
 /// Representation of the SVG attribute value.
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AttributeValue<'a> {
     /// [`<number>`] type.
     ///
@@ -66,10 +70,26 @@ pub enum AttributeValue<'a> {
     ///
     /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
     Color(Color),
-    /// [`<viewBox>`].
+    /// [`<viewBox>`] type.
     ///
     /// [`<viewBox>`]: https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
     ViewBox(ViewBox),
+    /// [`<list-of-points>`] type.
+    ///
+    /// [`<list-of-points>`]: https://www.w3.org/TR/SVG11/shapes.html#PointsBNF
+    Points(Points<'a>),
+    /// [`<path>`] type.
+    ///
+    /// [`<path>`]: https://www.w3.org/TR/SVG/paths.html#PathData
+    Path(path::Tokenizer<'a>),
+    /// [`<style>`] type.
+    ///
+    /// [`<style>`]: https://www.w3.org/TR/SVG/styling.html#StyleAttribute
+    Style(style::Tokenizer<'a>),
+    /// [`<transform-list>`] type.
+    ///
+    /// [`<transform-list>`]: https://www.w3.org/TR/SVG/types.html#DataTypeTransformList
+    Transform(transform::Tokenizer<'a>),
     /// Reference to the ENTITY. Contains only `name` from `&name;`.
     EntityRef(&'a str),
     /// [`<IRI>`] type.
@@ -88,37 +108,6 @@ pub enum AttributeValue<'a> {
     PredefValue(ValueId),
     /// Unknown data.
     String(&'a str),
-}
-
-impl<'a> fmt::Debug for AttributeValue<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            AttributeValue::Color(color) =>
-                write!(f, "Color({:?})", color),
-            AttributeValue::ViewBox(vb) =>
-                write!(f, "ViewBox({:?})", vb),
-            AttributeValue::EntityRef(name) =>
-                write!(f, "EntityRef({})", name),
-            AttributeValue::Length(len) =>
-                write!(f, "Length({:?})", len),
-            AttributeValue::LengthList(list) =>
-                write!(f, "LengthList({})", list.data()),
-            AttributeValue::IRI(name) =>
-                write!(f, "IRI({})", name),
-            AttributeValue::FuncIRI(name) =>
-                write!(f, "FuncIRI({})", name),
-            AttributeValue::FuncIRIWithFallback(name, ref fallback) =>
-                write!(f, "FuncIRI({}) Fallback({:?})", name, fallback),
-            AttributeValue::Number(num) =>
-                write!(f, "Number({})", num),
-            AttributeValue::NumberList(list) =>
-                write!(f, "NumberList({})", list.data()),
-            AttributeValue::PredefValue(id) =>
-                write!(f, "PredefValue({})", id.name()),
-            AttributeValue::String(text) =>
-                write!(f, "String({})", text),
-        }
-    }
 }
 
 macro_rules! parse_or {
@@ -144,8 +133,6 @@ impl<'a> AttributeValue<'a> {
     ///
     /// # Notes
     ///
-    /// - `transform`, path's `d`, `points` and `style` attributes should be parsed using their
-    ///   own tokenizer's. This function will parse them as `AttributeValue::String`, aka ignores.
     /// - `enable-background` and `cursor` are not fully implemented.
     ///   This function will try to parse a single predefined value. Other data will be parsed as
     ///   `AttributeValue::String`.
@@ -329,6 +316,24 @@ impl<'a> AttributeValue<'a> {
             | AId::BaseFrequency => {
                 // TODO: this attributes can contain only one or two numbers
                 Ok(AttributeValue::NumberList(NumberList::from_span(span)))
+            }
+
+            AId::Points => {
+                Ok(AttributeValue::Points(Points::from_span(span)))
+            }
+
+            AId::D => {
+                Ok(AttributeValue::Path(path::Tokenizer::from_span(span)))
+            }
+
+            AId::Style => {
+                Ok(AttributeValue::Style(style::Tokenizer::from_span(span)))
+            }
+
+              AId::Transform
+            | AttributeId::GradientTransform
+            | AttributeId::PatternTransform => {
+                Ok(AttributeValue::Transform(transform::Tokenizer::from_span(span)))
             }
 
             AId::AlignmentBaseline => {

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /*!
-*libsvgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
+*svgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
 It's not an XML parser since it does not only split the content into the XML nodes,
@@ -20,6 +20,8 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - [\<FuncIRI\>](https://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI)
  - [\<transform-list\>](https://www.w3.org/TR/SVG/types.html#DataTypeTransformList)
  - [\<style\>](https://www.w3.org/TR/SVG/styling.html#StyleAttribute)
+ - [\<viewBox\>](https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute)
+ - [\<list-of-points\>](https://www.w3.org/TR/SVG11/shapes.html#PointsBNF)
 
 ### Benefits
  - Most of the common data parsed into internal representation, and not just as string
@@ -56,7 +58,9 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
 #![doc(html_root_url = "https://docs.rs/svgparser/0.6.4")]
 
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
+#![deny(missing_docs)]
+#![deny(missing_debug_implementations)]
+#![deny(missing_copy_implementations)]
 
 pub extern crate xmlparser;
 extern crate phf;

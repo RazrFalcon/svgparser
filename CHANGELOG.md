@@ -6,14 +6,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- **Breaking**. Added `AttributeValue::Path`.
+- **Breaking**. Added `AttributeValue::Points`.
+- **Breaking**. Added `AttributeValue::Style`.
+- **Breaking**. Added `AttributeValue::Transform`.
+- **Breaking**. Added `AttributeValue::ViewBox`.
 - `points` attribute tokenizer: `Points`.
-- `viewBox` attribute parsing.
+- All tokenizers derive `Clone`, `Copy`, `PartialEq` and `Debug` now.
+- Added `Debug` for `NumberList` and `LengthList`.
 
 ### Changed
-- **Breaking**. `AttributeValue` parser no longer returns the `points` attribute
-  as a `NumberList`. Use a dedicated `Points` struct.
+- **Breaking**. `AttributeValue` parser no longer return the `points` attribute
+  as a `NumberList`, but as `Points`.
 - **Breaking**. `viewBox` attribute will be parsed as `AttributeValue::ViewBox`
   and not as `AttributeValue::NumberList`.
+- **Breaking**. `NumberList` and `LengthList` implements `FromSpan` trait
+  instead of custom `from_span` methods.
 
 ## [0.6.4] - 2018-02-03
 ### Fixed

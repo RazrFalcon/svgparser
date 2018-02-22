@@ -136,6 +136,7 @@ pub enum ElementEnd<'a> {
 
 
 /// Tokenizer for SVG structure.
+#[allow(missing_debug_implementations)]
 pub struct Tokenizer<'a> {
     parser: xmlparser::Tokenizer<'a>,
 }

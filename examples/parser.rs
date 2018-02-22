@@ -5,17 +5,14 @@ use std::{env, fs, str};
 use std::io::Read;
 
 use svgparser::{
-    path,
-    style,
     svg,
-    transform,
+    style,
     AttributeId,
     AttributeValue,
     ChainedError,
     ElementId,
     Error,
     FromSpan,
-    Points,
     StrSpan,
     TextUnescape,
     XmlSpace,
@@ -156,29 +153,32 @@ fn parse_svg_attribute(
     // very expensive (in a case of paths).
     // So you can decide for yourself what to do with attributes.
 
-    match aid {
-        AttributeId::D => {
+    // We need ElementId for attribute parsing.
+    // See 'from_span' documentation for details.
+    let av = AttributeValue::from_span(eid, aid, value)?;
+    match av {
+        AttributeValue::Path(tokenizer) => {
             print_indent!("Path:", depth);
 
             // By the SVG spec, any invalid data occurred in the path should
             // stop parsing of this path, but not the whole document.
-            for segment in path::Tokenizer::from_span(value) {
+            for segment in tokenizer {
                 print_indent!("{:?}", depth + 1, segment)
             }
         }
-        AttributeId::Points => {
+        AttributeValue::Points(tokenizer) => {
             print_indent!("Points:", depth);
 
             // By the SVG spec, any invalid data occurred in the `points` should
             // stop parsing of this attribute, but not the whole document.
-            for point in Points::from_span(value) {
-                print_indent!("({} {})", depth + 1, point.0, point.1)
+            for point in tokenizer {
+                print_indent!("{:?}", depth + 1, point)
             }
         }
-        AttributeId::Style => {
+        AttributeValue::Style(tokenizer) => {
             print_indent!("Style:", depth);
 
-            for token in style::Tokenizer::from_span(value) {
+            for token in tokenizer {
                 match token? {
                     style::Token::XmlAttribute(name, value) => {
                         print_indent!("Non-SVG attribute: {} = '{}'", depth + 1, name, value);
@@ -192,19 +192,14 @@ fn parse_svg_attribute(
                 }
             }
         }
-          AttributeId::Transform
-        | AttributeId::GradientTransform
-        | AttributeId::PatternTransform => {
+        AttributeValue::Transform(tokenizer) => {
             print_indent!("Transform:", depth);
 
-            for ts in transform::Tokenizer::from_span(value) {
-                print_indent!("{:?}", depth + 1, ts)
+            for ts in tokenizer {
+                print_indent!("{:?}", depth + 1, ts?)
             }
         }
         _ => {
-            // We need ElementId for attribute parsing.
-            // See 'from_span' documentation for details.
-            let av = AttributeValue::from_span(eid, aid, value)?;
             print_indent!("SVG attribute: {:?} = {:?}", depth, aid, av);
         }
     }

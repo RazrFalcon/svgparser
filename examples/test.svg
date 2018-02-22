@@ -26,6 +26,8 @@
       style="&st1;"/>
     <rect
       class="fil1 str1"/>
+    <polygon
+      points="10 20 30 40"/>
     <text>simple text</text>
     <text>
         multi

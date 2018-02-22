@@ -6,6 +6,8 @@
 //!
 //! [`<transform-list>`]: https://www.w3.org/TR/SVG/coords.html#TransformAttribute
 
+use std::fmt;
+
 use error::{
     Result,
 };
@@ -48,6 +50,7 @@ pub enum Token {
 }
 
 /// Transform tokenizer.
+#[derive(Clone, Copy, PartialEq)]
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
     rotate_ts: Option<(f64, f64)>,
@@ -61,6 +64,12 @@ impl<'a> FromSpan<'a> for Tokenizer<'a> {
             rotate_ts: None,
             last_angle: None,
         }
+    }
+}
+
+impl<'a> fmt::Debug for Tokenizer<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "TransformTokenizer({:?})", self.stream.span())
     }
 }
 

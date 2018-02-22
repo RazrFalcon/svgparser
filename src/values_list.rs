@@ -2,8 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::fmt;
+
 use {
     Error,
+    FromSpan,
     Length,
     Stream,
     StreamExt,
@@ -15,15 +18,15 @@ use {
 #[derive(Copy, Clone, PartialEq)]
 pub struct NumberList<'a>(Stream<'a>);
 
-impl<'a> NumberList<'a> {
-    /// Constructs a new `NumberList` from `StrSpan`.
-    pub fn from_span(span: StrSpan<'a>) -> NumberList<'a> {
+impl<'a> FromSpan<'a> for NumberList<'a> {
+    fn from_span(span: StrSpan<'a>) -> Self {
         NumberList(Stream::from_span(span))
     }
+}
 
-    /// Returns an underling string.
-    pub fn data(&self) -> &str {
-        self.0.span().to_str()
+impl<'a> fmt::Debug for NumberList<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "NumberList({:?})", self.0.span())
     }
 }
 
@@ -49,10 +52,11 @@ impl<'a> LengthList<'a> {
     pub fn from_span(span: StrSpan<'a>) -> LengthList<'a> {
         LengthList(Stream::from_span(span))
     }
+}
 
-    /// Returns an underling string.
-    pub fn data(&self) -> &str {
-        self.0.span().to_str()
+impl<'a> fmt::Debug for LengthList<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "LengthList({:?})", self.0.span())
     }
 }
 

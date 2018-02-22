@@ -31,6 +31,8 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - [\<FuncIRI\>](https://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI)
  - [\<transform-list\>](https://www.w3.org/TR/SVG/types.html#DataTypeTransformList)
  - [\<style\>](https://www.w3.org/TR/SVG/styling.html#StyleAttribute)
+ - [\<viewBox\>](https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute)
+ - [\<list-of-points\>](https://www.w3.org/TR/SVG11/shapes.html#PointsBNF)
 
 See the documentation for details.
 

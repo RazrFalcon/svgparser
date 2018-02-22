@@ -6,6 +6,8 @@
 //!
 //! [`<path>`]: https://www.w3.org/TR/SVG/paths.html#PathData
 
+use std::fmt;
+
 use {
     Stream,
     StreamExt,
@@ -79,6 +81,7 @@ pub enum Token {
 }
 
 /// Tokenizer for the \<path\> data.
+#[derive(Clone, Copy, PartialEq)]
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
     prev_cmd: Option<u8>,
@@ -90,6 +93,12 @@ impl<'a> FromSpan<'a> for Tokenizer<'a> {
             stream: Stream::from_span(span),
             prev_cmd: None,
         }
+    }
+}
+
+impl<'a> fmt::Debug for Tokenizer<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PathTokenizer({:?})", self.stream.span())
     }
 }
 

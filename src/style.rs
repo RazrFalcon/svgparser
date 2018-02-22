@@ -49,6 +49,7 @@ impl<'a> fmt::Debug for Token<'a> {
 }
 
 /// Tokenizer for \<style\> data.
+#[derive(Clone, Copy, PartialEq)]
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
 }
@@ -58,6 +59,12 @@ impl<'a> FromSpan<'a> for Tokenizer<'a> {
         Tokenizer {
             stream: Stream::from_span(span)
         }
+    }
+}
+
+impl<'a> fmt::Debug for Tokenizer<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "StyleTokenizer({:?})", self.stream.span())
     }
 }
 

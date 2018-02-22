@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use std::fmt;
+
 use {
     FromSpan,
     Stream,
@@ -13,11 +15,18 @@ use {
 /// Points tokenizer.
 ///
 /// Use it for `points` attribute of `polygon` and `polyline` elements.
+#[derive(Clone, Copy, PartialEq)]
 pub struct Points<'a>(Stream<'a>);
 
 impl<'a> FromSpan<'a> for Points<'a> {
     fn from_span(span: StrSpan<'a>) -> Self {
         Points(Stream::from_span(span))
+    }
+}
+
+impl<'a> fmt::Debug for Points<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Points({:?})", self.0.span())
     }
 }
 
