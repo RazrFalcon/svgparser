@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   and not as `AttributeValue::NumberList`.
 - **Breaking**. `NumberList` and `LengthList` implements `FromSpan` trait
   instead of custom `from_span` methods.
+- Relicense from MPL-2.0 to MIT/Apache-2.0.
 
 ## [0.6.4] - 2018-02-03
 ### Fixed

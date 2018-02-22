@@ -17,6 +17,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
 - [Alternatives](#alternatives)
 - [Usage](#usage)
 - [License](#license)
+- [Contribution](#contribution)
 
 ### [Documentation](https://docs.rs/svgparser/)
 
@@ -90,4 +91,17 @@ svgparser = "0.6"
 
 ### License
 
-*libsvgparser* is licensed under the [MPLv2.0](https://www.mozilla.org/en-US/MPL/).
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
