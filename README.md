@@ -1,8 +1,8 @@
-## libsvgparser [![Build Status]](https://travis-ci.org/RazrFalcon/libsvgparser)
+## svgparser [![Build Status]](https://travis-ci.org/RazrFalcon/svgparser)
 
-[Build Status]: https://travis-ci.org/RazrFalcon/libsvgparser.svg?branch=master
+[Build Status]: https://travis-ci.org/RazrFalcon/svgparser.svg?branch=master
 
-*libsvgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
+*svgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
 It's not an XML parser since it does not only split the content into the XML nodes,

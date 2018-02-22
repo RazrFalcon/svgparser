@@ -7,12 +7,12 @@ keywords = ["svg", "parser", "tokenizer"]
 categories = ["parsing"]
 license = "MIT/Apache-2.0"
 description = "Featureful, pull-based, zero-allocation SVG parser."
-repository = "https://github.com/RazrFalcon/libsvgparser"
+repository = "https://github.com/RazrFalcon/svgparser"
 documentation = "https://docs.rs/svgparser/"
 readme = "README.md"
 
 [badges]
-travis-ci = { repository = "RazrFalcon/libsvgparser" }
+travis-ci = { repository = "RazrFalcon/svgparser" }
 
 [dependencies]
 xmlparser = "0.1"
