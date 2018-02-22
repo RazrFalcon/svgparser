@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `points` attribute tokenizer: `Points`.
+- `viewBox` attribute parsing.
 
 ### Changed
 - **Breaking**. `AttributeValue` parser no longer returns the `points` attribute
   as a `NumberList`. Use a dedicated `Points` struct.
+- **Breaking**. `viewBox` attribute will be parsed as `AttributeValue::ViewBox`
+  and not as `AttributeValue::NumberList`.
 
 ## [0.6.4] - 2018-02-03
 ### Fixed

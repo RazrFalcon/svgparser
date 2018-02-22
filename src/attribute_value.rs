@@ -5,8 +5,6 @@
 use std::fmt;
 use std::str;
 
-// TODO: parse viewBox
-
 use xmlparser::{
     Reference,
 };
@@ -27,6 +25,16 @@ use {
     StrSpan,
     ValueId,
 };
+
+/// ViewBox representation.
+#[allow(missing_docs)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ViewBox {
+    pub x: f64,
+    pub y: f64,
+    pub w: f64,
+    pub h: f64,
+}
 
 /// The paint type fallback value in case when `FuncIRI` is not resolved.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -58,6 +66,10 @@ pub enum AttributeValue<'a> {
     ///
     /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
     Color(Color),
+    /// [`<viewBox>`].
+    ///
+    /// [`<viewBox>`]: https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
+    ViewBox(ViewBox),
     /// Reference to the ENTITY. Contains only `name` from `&name;`.
     EntityRef(&'a str),
     /// [`<IRI>`] type.
@@ -83,6 +95,8 @@ impl<'a> fmt::Debug for AttributeValue<'a> {
         match *self {
             AttributeValue::Color(color) =>
                 write!(f, "Color({:?})", color),
+            AttributeValue::ViewBox(vb) =>
+                write!(f, "ViewBox({:?})", vb),
             AttributeValue::EntityRef(name) =>
                 write!(f, "EntityRef({})", name),
             AttributeValue::Length(len) =>
@@ -130,17 +144,16 @@ impl<'a> AttributeValue<'a> {
     ///
     /// # Notes
     ///
-    /// - `transform`, path's `d` and `style` attributes should be parsed using their
+    /// - `transform`, path's `d`, `points` and `style` attributes should be parsed using their
     ///   own tokenizer's. This function will parse them as `AttributeValue::String`, aka ignores.
     /// - `enable-background` and `cursor` are not fully implemented.
     ///   This function will try to parse a single predefined value. Other data will be parsed as
     ///   `AttributeValue::String`.
     ///
     ///   Library will print a warning to stderr.
-    /// - `viewBox` will be parsed as `AttributeValue::NumberList`.
     /// - `opacity` value will be bounded to 0..1 range.
-    /// - This function didn't correct most of the numeric values. If value has an incorrect
-    ///   data, like `viewBox='0 0 -1 -5'` (negative w/h is error), it will be parsed as is.
+    /// - This function didn't correct most of the numeric values.
+    ///   Like `rect`'s negative size, etc.
     ///
     /// [`StrSpan`]: struct.StrSpan.html
     /// [presentation attributes]: https://www.w3.org/TR/SVG/propidx.html
@@ -712,7 +725,7 @@ impl<'a> AttributeValue<'a> {
             }
 
             AId::ViewBox => {
-                Ok(AttributeValue::NumberList(NumberList::from_span(span)))
+                parse_or_err!(parse_view_box(stream))
             }
 
             _ => Ok(AttributeValue::String(stream.span().to_str())),
@@ -808,6 +821,19 @@ fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>> {
 fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>> {
     let c = Color::from_span(stream.span())?;
     Ok(AttributeValue::Color(c))
+}
+
+fn parse_view_box<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
+    let x = try_opt!(stream.parse_list_number().ok());
+    let y = try_opt!(stream.parse_list_number().ok());
+    let w = try_opt!(stream.parse_list_number().ok());
+    let h = try_opt!(stream.parse_list_number().ok());
+
+    if w <= 0.0 || h <= 0.0 {
+        return None;
+    }
+
+    Some(AttributeValue::ViewBox(ViewBox { x, y, w, h }))
 }
 
 #[inline]

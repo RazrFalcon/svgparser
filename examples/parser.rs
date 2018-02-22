@@ -15,6 +15,7 @@ use svgparser::{
     ElementId,
     Error,
     FromSpan,
+    Points,
     StrSpan,
     TextUnescape,
     XmlSpace,
@@ -157,7 +158,7 @@ fn parse_svg_attribute(
 
     match aid {
         AttributeId::D => {
-            print_indent!("SVG path:", depth);
+            print_indent!("Path:", depth);
 
             // By the SVG spec, any invalid data occurred in the path should
             // stop parsing of this path, but not the whole document.
@@ -165,8 +166,17 @@ fn parse_svg_attribute(
                 print_indent!("{:?}", depth + 1, segment)
             }
         }
+        AttributeId::Points => {
+            print_indent!("Points:", depth);
+
+            // By the SVG spec, any invalid data occurred in the `points` should
+            // stop parsing of this attribute, but not the whole document.
+            for point in Points::from_span(value) {
+                print_indent!("({} {})", depth + 1, point.0, point.1)
+            }
+        }
         AttributeId::Style => {
-            print_indent!("SVG style:", depth);
+            print_indent!("Style:", depth);
 
             for token in style::Tokenizer::from_span(value) {
                 match token? {
@@ -185,7 +195,7 @@ fn parse_svg_attribute(
           AttributeId::Transform
         | AttributeId::GradientTransform
         | AttributeId::PatternTransform => {
-            print_indent!("SVG transform:", depth);
+            print_indent!("Transform:", depth);
 
             for ts in transform::Tokenizer::from_span(value) {
                 print_indent!("{:?}", depth + 1, ts)

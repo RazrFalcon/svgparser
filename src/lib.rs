@@ -97,6 +97,7 @@ pub use attribute_id::{
 pub use attribute_value::{
     AttributeValue,
     PaintFallback,
+    ViewBox,
 };
 pub use color::{
     Color,

@@ -7,11 +7,12 @@ extern crate svgparser;
 use svgparser::{
     AttributeId as AId,
     AttributeValue as AV,
-    PaintFallback,
-    ElementId,
-    Color,
-    ValueId,
     ChainedErrorExt,
+    Color,
+    ElementId,
+    PaintFallback,
+    ValueId,
+    ViewBox,
 };
 
 macro_rules! test {
@@ -63,7 +64,27 @@ test!(ref_1, AId::Class, "&ref;", AV::EntityRef("ref"));
 
 test!(eb_1, AId::EnableBackground, "new    ", AV::String("new"));
 
+test!(vb_1, AId::ViewBox, "10 20 30 40",
+    AV::ViewBox(ViewBox { x: 10.0, y: 20.0, w: 30.0, h: 40.0 }));
+
+test!(vb_2, AId::ViewBox, "10.1 20.2 30.3 40.4",
+    AV::ViewBox(ViewBox { x: 10.1, y: 20.2, w: 30.3, h: 40.4 }));
+
+test!(vb_3, AId::ViewBox, "10 20 30 40 invalid data",
+    AV::ViewBox(ViewBox { x: 10.0, y: 20.0, w: 30.0, h: 40.0 }));
+
+test!(vb_4, AId::ViewBox, "-10 -20 30 40",
+    AV::ViewBox(ViewBox { x: -10.0, y: -20.0, w: 30.0, h: 40.0 }));
+
 // color is last type that we check during parsing <paint>, so any error will be like that
 test_err!(paint_err_1, AId::Fill, "#link", "Error: invalid color at 1:1");
+
+test_err!(vb_err_1, AId::ViewBox, "qwe", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_2, AId::ViewBox, "10 20 30 0", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_3, AId::ViewBox, "10 20 0 40", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_4, AId::ViewBox, "10 20 0 0", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_5, AId::ViewBox, "10 20 -30 0", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_6, AId::ViewBox, "10 20 30 -40", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_7, AId::ViewBox, "10 20 -30 -40", "Error: invalid attribute value at 1:1");
 
 // TODO: test all supported attributes, probably via codegen.
