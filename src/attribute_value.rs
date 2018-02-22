@@ -833,7 +833,7 @@ fn parse_view_box<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {
         return None;
     }
 
-    Some(AttributeValue::ViewBox(ViewBox { x, y, w, h }))
+    Some(AttributeValue::ViewBox(ViewBox { x: x, y: y, w: w, h: h }))
 }
 
 #[inline]
