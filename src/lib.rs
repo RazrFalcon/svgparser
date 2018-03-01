@@ -40,7 +40,8 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - Pretty fast.
 
 ### Limitations
- - All keywords must be lowercase. Case-insensitive parsing is supported only for color names.
+ - All keywords must be lowercase.
+   Case-insensitive parsing is supported only for colors (requires allocation for named colors).
    Still, it's extremely rare.
  - The `<color>` followed by the `<icccolor>` is not supported. As the `<icccolor>` itself.
  - Only ENTITY objects are parsed from the DOCTYPE. Other ignored.

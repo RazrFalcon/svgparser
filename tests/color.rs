@@ -71,6 +71,18 @@ test_parse!(
 );
 
 test_parse!(
+    rgb_numeric_upper_case,
+    "RGB(254, 203, 231)",
+    Color::new(254, 203, 231)
+);
+
+test_parse!(
+    rgb_numeric_mixed_case,
+    "RgB(254, 203, 231)",
+    Color::new(254, 203, 231)
+);
+
+test_parse!(
     name_red,
     "red",
     Color::new(255, 0, 0)
@@ -108,12 +120,6 @@ macro_rules! test_error {
         }
     };
 }
-
-test_error!(
-    case_insensitive_parsing_not_supported_1,
-    "RGB(50, 50, 50)",
-    "Error: invalid color at 1:1"
-);
 
 test_error!(
     not_a_color_1,

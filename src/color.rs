@@ -24,7 +24,7 @@ use {
     StrSpan,
 };
 use streamext::bound;
-use colors::rgb_color_from_name;
+use colors;
 
 /// Representation of the [`<color>`] type.
 /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
@@ -77,6 +77,7 @@ impl Color {
     /// # Notes
     ///
     ///  - Any non-`hexdigit` bytes will be treated as `0`.
+    ///  - Allocates heap memory for case-insensitive named colors comparison.
     ///
     /// [spec]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
     /// [details]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
@@ -110,7 +111,7 @@ impl Color {
                     return Err(ErrorKind::InvalidColor(s.gen_error_pos_from(start)).into());
                 }
             }
-        } else if s.starts_with(b"rgb(") {
+        } else if is_rgb(&s) {
             s.advance(4);
 
             let l = s.parse_list_length()?;
@@ -134,8 +135,8 @@ impl Color {
             s.skip_spaces();
             s.consume_byte(b')')?;
         } else {
-            let name = s.consume_name()?;
-            match rgb_color_from_name(name.to_str()) {
+            let name = s.consume_name()?.to_str().to_lowercase();
+            match colors::rgb_color_from_name(&name) {
                 Some(c) => {
                     color = c;
                 }
@@ -185,4 +186,17 @@ fn hex_pair(c1: u8, c2: u8) -> u8 {
     let h1 = from_hex(c1);
     let h2 = from_hex(c2);
     (h1 << 4) | h2
+}
+
+fn is_rgb(s: &Stream) -> bool {
+    let mut s = s.clone();
+    let prefix = s.consume_bytes(|_, c| c != b'(').to_str();
+    if s.consume_byte(b'(').is_err() {
+        return false;
+    }
+
+    #[allow(unused_imports)]
+    use std::ascii::AsciiExt;
+
+    prefix.eq_ignore_ascii_case("rgb")
 }

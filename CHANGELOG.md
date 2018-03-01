@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking**. Added `AttributeValue::ViewBox`.
 - `points` attribute tokenizer: `Points`.
 - All tokenizers derive `Clone`, `Copy`, `PartialEq` and `Debug` now.
-- Added `Debug` for `NumberList` and `LengthList`.
+- `Debug` for `NumberList` and `LengthList`.
+- Case-insensitive parsing for `rgb(...)` colors.
 
 ### Changed
 - **Breaking**. `AttributeValue` parser no longer return the `points` attribute
