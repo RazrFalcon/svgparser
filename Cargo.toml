@@ -15,7 +15,9 @@ readme = "README.md"
 travis-ci = { repository = "RazrFalcon/svgparser" }
 
 [dependencies]
-xmlparser = "0.1"
+# xmlparser = "0.1"
+# xmlparser = { path = "../xmlparser" }
+xmlparser = { git = "https://github.com/RazrFalcon/libxmlparser" }
 phf = "0.7.21"
 log = "0.4"
 

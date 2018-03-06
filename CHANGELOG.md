@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   and not as `AttributeValue::NumberList`.
 - **Breaking**. `NumberList` and `LengthList` implements `FromSpan` trait
   instead of custom `from_span` methods.
+- **Breaking**. `TagName` and `AttrName` alias `QName` and not `Name` now.
+  So tag and attribute names contain namespace prefix now.
+  But not the namespace URI itself.
+- **Breaking**. Prefixed attributes ID's removed. So:
+
+  `AttributeId::XlinkHref` -> `AttributeId::Href` + `xlink` prefix.
 - Relicense from MPL-2.0 to MIT/Apache-2.0.
 
 ## [0.6.4] - 2018-02-03

@@ -71,16 +71,17 @@ fn parse(text: &str) -> Result<(), Error> {
         match token? {
             svg::Token::ElementStart(tag_name) => {
                 print_indent!("Element start: {:?}", depth, tag_name);
-                curr_tag_name = Some(tag_name);
+                curr_tag_name = Some(tag_name.local);
             }
             svg::Token::Attribute(name, value) => {
-                match name {
+                match name.local {
                     svg::Name::Xml(name) => {
-                        print_indent!("Non-SVG attribute: {} = '{}'", depth + 1, name, value);
+                        print_indent!("Non-SVG attribute: {} = '{}'",
+                                      depth + 1, name, value);
                     }
                     svg::Name::Svg(aid) => {
                         if let Some(svg::Name::Svg(eid)) = curr_tag_name {
-                            parse_svg_attribute(eid, aid, value, depth + 1)?;
+                            parse_svg_attribute(eid, name.prefix, aid, value, depth + 1)?;
                         }
                     }
                 }
@@ -144,6 +145,7 @@ fn parse(text: &str) -> Result<(), Error> {
 
 fn parse_svg_attribute(
     eid: ElementId,
+    prefix: &str,
     aid: AttributeId,
     value: StrSpan,
     depth: usize,
@@ -155,7 +157,7 @@ fn parse_svg_attribute(
 
     // We need ElementId for attribute parsing.
     // See 'from_span' documentation for details.
-    let av = AttributeValue::from_span(eid, aid, value)?;
+    let av = AttributeValue::from_span(eid, prefix, aid, value)?;
     match av {
         AttributeValue::Path(tokenizer) => {
             print_indent!("Path:", depth);
@@ -184,7 +186,7 @@ fn parse_svg_attribute(
                         print_indent!("Non-SVG attribute: {} = '{}'", depth + 1, name, value);
                     }
                     style::Token::SvgAttribute(aid, value) => {
-                        parse_svg_attribute(eid, aid, value, depth + 1)?;
+                        parse_svg_attribute(eid, "", aid, value, depth + 1)?;
                     }
                     style::Token::EntityRef(name) => {
                         print_indent!("Entity reference: {}", depth + 1, name)

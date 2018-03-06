@@ -32,28 +32,53 @@ pub enum Name<'a, T> {
     Svg(T),
 }
 
-/// Tag name.
-pub type TagName<'a> = Name<'a, ElementId>;
-/// Attribute name.
-pub type AttrName<'a> = Name<'a, AttributeId>;
+/// Qualified name.
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub struct QName<'a, T> {
+    /// Namespace prefix.
+    pub prefix: &'a str,
+    /// Local name.
+    pub local: Name<'a, T>,
+}
 
-impl<'a> From<StrSpan<'a>> for TagName<'a> {
-    fn from(v: StrSpan<'a>) -> Self {
-        let v = v.to_str();
-        match ElementId::from_name(v) {
-            Some(id) => Name::Svg(id),
-            None => Name::Xml(v),
+impl<'a, T> QName<'a, T> {
+    /// Creates a new `QName`.
+    pub fn new(prefix: &'a str, local: Name<'a, T>) -> Self {
+        QName {
+            prefix: prefix,
+            local: local,
         }
     }
 }
 
-impl<'a> From<StrSpan<'a>> for AttrName<'a> {
-    fn from(v: StrSpan<'a>) -> Self {
-        let v = v.to_str();
-        match AttributeId::from_name(v) {
+/// Tag name.
+pub type TagName<'a> = QName<'a, ElementId>;
+/// Attribute name.
+pub type AttrName<'a> = QName<'a, AttributeId>;
+
+type StrSpanPair<'a> = (StrSpan<'a>, StrSpan<'a>);
+
+impl<'a> From<StrSpanPair<'a>> for TagName<'a> {
+    fn from(v: StrSpanPair<'a>) -> Self {
+        let v1 = v.1.to_str();
+        let local = match ElementId::from_name(v1) {
             Some(id) => Name::Svg(id),
-            None => Name::Xml(v),
-        }
+            None => Name::Xml(v1),
+        };
+
+        QName::new(v.0.to_str(), local)
+    }
+}
+
+impl<'a> From<StrSpanPair<'a>> for AttrName<'a> {
+    fn from(v: StrSpanPair<'a>) -> Self {
+        let v1 = v.1.to_str();
+        let local = match AttributeId::from_name(v1) {
+            Some(id) => Name::Svg(id),
+            None => Name::Xml(v1),
+        };
+
+        QName::new(v.0.to_str(), local)
     }
 }
 
@@ -174,16 +199,16 @@ impl<'a> Iterator for Tokenizer<'a> {
         };
 
         let t = match token {
-            xmlparser::Token::ElementStart(name) => {
-                Ok(Token::ElementStart(name.into()))
+            xmlparser::Token::ElementStart(prefix, name) => {
+                Ok(Token::ElementStart((prefix, name).into()))
             }
             xmlparser::Token::ElementEnd(end) => {
                 let svg_end = match end {
                     xmlparser::ElementEnd::Open => {
                         ElementEnd::Open
                     }
-                    xmlparser::ElementEnd::Close(name) => {
-                        ElementEnd::Close(name.into())
+                    xmlparser::ElementEnd::Close(prefix, name) => {
+                        ElementEnd::Close((prefix, name).into())
                     }
                     xmlparser::ElementEnd::Empty => {
                         ElementEnd::Empty

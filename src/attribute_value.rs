@@ -153,11 +153,14 @@ impl<'a> AttributeValue<'a> {
     /// - `opacity` value will be bounded to 0..1 range.
     /// - This function didn't correct most of the numeric values.
     ///   Like `rect`'s negative size, etc.
+    /// - If `prefix` is not empty and `aid` is not `Href`,
+    ///   then `AttributeValue::String` will be removed.
     ///
     /// [`StrSpan`]: struct.StrSpan.html
     /// [presentation attributes]: https://www.w3.org/TR/SVG/propidx.html
     pub fn from_span(
         eid: ElementId,
+        prefix: &str,
         aid: AttributeId,
         span: StrSpan<'a>,
     ) -> Result<AttributeValue<'a>> {
@@ -208,6 +211,14 @@ impl<'a> AttributeValue<'a> {
             if let Ok(Reference::EntityRef(name)) = r {
                 return Ok(AttributeValue::EntityRef(name.to_str()));
             }
+        }
+
+        if aid == AId::Href && prefix == "xlink" {
+            return parse_iri(stream);
+        }
+
+        if !prefix.is_empty() {
+            return Ok(AttributeValue::String(stream.span().to_str()));
         }
 
         match aid {
@@ -309,8 +320,6 @@ impl<'a> AttributeValue<'a> {
                     ValueId::Inherit),
                     parse_or_err!(parse_func_iri(stream)))
             }
-
-            AId::XlinkHref => { parse_iri(stream) }
 
             AId::Color => {
                 parse_or!(parse_predef!(ValueId::Inherit),
@@ -756,11 +765,12 @@ impl<'a> AttributeValue<'a> {
     /// [`from_frame`]: #method.from_frame
     pub fn from_str(
         eid: ElementId,
+        prefix: &str,
         aid: AttributeId,
         text: &'a str,
     ) -> Result<AttributeValue<'a>>
     {
-        AttributeValue::from_span(eid, aid, StrSpan::from_str(text))
+        AttributeValue::from_span(eid, prefix, aid, StrSpan::from_str(text))
     }
 }
 

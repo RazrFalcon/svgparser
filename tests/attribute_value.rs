@@ -15,7 +15,7 @@ macro_rules! test {
     ($name:ident, $aid:expr, $text:expr, $result:expr) => (
         #[test]
         fn $name() {
-            let v = AV::from_str(ElementId::Rect, $aid, $text).unwrap();
+            let v = AV::from_str(ElementId::Rect, "", $aid, $text).unwrap();
             assert_eq!(v, $result);
         }
     )
@@ -25,7 +25,7 @@ macro_rules! test_err {
     ($name:ident, $aid:expr, $text:expr, $err:expr) => (
         #[test]
         fn $name() {
-            let v = AV::from_str(ElementId::Rect, $aid, $text);
+            let v = AV::from_str(ElementId::Rect, "", $aid, $text);
             assert_eq!(v.unwrap_err().full_chain(), $err);
         }
     )
