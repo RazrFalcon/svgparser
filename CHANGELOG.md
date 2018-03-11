@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.7.0] - 2018-03-11
 ### Added
 - **Breaking**. Added `AttributeValue::Path`.
 - **Breaking**. Added `AttributeValue::Points`.
@@ -29,13 +31,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   So tag and attribute names contain namespace prefix now.
   But not the namespace URI itself.
 - **Breaking**. Prefixed attributes ID's removed. So:
+  
+  `AttributeId::XlinkHref` -> `xlink` prefix + `AttributeId::Href`.
 - **Breaking**. The `cursor` attribute will be parsed as a string now.
-
-  `AttributeId::XlinkHref` -> `AttributeId::Href` + `xlink` prefix.
 - Relicense from MPL-2.0 to MIT/Apache-2.0.
 
 ### Fixed
-- `style` attribute parsing when value contains comment.
+- `style` attribute parsing when value contains comments.
 
 ## [0.6.4] - 2018-02-03
 ### Fixed
@@ -231,7 +233,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/RazrFalcon/svgparser/compare/v0.6.4...HEAD
+[Unreleased]: https://github.com/RazrFalcon/svgparser/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/RazrFalcon/svgparser/compare/v0.6.4...v0.7.0
 [0.6.4]: https://github.com/RazrFalcon/svgparser/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/RazrFalcon/svgparser/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/RazrFalcon/svgparser/compare/v0.6.1...v0.6.2
