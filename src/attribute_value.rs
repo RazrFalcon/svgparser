@@ -712,30 +712,6 @@ impl<'a> AttributeValue<'a> {
                     ValueId::Inherit), Ok(AttributeValue::String(stream.span().to_str())))
             }
 
-            AId::Cursor => {
-                warn!("The 'cursor' property is not fully supported");
-
-                parse_or_err!(parse_predef!(
-                    ValueId::Auto,
-                    ValueId::Crosshair,
-                    ValueId::Default,
-                    ValueId::Pointer,
-                    ValueId::Move,
-                    ValueId::EResize,
-                    ValueId::NeResize,
-                    ValueId::NwResize,
-                    ValueId::NResize,
-                    ValueId::SeResize,
-                    ValueId::SwResize,
-                    ValueId::SResize,
-                    ValueId::WResize,
-                    ValueId::Text,
-                    ValueId::Wait,
-                    ValueId::Help,
-                    ValueId::Inherit
-                ))
-            }
-
             AId::EnableBackground => {
                 // TODO: parse 'new x y h w'
 

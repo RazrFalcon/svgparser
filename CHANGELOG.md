@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   So tag and attribute names contain namespace prefix now.
   But not the namespace URI itself.
 - **Breaking**. Prefixed attributes ID's removed. So:
+- **Breaking**. The `cursor` attribute will be parsed as a string now.
 
   `AttributeId::XlinkHref` -> `AttributeId::Href` + `xlink` prefix.
 - Relicense from MPL-2.0 to MIT/Apache-2.0.
