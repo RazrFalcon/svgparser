@@ -19,6 +19,7 @@ use {
     path,
     style,
     transform,
+    AspectRatio,
     AttributeId,
     Color,
     ElementId,
@@ -86,6 +87,9 @@ pub enum AttributeValue<'a> {
     ///
     /// [`<viewBox>`]: https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
     ViewBox(ViewBox),
+    /// Representation of the [`preserveAspectRatio`] attribute.
+    /// [`preserveAspectRatio`]: https://www.w3.org/TR/SVG/coords.html#PreserveAspectRatioAttribute
+    AspectRatio(AspectRatio),
     /// [`<list-of-points>`] type.
     ///
     /// [`<list-of-points>`]: https://www.w3.org/TR/SVG11/shapes.html#PointsBNF
@@ -131,7 +135,6 @@ macro_rules! parse_or {
     })
 }
 
-// TODO: more attributes
 // TODO: test, somehow
 impl<'a> AttributeValue<'a> {
     /// Parses `AttributeValue` from [`StrSpan`].
@@ -754,6 +757,10 @@ impl<'a> AttributeValue<'a> {
                 parse_or_err!(parse_view_box(stream))
             }
 
+            AId::PreserveAspectRatio => {
+                parse_or_err!(parse_aspect_ratio(stream))
+            }
+
             _ => Ok(AttributeValue::String(stream.span().to_str())),
         }
     }
@@ -768,8 +775,7 @@ impl<'a> AttributeValue<'a> {
         prefix: &str,
         aid: AttributeId,
         text: &'a str,
-    ) -> Result<AttributeValue<'a>>
-    {
+    ) -> Result<AttributeValue<'a>> {
         AttributeValue::from_span(eid, prefix, aid, StrSpan::from_str(text))
     }
 }
@@ -848,6 +854,11 @@ fn parse_number<'a>(mut stream: Stream<'a>) -> Result<AttributeValue<'a>> {
 fn parse_rgb_color<'a>(stream: Stream<'a>) -> Result<AttributeValue<'a>> {
     let c = Color::from_span(stream.span())?;
     Ok(AttributeValue::Color(c))
+}
+
+fn parse_aspect_ratio<'a>(stream: Stream<'a>) -> Option<AttributeValue<'a>> {
+    let r = try_opt!(AspectRatio::from_span(stream.span()).ok());
+    Some(AttributeValue::AspectRatio(r))
 }
 
 fn parse_view_box<'a>(mut stream: Stream<'a>) -> Option<AttributeValue<'a>> {

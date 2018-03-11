@@ -87,6 +87,7 @@ pub mod style;
 pub mod svg;
 pub mod transform;
 
+mod aspect_ratio;
 mod attribute_id;
 mod attribute_value;
 mod color;
@@ -100,6 +101,7 @@ mod value_id;
 mod values_list;
 
 
+pub use aspect_ratio::*;
 pub use attribute_id::{
     AttributeId,
 };

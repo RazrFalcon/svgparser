@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - **Breaking**. Added `AttributeValue::Style`.
 - **Breaking**. Added `AttributeValue::Transform`.
 - **Breaking**. Added `AttributeValue::ViewBox`.
+- **Breaking**. Added `AttributeValue::AspectRatio`.
 - `points` attribute tokenizer: `Points`.
 - All tokenizers derive `Clone`, `Copy`, `PartialEq` and `Debug` now.
 - `Debug` for `NumberList` and `LengthList`.
 - Case-insensitive parsing for `rgb(...)` colors.
+- `preserveAspectRatio` attribute parsing.
 
 ### Changed
 - **Breaking**. `AttributeValue` parser no longer return the `points` attribute
