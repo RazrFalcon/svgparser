@@ -83,6 +83,14 @@ test_attr!(parse_style_12, "font-family:Neue Frutiger 65",
     (AId::FontFamily, "Neue Frutiger 65")
 );
 
+test_attr!(parse_style_13, "/*text*/fill:green/*text*/",
+    (AId::Fill, "green")
+);
+
+test_attr!(parse_style_14, "  /*text*/ fill:green  /*text*/ ",
+    (AId::Fill, "green")
+);
+
 #[test]
 fn invalid_1() {
     let mut s = style::Tokenizer::from_str(":");

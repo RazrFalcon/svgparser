@@ -156,7 +156,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
         stream.skip_string(b"&apos;")?;
         v
     } else {
-        stream.consume_bytes(|_, c| c != b';')
+        stream.consume_bytes(|_, c| c != b';' && c != b'/')
     }.trim();
 
     if value.len() == 0 {

@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   `AttributeId::XlinkHref` -> `AttributeId::Href` + `xlink` prefix.
 - Relicense from MPL-2.0 to MIT/Apache-2.0.
 
+### Fixed
+- `style` attribute parsing when value contains comment.
+
 ## [0.6.4] - 2018-02-03
 ### Fixed
 - Invalid files in the crate package.
