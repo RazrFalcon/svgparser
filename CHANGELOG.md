@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- **Breaking**. Use `failure` instead of `error-chain`.
+- **Breaking**. A completely new error types.
+- Minimum Rust version is 1.18.
 
 ## [0.7.0] - 2018-03-11
 ### Added

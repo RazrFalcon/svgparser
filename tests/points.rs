@@ -1,8 +1,12 @@
 extern crate svgparser;
 
 use svgparser::{
-    FromSpan,
+    xmlparser,
     Points,
+};
+
+use xmlparser::{
+    FromSpan,
 };
 
 macro_rules! test {

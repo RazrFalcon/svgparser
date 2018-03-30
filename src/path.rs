@@ -12,11 +12,14 @@
 
 use std::fmt;
 
-use {
-    Stream,
-    StreamExt,
-    StrSpan,
+use xmlparser::{
     FromSpan,
+    Stream,
+    StrSpan,
+};
+
+use {
+    StreamExt,
 };
 
 /// Path's segment token.

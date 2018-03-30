@@ -14,18 +14,19 @@ use std::fmt;
 use std::str;
 
 use xmlparser::{
+    self,
+    FromSpan,
     Reference,
+    Stream,
+    StrSpan,
 };
 
 use error::{
-    Result,
+    StreamError,
+    StreamResult,
 };
 use {
     AttributeId,
-    ErrorKind,
-    FromSpan,
-    Stream,
-    StrSpan,
 };
 
 /// Style token.
@@ -52,7 +53,7 @@ impl<'a> fmt::Debug for Token<'a> {
     }
 }
 
-/// Tokenizer for \<style\> data.
+/// Tokenizer for the \<style\> data.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Tokenizer<'a> {
     stream: Stream<'a>,
@@ -73,9 +74,9 @@ impl<'a> fmt::Debug for Tokenizer<'a> {
 }
 
 impl<'a> Iterator for Tokenizer<'a> {
-    type Item = Result<Token<'a>>;
+    type Item = StreamResult<Token<'a>>;
 
-    /// Extracts next style object from the stream.
+    /// Extracts a next style object from the stream.
     ///
     /// # Errors
     ///
@@ -95,37 +96,37 @@ impl<'a> Iterator for Tokenizer<'a> {
             return None;
         }
 
-        macro_rules! try_opt2 {
+        macro_rules! try2 {
             ($expr:expr) => {
                 match $expr {
                     Ok(value) => value,
                     Err(e) => {
-                        self.stream.jump_to_end();
                         return Some(Err(e.into()));
                     }
                 }
             }
         }
 
-        let c = try_opt2!(self.stream.curr_byte());
+        let c = try2!(self.stream.curr_byte());
         if c == b'/' {
-            try_opt2!(skip_comment(&mut self.stream));
-            return self.next();
+            try2!(skip_comment(&mut self.stream));
+            self.next()
         } else if c == b'-' {
-            try_opt2!(parse_prefix(&mut self.stream));
-            return self.next();
+            try2!(parse_prefix(&mut self.stream));
+            self.next()
         } else if c == b'&' {
-            return Some(parse_entity_ref(&mut self.stream));
+            Some(parse_entity_ref(&mut self.stream))
         } else if is_ident_char(c) {
-            return Some(parse_attribute(&mut self.stream));
+            Some(parse_attribute(&mut self.stream))
         } else {
+            let pos = self.stream.gen_error_pos();
             self.stream.jump_to_end();
-            return Some(Err(ErrorKind::InvalidAttributeValue(self.stream.gen_error_pos()).into()));
+            Some(Err(xmlparser::StreamError::InvalidChar(c as char, "/-&".into(), pos).into()))
         }
     }
 }
 
-fn skip_comment(stream: &mut Stream) -> Result<()> {
+fn skip_comment(stream: &mut Stream) -> StreamResult<()> {
     stream.skip_string(b"/*")?;
     stream.skip_bytes(|_, c| c != b'*');
     stream.skip_string(b"*/")?;
@@ -134,11 +135,13 @@ fn skip_comment(stream: &mut Stream) -> Result<()> {
     Ok(())
 }
 
-fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
+fn parse_attribute<'a>(stream: &mut Stream<'a>) -> StreamResult<Token<'a>> {
     let name = stream.consume_bytes(|_, c| is_ident_char(c));
 
     if name.is_empty() {
-        return Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos()).into());
+        // TODO: this
+        // The error type is irrelevant because we will ignore it anyway.
+        return Err(xmlparser::StreamError::UnexpectedEndOfStream.into());
     }
 
     stream.skip_spaces();
@@ -160,7 +163,7 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
     }.trim();
 
     if value.len() == 0 {
-        return Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos()).into());
+        return Err(xmlparser::StreamError::UnexpectedEndOfStream.into());
     }
 
     stream.skip_spaces();
@@ -178,15 +181,18 @@ fn parse_attribute<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
     }
 }
 
-fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> Result<Token<'a>> {
-    if let Ok(Reference::EntityRef(name)) = stream.consume_reference() {
-        Ok(Token::EntityRef(name.to_str()))
-    } else {
-        Err(ErrorKind::InvalidAttributeValue(stream.gen_error_pos()).into())
+fn parse_entity_ref<'a>(stream: &mut Stream<'a>) -> StreamResult<Token<'a>> {
+    match stream.consume_reference()? {
+        Reference::EntityRef(name) => {
+            Ok(Token::EntityRef(name.to_str()))
+        }
+        Reference::CharRef(_) => {
+            Err(StreamError::InvalidEntityRef(stream.gen_error_pos()))
+        }
     }
 }
 
-fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<()> {
+fn parse_prefix<'a>(stream: &mut Stream<'a>) -> StreamResult<()> {
     // prefixed attributes are not supported, aka '-webkit-*'
 
     stream.advance(1); // -
@@ -199,6 +205,7 @@ fn parse_prefix<'a>(stream: &mut Stream<'a>) -> Result<()> {
     Ok(())
 }
 
+// TODO: to xmlparser traits
 fn is_ident_char(c: u8) -> bool {
     match c {
           b'0'...b'9'

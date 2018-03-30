@@ -12,15 +12,18 @@
 
 use std::fmt;
 
-use error::{
-    Result,
-};
-use {
-    ErrorKind,
+use xmlparser::{
     FromSpan,
     Stream,
-    StreamExt,
     StrSpan,
+};
+
+use error::{
+    StreamError,
+    StreamResult,
+};
+use {
+    StreamExt,
 };
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -78,13 +81,13 @@ impl<'a> fmt::Debug for Tokenizer<'a> {
 }
 
 impl<'a> Iterator for Tokenizer<'a> {
-    type Item = Result<Token>;
+    type Item = StreamResult<Token>;
 
     /// Extracts next transform from the stream.
     ///
     /// # Errors
     ///
-    /// - Most of the `Error` types can occur.
+    /// - Most of the `StreamError` types can occur.
     ///
     /// # Notes
     ///
@@ -115,20 +118,14 @@ impl<'a> Iterator for Tokenizer<'a> {
             return None;
         }
 
-        let ts = self.parse_next();
-        if ts.is_err() {
-            self.stream.jump_to_end();
-        }
-
-        Some(ts)
+        Some(self.parse_next())
     }
 }
 
 impl<'a> Tokenizer<'a> {
-    fn parse_next(&mut self) -> Result<Token> {
+    fn parse_next(&mut self) -> StreamResult<Token> {
         let s = &mut self.stream;
 
-        let start = s.pos();
         let name = s.consume_name()?;
         s.skip_spaces();
         s.consume_byte(b'(')?;
@@ -211,8 +208,8 @@ impl<'a> Tokenizer<'a> {
                 }
             }
             _ => {
-                let pos = s.gen_error_pos_from(start);
-                return Err(ErrorKind::InvalidTransform(pos).into());
+                let pos = s.gen_error_pos();
+                return Err(StreamError::InvalidTransformPrefix(pos));
             }
         };
 

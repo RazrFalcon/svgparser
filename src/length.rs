@@ -23,21 +23,18 @@ pub enum LengthUnit {
 }
 
 /// Representation of the [`<length>`] type.
+///
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[allow(missing_docs)]
 pub struct Length {
-    #[allow(missing_docs)]
     pub num: f64,
-    #[allow(missing_docs)]
     pub unit: LengthUnit,
 }
 
 impl Length {
     /// Constructs a new length.
     pub fn new(num: f64, unit: LengthUnit) -> Length {
-        Length {
-            num: num,
-            unit: unit,
-        }
+        Length { num, unit, }
     }
 }

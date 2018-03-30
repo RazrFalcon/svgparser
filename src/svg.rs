@@ -10,16 +10,15 @@
 
 use std::str;
 
-use xmlparser;
-
-use error::{
-    Result,
+use xmlparser::{
+    self,
+    FromSpan,
+    StrSpan,
 };
+
 use {
     AttributeId,
     ElementId,
-    StrSpan,
-    FromSpan,
 };
 
 
@@ -179,7 +178,7 @@ impl<'a> FromSpan<'a> for Tokenizer<'a> {
 }
 
 impl<'a> Iterator for Tokenizer<'a> {
-    type Item = Result<Token<'a>>;
+    type Item = Result<Token<'a>, xmlparser::Error>;
 
     /// Extracts next SVG node from the stream.
     ///

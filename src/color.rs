@@ -7,34 +7,32 @@
 // except according to those terms.
 
 use std::str::FromStr;
+use std::cmp;
 
 use xmlparser::{
+    Stream,
+    StrSpan,
     XmlByteExt,
 };
 
 use error::{
-    Result,
+    StreamError,
+    StreamResult,
 };
 use {
-    Error,
-    ErrorKind,
     LengthUnit,
-    Stream,
     StreamExt,
-    StrSpan,
 };
-use streamext::bound;
 use colors;
 
 /// Representation of the [`<color>`] type.
+///
 /// [`<color>`]: https://www.w3.org/TR/SVG/types.html#DataTypeColor
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[allow(missing_docs)]
 pub struct Color {
-    #[allow(missing_docs)]
     pub red: u8,
-    #[allow(missing_docs)]
     pub green: u8,
-    #[allow(missing_docs)]
     pub blue: u8,
 }
 
@@ -42,11 +40,7 @@ impl Color {
     /// Constructs a new `Color` from `red`, `green` and `blue` values.
     #[inline]
     pub fn new(red: u8, green: u8, blue: u8) -> Color {
-        Color {
-            red: red,
-            green: green,
-            blue: blue,
-        }
+        Color { red, green, blue }
     }
 
     /// Parses `Color` from `StrSpan`.
@@ -81,7 +75,7 @@ impl Color {
     ///
     /// [spec]: http://www.w3.org/TR/SVG/types.html#DataTypeColor
     /// [details]: https://lists.w3.org/Archives/Public/www-svg/2014Jan/0109.html
-    pub fn from_span(span: StrSpan) -> Result<Color> {
+    pub fn from_span(span: StrSpan) -> StreamResult<Color> {
         let mut s = Stream::from_span(span);
 
         s.skip_spaces();
@@ -108,7 +102,7 @@ impl Color {
                     color.blue = short_hex(color_str[2]);
                 }
                 _ => {
-                    return Err(ErrorKind::InvalidColor(s.gen_error_pos_from(start)).into());
+                    return Err(StreamError::InvalidColor(s.gen_error_pos_from(start)));
                 }
             }
         } else if is_rgb(&s) {
@@ -141,7 +135,7 @@ impl Color {
                     color = c;
                 }
                 None => {
-                    return Err(ErrorKind::InvalidColor(s.gen_error_pos_from(start)).into());
+                    return Err(StreamError::InvalidColor(s.gen_error_pos_from(start)));
                 }
             }
         }
@@ -150,7 +144,7 @@ impl Color {
         // which is not supported.
         s.skip_spaces();
         if !s.at_end() {
-            return Err(ErrorKind::InvalidColor(s.gen_error_pos()).into());
+            return Err(StreamError::InvalidColor(s.gen_error_pos()));
         }
 
         Ok(color)
@@ -158,9 +152,9 @@ impl Color {
 }
 
 impl FromStr for Color {
-    type Err = Error;
+    type Err = StreamError;
 
-    fn from_str(text: &str) -> Result<Self> {
+    fn from_str(text: &str) -> StreamResult<Self> {
         Color::from_span(StrSpan::from_str(text))
     }
 }
@@ -199,4 +193,9 @@ fn is_rgb(s: &Stream) -> bool {
     use std::ascii::AsciiExt;
 
     prefix.eq_ignore_ascii_case("rgb")
+}
+
+#[inline]
+fn bound<T: Ord>(min: T, val: T, max: T) -> T {
+    cmp::max(min, cmp::min(max, val))
 }

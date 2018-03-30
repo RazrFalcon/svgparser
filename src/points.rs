@@ -8,11 +8,14 @@
 
 use std::fmt;
 
-use {
+use xmlparser::{
     FromSpan,
     Stream,
-    StreamExt,
     StrSpan,
+};
+
+use {
+    StreamExt,
 };
 
 

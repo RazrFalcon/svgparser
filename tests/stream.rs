@@ -1,11 +1,14 @@
 extern crate svgparser;
 
 use svgparser::{
+    xmlparser,
     Length,
     LengthUnit,
-    Stream,
     StreamExt,
-    ChainedErrorExt,
+};
+
+use xmlparser::{
+    Stream,
 };
 
 macro_rules! test_number {
@@ -50,19 +53,19 @@ macro_rules! test_number_err {
         #[test]
         fn $name() {
             let mut s = Stream::from_str($text);
-            assert_eq!(s.parse_number().unwrap_err().full_chain(), $result);
+            assert_eq!(s.parse_number().unwrap_err().to_string(), $result);
         }
     )
 }
 
-test_number_err!(number_err_1, "q",    "Error: invalid number at 1:1");
-test_number_err!(number_err_2, "",     "Error: invalid number at 1:1");
-test_number_err!(number_err_3, "-",    "Error: invalid number at 1:1");
-test_number_err!(number_err_4, "+",    "Error: invalid number at 1:1");
-test_number_err!(number_err_5, "-q",   "Error: invalid number at 1:1");
-test_number_err!(number_err_6, ".",    "Error: invalid number at 1:1");
-test_number_err!(number_err_7, "99999999e99999999",  "Error: invalid number at 1:1");
-test_number_err!(number_err_8, "-99999999e99999999", "Error: invalid number at 1:1");
+test_number_err!(number_err_1, "q",    "invalid number at 1:1");
+test_number_err!(number_err_2, "",     "invalid number at 1:1");
+test_number_err!(number_err_3, "-",    "invalid number at 1:1");
+test_number_err!(number_err_4, "+",    "invalid number at 1:1");
+test_number_err!(number_err_5, "-q",   "invalid number at 1:1");
+test_number_err!(number_err_6, ".",    "invalid number at 1:1");
+test_number_err!(number_err_7, "99999999e99999999",  "invalid number at 1:1");
+test_number_err!(number_err_8, "-99999999e99999999", "invalid number at 1:1");
 
 // ---
 
@@ -97,8 +100,8 @@ test_length!(length_16, "1.0e0em", Length::new(1.0, LengthUnit::Em));
 fn length_err_1() {
     let mut s = Stream::from_str("1q");
     assert_eq!(s.parse_length().unwrap(), Length::new(1.0, LengthUnit::None));
-    assert_eq!(s.parse_length().unwrap_err().full_chain(),
-               "Error: invalid number at 1:2");
+    assert_eq!(s.parse_length().unwrap_err().to_string(),
+               "invalid number at 1:2");
 }
 
 // ---
@@ -113,6 +116,6 @@ fn integer_1() {
 fn integer_err_1() {
     // error because of overflow
     let mut s = Stream::from_str("10000000000000");
-    assert_eq!(s.parse_integer().unwrap_err().full_chain(),
-               "Error: invalid number at 1:1");
+    assert_eq!(s.parse_integer().unwrap_err().to_string(),
+               "invalid number at 1:1");
 }

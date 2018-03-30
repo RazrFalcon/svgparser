@@ -6,23 +6,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cmp;
 use std::str::FromStr;
 
 use xmlparser::{
+    self,
+    Stream,
     XmlByteExt,
-    StreamError,
-    StreamErrorKind,
 };
 
 use error::{
-    Result,
+    StreamError,
+    StreamResult,
 };
 use {
-    ErrorKind,
     Length,
     LengthUnit,
-    Stream,
 };
 
 
@@ -33,7 +31,7 @@ pub trait StreamExt {
     /// This method will detect a number length and then
     /// will pass a substring to the `std::from_str` method.
     ///
-    /// https://www.w3.org/TR/SVG/types.html#DataTypeNumber
+    /// <https://www.w3.org/TR/SVG/types.html#DataTypeNumber>
     ///
     /// # Errors
     ///
@@ -42,20 +40,22 @@ pub trait StreamExt {
     /// # Examples
     ///
     /// ```
-    /// use svgparser::{Stream, StreamExt};
+    /// use svgparser::xmlparser::Stream;
+    /// use svgparser::StreamExt;
     ///
     /// let mut s = Stream::from_str("3.14");
     /// assert_eq!(s.parse_number().unwrap(), 3.14);
     /// assert_eq!(s.at_end(), true);
     /// ```
-    fn parse_number(&mut self) -> Result<f64>;
+    fn parse_number(&mut self) -> StreamResult<f64>;
 
     /// Parses number from the list of numbers.
     ///
     /// # Examples
     ///
     /// ```
-    /// use svgparser::{Stream, StreamExt};
+    /// use svgparser::xmlparser::Stream;
+    /// use svgparser::StreamExt;
     ///
     /// let mut s = Stream::from_str("3.14, 12,5 , 20-4");
     /// assert_eq!(s.parse_list_number().unwrap(), 3.14);
@@ -64,25 +64,27 @@ pub trait StreamExt {
     /// assert_eq!(s.parse_list_number().unwrap(), 20.0);
     /// assert_eq!(s.parse_list_number().unwrap(), -4.0);
     /// ```
-    fn parse_list_number(&mut self) -> Result<f64>;
+    fn parse_list_number(&mut self) -> StreamResult<f64>;
 
     /// Parses integer number from the stream.
     ///
     /// Same as [`parse_number()`], but only for integer. Does not refer to any SVG type.
+    ///
     /// [`parse_number()`]: #method.parse_number
-    fn parse_integer(&mut self) -> Result<i32>;
+    fn parse_integer(&mut self) -> StreamResult<i32>;
 
     /// Parses integer from the list of numbers.
-    fn parse_list_integer(&mut self) -> Result<i32>;
+    fn parse_list_integer(&mut self) -> StreamResult<i32>;
 
     /// Parses length from the stream.
     ///
-    /// https://www.w3.org/TR/SVG/types.html#DataTypeLength
+    /// <https://www.w3.org/TR/SVG/types.html#DataTypeLength>
     ///
     /// # Examples
     ///
     /// ```
-    /// use svgparser::{Stream, StreamExt, Length, LengthUnit};
+    /// use svgparser::xmlparser::Stream;
+    /// use svgparser::{StreamExt, Length, LengthUnit};
     ///
     /// let mut s = Stream::from_str("30%");
     /// assert_eq!(s.parse_length().unwrap(), Length::new(30.0, LengthUnit::Percent));
@@ -91,30 +93,30 @@ pub trait StreamExt {
     /// # Notes
     ///
     /// - Suffix must be lowercase, otherwise it will be an error.
-    fn parse_length(&mut self) -> Result<Length>;
+    fn parse_length(&mut self) -> StreamResult<Length>;
 
     /// Parses length from the list of lengths.
-    fn parse_list_length(&mut self) -> Result<Length>;
+    fn parse_list_length(&mut self) -> StreamResult<Length>;
 
     /// Skips digits.
     fn skip_digits(&mut self);
 }
 
 impl<'a> StreamExt for Stream<'a> {
-    fn parse_number(&mut self) -> Result<f64> {
+    fn parse_number(&mut self) -> StreamResult<f64> {
         // strip off leading blanks
         self.skip_spaces();
 
         if self.at_end() {
             // empty string
-            return Err(ErrorKind::InvalidNumber(self.gen_error_pos()).into());
+            return Err(StreamError::InvalidNumber(self.gen_error_pos()));
         }
 
         let start = self.pos();
 
         macro_rules! gen_err {
             () => ({
-                Err(ErrorKind::InvalidNumber(self.gen_error_pos_from(start)).into())
+                Err(StreamError::InvalidNumber(self.gen_error_pos_from(start)))
             })
         }
 
@@ -188,10 +190,9 @@ impl<'a> StreamExt for Stream<'a> {
         gen_err!()
     }
 
-    fn parse_list_number(&mut self) -> Result<f64> {
+    fn parse_list_number(&mut self) -> StreamResult<f64> {
         if self.at_end() {
-            let err: StreamError = StreamErrorKind::UnexpectedEndOfStream.into();
-            return Err(err.into());
+            return Err(xmlparser::StreamError::UnexpectedEndOfStream.into());
         }
 
         let n = self.parse_number()?;
@@ -200,18 +201,18 @@ impl<'a> StreamExt for Stream<'a> {
         Ok(n)
     }
 
-    fn parse_integer(&mut self) -> Result<i32> {
+    fn parse_integer(&mut self) -> StreamResult<i32> {
         self.skip_spaces();
 
         if self.at_end() {
-            return Err(ErrorKind::InvalidNumber(self.gen_error_pos()).into());
+            return Err(StreamError::InvalidNumber(self.gen_error_pos()));
         }
 
         let start = self.pos();
 
         macro_rules! gen_err {
             () => ({
-                Err(ErrorKind::InvalidNumber(self.gen_error_pos_from(start)).into())
+                Err(StreamError::InvalidNumber(self.gen_error_pos_from(start)))
             })
         }
 
@@ -236,10 +237,9 @@ impl<'a> StreamExt for Stream<'a> {
         }
     }
 
-    fn parse_list_integer(&mut self) -> Result<i32> {
+    fn parse_list_integer(&mut self) -> StreamResult<i32> {
         if self.at_end() {
-            let err: StreamError = StreamErrorKind::UnexpectedEndOfStream.into();
-            return Err(err.into());
+            return Err(xmlparser::StreamError::UnexpectedEndOfStream.into());
         }
 
         let n = self.parse_integer()?;
@@ -248,7 +248,7 @@ impl<'a> StreamExt for Stream<'a> {
         Ok(n)
     }
 
-    fn parse_length(&mut self) -> Result<Length> {
+    fn parse_length(&mut self) -> StreamResult<Length> {
         self.skip_spaces();
 
         let n = self.parse_number()?;
@@ -288,10 +288,9 @@ impl<'a> StreamExt for Stream<'a> {
         Ok(Length::new(n, u))
     }
 
-    fn parse_list_length(&mut self) -> Result<Length> {
+    fn parse_list_length(&mut self) -> StreamResult<Length> {
         if self.at_end() {
-            let err: StreamError = StreamErrorKind::UnexpectedEndOfStream.into();
-            return Err(err.into());
+            return Err(xmlparser::StreamError::UnexpectedEndOfStream.into());
         }
 
         let l = self.parse_length()?;
@@ -310,9 +309,4 @@ fn parse_list_separator(s: &mut Stream) {
     if s.is_curr_byte_eq(b',') {
         s.advance(1);
     }
-}
-
-#[inline]
-pub fn bound<T: Ord>(min: T, val: T, max: T) -> T {
-    cmp::max(min, cmp::min(max, val))
 }

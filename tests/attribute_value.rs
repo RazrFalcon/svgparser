@@ -3,7 +3,6 @@ extern crate svgparser;
 use svgparser::{
     AttributeId as AId,
     AttributeValue as AV,
-    ChainedErrorExt,
     Color,
     ElementId,
     PaintFallback,
@@ -26,13 +25,14 @@ macro_rules! test_err {
         #[test]
         fn $name() {
             let v = AV::from_str(ElementId::Rect, "", $aid, $text);
-            assert_eq!(v.unwrap_err().full_chain(), $err);
+            assert_eq!(v.unwrap_err().to_string(), $err);
         }
     )
 }
 
-test_err!(empty_1, AId::Fill, "", "Error: unexpected end of stream");
-test_err!(empty_2, AId::Fill, " ", "Error: unexpected end of stream");
+test_err!(empty_1, AId::Fill, "", "unexpected end of stream");
+test_err!(empty_2, AId::Fill, " ", "unexpected end of stream");
+
 // unicode attribute can have spaces
 test!(unicode_1, AId::Unicode, " ", AV::String(" "));
 
@@ -73,14 +73,15 @@ test!(vb_4, AId::ViewBox, "-10 -20 30 40",
     AV::ViewBox(ViewBox { x: -10.0, y: -20.0, w: 30.0, h: 40.0 }));
 
 // color is last type that we check during parsing <paint>, so any error will be like that
-test_err!(paint_err_1, AId::Fill, "#link", "Error: invalid color at 1:1");
+test_err!(paint_err_1, AId::Fill, "#link", "invalid color at 1:1");
+test_err!(paint_err_2, AId::Fill, "text", "invalid color at 1:1");
 
-test_err!(vb_err_1, AId::ViewBox, "qwe", "Error: invalid attribute value at 1:1");
-test_err!(vb_err_2, AId::ViewBox, "10 20 30 0", "Error: invalid attribute value at 1:1");
-test_err!(vb_err_3, AId::ViewBox, "10 20 0 40", "Error: invalid attribute value at 1:1");
-test_err!(vb_err_4, AId::ViewBox, "10 20 0 0", "Error: invalid attribute value at 1:1");
-test_err!(vb_err_5, AId::ViewBox, "10 20 -30 0", "Error: invalid attribute value at 1:1");
-test_err!(vb_err_6, AId::ViewBox, "10 20 30 -40", "Error: invalid attribute value at 1:1");
-test_err!(vb_err_7, AId::ViewBox, "10 20 -30 -40", "Error: invalid attribute value at 1:1");
+test_err!(vb_err_1, AId::ViewBox, "qwe", "invalid number at 1:1");
+test_err!(vb_err_2, AId::ViewBox, "10 20 30 0", "viewBox should have a positive size");
+test_err!(vb_err_3, AId::ViewBox, "10 20 0 40", "viewBox should have a positive size");
+test_err!(vb_err_4, AId::ViewBox, "10 20 0 0", "viewBox should have a positive size");
+test_err!(vb_err_5, AId::ViewBox, "10 20 -30 0", "viewBox should have a positive size");
+test_err!(vb_err_6, AId::ViewBox, "10 20 30 -40", "viewBox should have a positive size");
+test_err!(vb_err_7, AId::ViewBox, "10 20 -30 -40", "viewBox should have a positive size");
 
 // TODO: test all supported attributes, probably via codegen.

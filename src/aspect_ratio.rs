@@ -8,18 +8,19 @@
 
 use std::str::FromStr;
 
-use error::{
-    Result,
-};
-use {
-    Error,
-    ErrorKind,
+use xmlparser::{
     Stream,
     StrSpan,
 };
 
+use error::{
+    StreamError,
+    StreamResult,
+};
+
 
 /// Representation of the `align` value of the [`preserveAspectRatio`] attribute.
+///
 /// [`preserveAspectRatio`]: https://www.w3.org/TR/SVG/coords.html#PreserveAspectRatioAttribute
 #[allow(missing_docs)]
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -37,6 +38,7 @@ pub enum Align {
 }
 
 /// Representation of the [`preserveAspectRatio`] attribute.
+///
 /// [`preserveAspectRatio`]: https://www.w3.org/TR/SVG/coords.html#PreserveAspectRatioAttribute
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct AspectRatio {
@@ -55,9 +57,8 @@ pub struct AspectRatio {
 
 impl AspectRatio {
     /// Parses `AspectRatio` from `StrSpan`.
-    pub fn from_span(span: StrSpan) -> Result<Self> {
+    pub fn from_span(span: StrSpan) -> StreamResult<Self> {
         let mut s = Stream::from_span(span);
-        let start = s.pos();
 
         s.skip_spaces();
 
@@ -68,7 +69,8 @@ impl AspectRatio {
             s.skip_spaces();
         }
 
-        let align = match s.consume_name()?.to_str() {
+        let align = s.consume_name()?.to_str();
+        let align = match align {
             "none" => Align::None,
             "xMinYMin" => Align::XMinYMin,
             "xMidYMin" => Align::XMidYMin,
@@ -80,7 +82,7 @@ impl AspectRatio {
             "xMidYMax" => Align::XMidYMax,
             "xMaxYMax" => Align::XMaxYMax,
             _ => return {
-                Err(ErrorKind::InvalidAttributeValue(s.gen_error_pos_from(start)).into())
+                Err(StreamError::InvalidAlignType(align.into()))
             }
         };
 
@@ -88,12 +90,13 @@ impl AspectRatio {
 
         let mut slice = false;
         if !s.at_end() {
-            match s.consume_name()?.to_str() {
+            let v = s.consume_name()?.to_str();
+            match v {
                 "meet" => {}
                 "slice" => slice = true,
                 "" => {}
                 _ => return {
-                    Err(ErrorKind::InvalidAttributeValue(s.gen_error_pos_from(start)).into())
+                    Err(StreamError::InvalidAlignSlice(v.into()))
                 }
             };
         }
@@ -107,9 +110,9 @@ impl AspectRatio {
 }
 
 impl FromStr for AspectRatio {
-    type Err = Error;
+    type Err = StreamError;
 
-    fn from_str(text: &str) -> Result<Self> {
+    fn from_str(text: &str) -> StreamResult<Self> {
         AspectRatio::from_span(StrSpan::from_str(text))
     }
 }

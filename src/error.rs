@@ -6,63 +6,63 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::str;
-
-use error_chain;
-use xmlparser;
-
-use {
+use xmlparser::{
+    self,
     ErrorPos,
 };
 
+/// Additional errors for `xmlparser::StreamError`.
+#[derive(Fail, Debug)]
+pub enum StreamError {
+    /// An invalid color.
+    #[fail(display = "invalid color at {}", _0)]
+    InvalidColor(ErrorPos),
 
-error_chain! {
-    types {
-        Error, ErrorKind, ResultExt, Result;
-    }
+    /// An invalid number.
+    #[fail(display = "invalid number at {}", _0)]
+    InvalidNumber(ErrorPos),
 
-    links {
-        Xml(xmlparser::Error, xmlparser::ErrorKind) #[doc = "xmlparser errors"];
-        Stream(xmlparser::StreamError, xmlparser::StreamErrorKind) #[doc = "'Stream' errors"];
-    }
+    /// An invalid length.
+    #[fail(display = "invalid length at {}", _0)]
+    InvalidLength(ErrorPos),
 
-    errors {
-        /// An invalid number.
-        InvalidNumber(pos: ErrorPos) {
-            display("invalid number at {}", pos)
-        }
+    /// An invalid entity reference.
+    #[fail(display = "invalid entity reference at {}", _0)]
+    InvalidEntityRef(ErrorPos),
 
-        /// An invalid length.
-        InvalidLength(pos: ErrorPos) {
-            display("invalid length at {}", pos)
-        }
+    /// An invalid transform prefix.
+    #[fail(display = "invalid transform prefix at {}", _0)]
+    InvalidTransformPrefix(ErrorPos),
 
-        /// An invalid color.
-        InvalidColor(pos: ErrorPos) {
-            display("invalid color at {}", pos)
-        }
+    /// An invalid align type.
+    #[fail(display = "'{}' is an invalid align type", _0)]
+    InvalidAlignType(String),
 
-        /// An invalid transform.
-        InvalidTransform(pos: ErrorPos) {
-            display("invalid transform at {}", pos)
-        }
+    /// An invalid align slice.
+    #[fail(display = "expected 'meet' or 'slice' not '{}'", _0)]
+    InvalidAlignSlice(String),
 
-        /// An invalid attribute value.
-        InvalidAttributeValue(pos: ErrorPos) {
-            display("invalid attribute value at {}", pos)
-        }
+    /// An invalid predefined value.
+    #[fail(display = "current attribute doesn't support the '{}' value", _0)]
+    InvalidPredefValue(String),
+
+    /// Not a FuncIRI: `url(#id)`.
+    #[fail(display = "expected a FuncIRI not '{}'", _0)]
+    NotAFuncIRI(String),
+
+    /// A viewBox with a negative or zero size.
+    #[fail(display = "viewBox should have a positive size")]
+    InvalidViewbox,
+
+    /// An XML stream error.
+    #[fail(display = "{}", _0)]
+    XmlError(xmlparser::StreamError),
+}
+
+impl From<xmlparser::StreamError> for StreamError {
+    fn from(v: xmlparser::StreamError) -> Self {
+        StreamError::XmlError(v)
     }
 }
 
-
-/// `ChainedError` additional methods.
-pub trait ChainedErrorExt {
-    /// Shorthand for `display_chain().to_string().trim()`.
-    fn full_chain(&self) -> String;
-}
-
-impl<T: error_chain::ChainedError> ChainedErrorExt for T {
-    fn full_chain(&self) -> String {
-        self.display_chain().to_string().trim().to_owned()
-    }
-}
+pub type StreamResult<T> = ::std::result::Result<T, StreamError>;

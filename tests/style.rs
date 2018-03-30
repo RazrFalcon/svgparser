@@ -1,10 +1,13 @@
 extern crate svgparser;
 
-use svgparser::style;
 use svgparser::{
-    FromSpan,
+    style,
+    xmlparser,
     AttributeId as AId,
-    ChainedError,
+};
+
+use xmlparser::{
+    FromSpan,
 };
 
 macro_rules! test_attr {
@@ -94,22 +97,22 @@ test_attr!(parse_style_14, "  /*text*/ fill:green  /*text*/ ",
 #[test]
 fn invalid_1() {
     let mut s = style::Tokenizer::from_str(":");
-    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
-               "Error: invalid attribute value at 1:2\n");
+    assert_eq!(s.next().unwrap().unwrap_err().to_string(),
+               "expected '/-&' not ':' at 1:1");
 }
 
 #[test]
 fn invalid_2() {
     let mut s = style::Tokenizer::from_str("name:'");
-    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
-               "Error: unexpected end of stream\n");
+    assert_eq!(s.next().unwrap().unwrap_err().to_string(),
+               "unexpected end of stream");
 }
 
 #[test]
 fn invalid_3() {
     let mut s = style::Tokenizer::from_str("&\x0a96M*9");
-    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
-               "Error: invalid attribute value at 1:2\n");
+    assert_eq!(s.next().unwrap().unwrap_err().to_string(),
+               "invalid name token");
 }
 
 #[test]
@@ -121,13 +124,13 @@ fn invalid_4() {
 #[test]
 fn invalid_5() {
     let mut s = style::Tokenizer::from_str("&#x4B2ƿ  ;");
-    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
-               "Error: invalid attribute value at 1:7\n");
+    assert_eq!(s.next().unwrap().unwrap_err().to_string(),
+               "expected ';' not 'Æ' at 1:7");
 }
 
 #[test]
 fn invalid_6() {
     let mut s = style::Tokenizer::from_str("{");
-    assert_eq!(s.next().unwrap().unwrap_err().display_chain().to_string(),
-               "Error: invalid attribute value at 1:2\n");
+    assert_eq!(s.next().unwrap().unwrap_err().to_string(),
+               "expected '/-&' not '{' at 1:1");
 }

@@ -8,16 +8,22 @@
 
 use std::fmt;
 
-use {
-    Error,
+use xmlparser::{
     FromSpan,
-    Length,
     Stream,
-    StreamExt,
     StrSpan,
 };
 
+use error::{
+    StreamResult,
+};
+use {
+    Length,
+    StreamExt,
+};
+
 /// Iterator over a list of [`<number>`] values.
+///
 /// [`<number>`]: https://www.w3.org/TR/SVG/types.html#DataTypeNumber
 #[derive(Copy, Clone, PartialEq)]
 pub struct NumberList<'a>(Stream<'a>);
@@ -35,7 +41,7 @@ impl<'a> fmt::Debug for NumberList<'a> {
 }
 
 impl<'a> Iterator for NumberList<'a> {
-    type Item = Result<f64, Error>;
+    type Item = StreamResult<f64>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.0.at_end() {
@@ -47,6 +53,7 @@ impl<'a> Iterator for NumberList<'a> {
 }
 
 /// Iterator over a list of [`<length>`] values.
+///
 /// [`<length>`]: https://www.w3.org/TR/SVG/types.html#DataTypeLength
 #[derive(Copy, Clone, PartialEq)]
 pub struct LengthList<'a>(Stream<'a>);
@@ -65,7 +72,7 @@ impl<'a> fmt::Debug for LengthList<'a> {
 }
 
 impl<'a> Iterator for LengthList<'a> {
-    type Item = Result<Length, Error>;
+    type Item = StreamResult<Length>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.0.at_end() {

@@ -81,7 +81,7 @@ If you know about other alternatives - please send a pull request.
 
 ### Usage
 
-Dependency: [Rust](https://www.rust-lang.org/) >= 1.17
+Dependency: [Rust](https://www.rust-lang.org/) >= 1.18
 
 Add this to your `Cargo.toml`:
 

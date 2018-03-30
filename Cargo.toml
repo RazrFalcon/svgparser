@@ -15,13 +15,10 @@ readme = "README.md"
 travis-ci = { repository = "RazrFalcon/svgparser" }
 
 [dependencies]
-xmlparser = "0.2"
-phf = "0.7.21"
+xmlparser = { git = "https://github.com/RazrFalcon/xmlparser" }
+failure = "0.1.1"
 log = "0.4"
-
-[dependencies.error-chain]
-version = "0.11"
-default-features = false
+phf = "0.7.21"
 
 [dev-dependencies]
 bencher = "0.1"

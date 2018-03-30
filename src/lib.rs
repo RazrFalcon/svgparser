@@ -70,7 +70,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
 pub extern crate xmlparser;
 extern crate phf;
 #[macro_use] extern crate log;
-#[macro_use] extern crate error_chain;
+#[macro_use] extern crate failure;
 
 
 macro_rules! try_opt {
@@ -81,6 +81,7 @@ macro_rules! try_opt {
         }
     }
 }
+
 
 pub mod path;
 pub mod style;
@@ -102,51 +103,13 @@ mod values_list;
 
 
 pub use aspect_ratio::*;
-pub use attribute_id::{
-    AttributeId,
-};
-pub use attribute_value::{
-    AttributeValue,
-    PaintFallback,
-    ViewBox,
-};
-pub use color::{
-    Color,
-};
-pub use element_id::{
-    ElementId,
-};
-pub use error::{
-    ChainedErrorExt,
-    Error,
-    ErrorKind,
-};
-pub use length::{
-    Length,
-    LengthUnit,
-};
-pub use points::{
-    Points,
-};
-pub use streamext::{
-    StreamExt,
-};
-pub use value_id::{
-    ValueId,
-};
-pub use values_list::{
-    NumberList,
-    LengthList,
-};
-
-pub use xmlparser::{
-    ChainedError,
-    EntityDefinition,
-    ErrorPos,
-    ExternalId,
-    FromSpan,
-    Stream,
-    StrSpan,
-    TextUnescape,
-    XmlSpace,
-};
+pub use attribute_id::*;
+pub use attribute_value::*;
+pub use color::*;
+pub use element_id::*;
+pub use error::StreamError;
+pub use length::*;
+pub use points::*;
+pub use streamext::*;
+pub use value_id::*;
+pub use values_list::*;

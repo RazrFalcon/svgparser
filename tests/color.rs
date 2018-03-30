@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use svgparser::{
     Color,
-    ChainedErrorExt,
+//    ChainedErrorExt,
 };
 
 macro_rules! test_parse {
@@ -116,7 +116,7 @@ macro_rules! test_error {
     ($name:ident, $text:expr, $err:expr) => {
         #[test]
         fn $name() {
-            assert_eq!(Color::from_str($text).unwrap_err().full_chain(), $err);
+            assert_eq!(Color::from_str($text).unwrap_err().to_string(), $err);
         }
     };
 }
@@ -124,29 +124,29 @@ macro_rules! test_error {
 test_error!(
     not_a_color_1,
     "text",
-    "Error: invalid color at 1:1"
+    "invalid color at 1:1"
 );
 
 test_error!(
     icc_color_not_supported_1,
     "#CD853F icc-color(acmecmyk, 0.11, 0.48, 0.83, 0.00)",
-    "Error: invalid color at 1:9"
+    "invalid color at 1:9"
 );
 
 test_error!(
     icc_color_not_supported_2,
     "red icc-color(acmecmyk, 0.11, 0.48, 0.83, 0.00)",
-    "Error: invalid color at 1:5"
+    "invalid color at 1:5"
 );
 
 test_error!(
     invalid_input_1,
     "rgb(-0\x0d",
-    "Error: unexpected end of stream"
+    "unexpected end of stream"
 );
 
 test_error!(
     invalid_input_2,
     "#9ߞpx! ;",
-    "Error: invalid color at 1:1"
+    "invalid color at 1:1"
 );

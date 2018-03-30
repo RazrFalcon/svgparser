@@ -7,11 +7,14 @@ use std::io::Read;
 use svgparser::{
     svg,
     style,
+    xmlparser,
     AttributeId,
     AttributeValue,
-    ChainedError,
     ElementId,
-    Error,
+    StreamError,
+};
+
+use xmlparser::{
     FromSpan,
     StrSpan,
     TextUnescape,
@@ -35,7 +38,7 @@ fn main() {
 
     // Parse an SVG.
     if let Err(e) = parse(&text) {
-        println!("{}", e.display_chain().to_string().trim());
+        println!("{}", e.to_string());
     }
 }
 
@@ -58,7 +61,7 @@ fn write_indent(depth: usize) {
     }
 }
 
-fn parse(text: &str) -> Result<(), Error> {
+fn parse(text: &str) -> Result<(), xmlparser::Error> {
     // Control XML nodes depth.
     let mut depth = 0;
 
@@ -81,7 +84,7 @@ fn parse(text: &str) -> Result<(), Error> {
                     }
                     svg::Name::Svg(aid) => {
                         if let Some(svg::Name::Svg(eid)) = curr_tag_name {
-                            parse_svg_attribute(eid, name.prefix, aid, value, depth + 1)?;
+                            parse_svg_attribute(eid, name.prefix, aid, value, depth + 1).unwrap();
                         }
                     }
                 }
@@ -149,7 +152,7 @@ fn parse_svg_attribute(
     aid: AttributeId,
     value: StrSpan,
     depth: usize,
-) -> Result<(), Error> {
+) -> Result<(), StreamError> {
     // SVG attributes parsing should be done 'manually'.
     // svgparser doesn't parse attributes by default because it can be
     // very expensive (in a case of paths).

@@ -1,12 +1,15 @@
 extern crate svgparser;
 
 use svgparser::{
-    FromSpan,
-    ChainedErrorExt,
+    xmlparser,
 };
 use svgparser::transform::{
     Tokenizer,
     Token,
+};
+
+use xmlparser::{
+    FromSpan,
 };
 
 macro_rules! test {
@@ -85,16 +88,16 @@ test!(ts_list_2, "translate(10,20), scale(2) ,  rotate(45),",
 #[test]
 fn error_1() {
     let mut ts = Tokenizer::from_str("text");
-    assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
-               "Error: unexpected end of stream");
+    assert_eq!(ts.next().unwrap().unwrap_err().to_string(),
+               "unexpected end of stream");
 }
 
 #[test]
 fn error_2() {
     let mut ts = Tokenizer::from_str("scale(2) text");
     let _ = ts.next().unwrap();
-    assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
-               "Error: unexpected end of stream");
+    assert_eq!(ts.next().unwrap().unwrap_err().to_string(),
+               "unexpected end of stream");
 }
 
 #[test]
@@ -106,6 +109,6 @@ fn error_3() {
 #[test]
 fn error_4() {
     let mut ts = Tokenizer::from_str("???G");
-    assert_eq!(ts.next().unwrap().unwrap_err().full_chain(),
-               "Error: invalid name token");
+    assert_eq!(ts.next().unwrap().unwrap_err().to_string(),
+               "invalid name token");
 }

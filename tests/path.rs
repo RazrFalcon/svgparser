@@ -1,11 +1,15 @@
 extern crate svgparser;
 
 use svgparser::{
-    FromSpan,
+    xmlparser,
 };
 use svgparser::path::{
     Tokenizer,
     Token,
+};
+
+use xmlparser::{
+    FromSpan,
 };
 
 macro_rules! test {
