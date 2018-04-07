@@ -1,4 +1,7 @@
-## svgparser [![Build Status]](https://travis-ci.org/RazrFalcon/svgparser)
+## svgparser
+[![Build Status]](https://travis-ci.org/RazrFalcon/svgparser)
+[![Crates.io](https://img.shields.io/crates/v/svgparser.svg)](https://crates.io/crates/svgparser)
+[![Documentation](https://docs.rs/svgparser/badge.svg)](https://docs.rs/svgparser)
 
 [Build Status]: https://travis-ci.org/RazrFalcon/svgparser.svg?branch=master
 
@@ -9,7 +12,6 @@ It's not an XML parser since it does not only split the content into the XML nod
 but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataTypes) parsing.
 
 ## Table of Contents
-- [Documentation](#documentation)
 - [Supported SVG types](#supported-svg-types)
 - [Benefits](#benefits)
 - [Limitations](#limitations)
@@ -18,8 +20,6 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
 - [Usage](#usage)
 - [License](#license)
 - [Contribution](#contribution)
-
-### [Documentation](https://docs.rs/svgparser/)
 
 ### Supported SVG types
  - [\<color\>](https://www.w3.org/TR/SVG/types.html#DataTypeColor)
