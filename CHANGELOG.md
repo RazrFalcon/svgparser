@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.8.0] - 2018-04-10
 ### Changed
 - **Breaking**. Use `failure` instead of `error-chain`.
 - **Breaking**. A completely new error types.

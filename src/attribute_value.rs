@@ -130,7 +130,7 @@ pub enum AttributeValue<'a> {
 
 // TODO: test, somehow
 impl<'a> AttributeValue<'a> {
-    /// Parses `AttributeValue` from [`StrSpan`].
+    /// Parses `AttributeValue` from `StrSpan`.
     ///
     /// This function supports all [presentation attributes].
     ///
@@ -150,7 +150,6 @@ impl<'a> AttributeValue<'a> {
     /// - If `prefix` is not empty and `aid` is not `Href`,
     ///   then `AttributeValue::String` will be removed.
     ///
-    /// [`StrSpan`]: struct.StrSpan.html
     /// [presentation attributes]: https://www.w3.org/TR/SVG/propidx.html
     pub fn from_span(
         eid: ElementId,
