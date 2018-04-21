@@ -7,6 +7,9 @@
 // except according to those terms.
 
 /*!
+
+**DEPRECATED**. Use [`svgtypes`](https://github.com/RazrFalcon/svgtypes) instead.
+
 *svgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
@@ -60,7 +63,7 @@ but also supports [SVG types](https://www.w3.org/TR/SVG/types.html#BasicDataType
  - The library forbids unsafe code.
 */
 
-#![doc(html_root_url = "https://docs.rs/svgparser/0.8.0")]
+#![doc(html_root_url = "https://docs.rs/svgparser/0.8.1")]
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]

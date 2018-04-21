@@ -5,6 +5,8 @@
 
 [Build Status]: https://travis-ci.org/RazrFalcon/svgparser.svg?branch=master
 
+**DEPRECATED**. Use [`svgtypes`](https://github.com/RazrFalcon/svgtypes) instead.
+
 *svgparser* is a pull-based parser for [SVG 1.1 Full](https://www.w3.org/TR/SVG/)
 data format without heap allocations.
 
